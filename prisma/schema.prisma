@@ -1,0 +1,157 @@
+// Prisma schema for App Review Analyzer
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 应用表（支持双平台）
+model App {
+  id            Int       @id @default(autoincrement())
+  platform      Platform  // 'ios' | 'android'
+  appId         String    // App Store ID or Package Name
+  name          String?
+  bundleId      String?
+  iconUrl       String?
+  rating        Float?
+  reviewCount   Int?
+  developer     String?
+  category      String?
+  lastCrawledAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  reviews       Review[]
+  taskApps      TaskApp[]
+
+  @@unique([platform, appId])
+  @@index([platform, appId])
+}
+
+enum Platform {
+  ios
+  android
+}
+
+// 评论表
+model Review {
+  id           Int       @id @default(autoincrement())
+  appId        Int
+  app          App       @relation(fields: [appId], references: [id], onDelete: Cascade)
+  
+  platform     Platform
+  reviewId     String    // Platform's original review ID
+  author       String?
+  rating       Int       // 1-5
+  title        String?
+  content      String
+  reviewDate   DateTime
+  appVersion   String?
+  helpfulCount Int       @default(0)
+  language     String?   // Language code
+  country      String?   // Country code
+  
+  sentiment    String?   // AI-detected sentiment
+  aiTags       Json?     // AI-generated tags
+  
+  createdAt    DateTime  @default(now())
+
+  @@unique([platform, reviewId])
+  @@index([appId, rating])
+  @@index([reviewDate])
+}
+
+// 分析任务表
+model AnalysisTask {
+  id          String    @id @default(uuid())
+  userId      String?   // For future user system
+  taskType    TaskType  // 'single' | 'comparison'
+  status      TaskStatus @default(pending)
+  progress    Int       @default(0)
+  
+  // App identification (for single app analysis)
+  platform    Platform? // App platform
+  appStoreId  String?   // App Store ID or Package Name
+  
+  // SEO-friendly URL slug (e.g., "instagram-ios", "tiktok-android")
+  // Note: Slug can be duplicated (e.g., multiple analyses of same app)
+  // The latest analysis for each app is found by (platform, appStoreId, createdAt DESC)
+  appSlug     String?
+  isLatest    Boolean   @default(true) // Mark as latest analysis for this app
+  
+  modelUsed   String?   // AI model identifier
+  options     Json?     // Analysis options
+  result      Json?     // Analysis result
+  errorMsg    String?
+  
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  taskApps    TaskApp[]
+
+  @@index([userId, status])
+  @@index([createdAt])
+  @@index([appSlug, isLatest])
+  @@index([platform, appStoreId, createdAt])  // For finding latest analysis
+}
+
+enum TaskType {
+  single
+  comparison
+}
+
+enum TaskStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+// 任务关联应用表（支持竞品对比）
+model TaskApp {
+  id      Int          @id @default(autoincrement())
+  taskId  String
+  task    AnalysisTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  appId   Int
+  app     App          @relation(fields: [appId], references: [id])
+  
+  role    AppRole      // 'target' | 'competitor'
+  
+  createdAt DateTime   @default(now())
+
+  @@index([taskId])
+}
+
+enum AppRole {
+  target
+  competitor
+}
+
+// AI模型配置表
+model AIModel {
+  id              Int      @id @default(autoincrement())
+  modelKey        String   @unique
+  provider        String   // 'openrouter', 'anthropic-direct', etc.
+  displayName     String
+  apiModelName    String   // Actual model name for API calls
+  
+  costInput       Float    // Cost per 1K tokens (input)
+  costOutput      Float    // Cost per 1K tokens (output)
+  maxTokens       Int?
+  
+  capabilities    Json     // {"languages": ["en","zh"], "speed": "fast"}
+  isActive        Boolean  @default(true)
+  priority        Int      @default(0)
+  
+  planRestrictions String[] // ['free', 'pro', 'enterprise']
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
