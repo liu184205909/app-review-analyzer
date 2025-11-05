@@ -265,7 +265,7 @@ async function processAnalysis(
             date: r.date,
             appVersion: r.appVersion,
           })),
-        },
+        } as any,
         completedAt: new Date(),
       },
     });
