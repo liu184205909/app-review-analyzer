@@ -172,10 +172,7 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { 
-        progress: 30,
-        currentStep: 'Fetching reviews...',
-      },
+      data: { progress: 30 },
     });
 
     // Fetch reviews with intelligent sampling
@@ -256,10 +253,7 @@ async function processAnalysis(
     // Update progress before AI analysis
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { 
-        progress: 60,
-        currentStep: `Analyzing ${reviewsToAnalyze.length} reviews with AI...`,
-      },
+      data: { progress: 60 },
     });
 
     // Perform AI analysis
@@ -276,10 +270,7 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { 
-        progress: 90,
-        currentStep: 'Finalizing report...',
-      },
+      data: { progress: 90 },
     });
 
     // Save result with reviews data
