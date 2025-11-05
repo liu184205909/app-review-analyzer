@@ -14,15 +14,17 @@ export default function HomePage() {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'ios' | 'android'>('all');
 
   // Fetch recent analyses on component mount
   useEffect(() => {
     fetchRecentAnalyses();
-  }, []);
+  }, [platformFilter]);
 
   const fetchRecentAnalyses = async () => {
     try {
-      const response = await fetch('/api/recent?limit=6');
+      const platformParam = platformFilter === 'all' ? '' : `&platform=${platformFilter}`;
+      const response = await fetch(`/api/recent?limit=12&sort=recent${platformParam}`);
       const data = await response.json();
       setRecentAnalyses(data.analyses || []);
     } catch (error) {
@@ -287,13 +289,44 @@ export default function HomePage() {
         {!loadingRecent && recentAnalyses.length > 0 && (
           <div className="mt-16">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Clock className="w-6 h-6 text-blue-600" />
-                Recent Analyses
-              </h3>
-              <a href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                View All →
-              </a>
+              <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <Clock className="w-8 h-8 text-blue-600" />
+                最近分析
+              </h2>
+              
+              {/* Platform Filter */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPlatformFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    platformFilter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  全部
+                </button>
+                <button
+                  onClick={() => setPlatformFilter('ios')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    platformFilter === 'ios'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  iOS
+                </button>
+                <button
+                  onClick={() => setPlatformFilter('android')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    platformFilter === 'android'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Android
+                </button>
+              </div>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -301,59 +334,69 @@ export default function HomePage() {
                 <a
                   key={analysis.id}
                   href={`/analysis/${analysis.slug}`}
-                  className="block p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition border border-gray-100 hover:border-blue-200"
+                  className="group block p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-gray-100 hover:border-blue-200"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-4">
                     {/* App Icon */}
                     {analysis.iconUrl ? (
                       <img
                         src={analysis.iconUrl}
                         alt={analysis.appName}
-                        className="w-12 h-12 rounded-lg flex-shrink-0"
+                        className="w-14 h-14 rounded-xl flex-shrink-0 group-hover:scale-105 transition"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                        <Search className="w-6 h-6 text-white" />
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                        <Search className="w-7 h-7 text-white" />
                       </div>
                     )}
 
                     {/* App Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-bold text-gray-900 truncate text-lg group-hover:text-blue-600 transition">
                         {analysis.appName}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      </h3>
+                      
+                      {/* Rating & Platform */}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-500 text-sm">★</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {analysis.rating.toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="text-gray-300">·</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${
                           analysis.platform === 'ios' 
                             ? 'bg-gray-100 text-gray-700'
                             : 'bg-green-100 text-green-700'
                         }`}>
                           {analysis.platform === 'ios' ? 'iOS' : 'Android'}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          {analysis.reviewCount} reviews
-                        </span>
                       </div>
-                      
-                      {/* Status */}
-                      <div className="flex items-center gap-1 mt-2">
-                        {analysis.status === 'completed' ? (
-                          <>
-                            <TrendingUp className="w-3 h-3 text-green-600" />
-                            <span className="text-xs text-green-600 font-medium">
-                              Completed
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-3 h-3 rounded-full bg-blue-100 flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></div>
-                            </div>
-                            <span className="text-xs text-blue-600 font-medium">
-                              {analysis.progress}% complete
-                            </span>
-                          </>
-                        )}
+
+                      {/* Sentiment Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
+                          <span>{analysis.reviewCount} 条评论</span>
+                        </div>
+                        <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-gray-100">
+                          <div 
+                            className="bg-green-500"
+                            style={{ width: `${analysis.sentiment.positive}%` }}
+                          />
+                          <div 
+                            className="bg-yellow-400"
+                            style={{ width: `${analysis.sentiment.neutral}%` }}
+                          />
+                          <div 
+                            className="bg-red-500"
+                            style={{ width: `${analysis.sentiment.negative}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>正面 {analysis.sentiment.positive}%</span>
+                          <span>负面 {analysis.sentiment.negative}%</span>
+                        </div>
                       </div>
                     </div>
                   </div>

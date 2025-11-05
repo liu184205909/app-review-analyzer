@@ -7,47 +7,59 @@ import prisma from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '6');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const sortBy = url.searchParams.get('sort') || 'recent'; // 'recent' | 'popular'
+    const platform = url.searchParams.get('platform'); // 'ios' | 'android' | null
 
-    // Fetch recent completed analyses
+    // Build where clause
+    const where: any = {
+      status: 'completed', // 只显示完成的
+      isLatest: true,
+    };
+
+    if (platform) {
+      where.platform = platform;
+    }
+
+    // Fetch completed analyses
     const recentAnalyses = await prisma.analysisTask.findMany({
-      where: {
-        status: {
-          in: ['completed', 'partial'], // 包括部分完成的
-        },
-        isLatest: true,
-      },
-      orderBy: {
-        completedAt: 'desc',
-      },
+      where,
+      orderBy: sortBy === 'popular' 
+        ? { createdAt: 'desc' } // TODO: 后续可以按浏览量排序
+        : { completedAt: 'desc' },
       take: limit,
       select: {
         id: true,
         appSlug: true,
         platform: true,
-        status: true,
-        progress: true,
-        createdAt: true,
+        appStoreId: true,
         completedAt: true,
         result: true,
       },
     });
 
     // Format response
-    const formatted = recentAnalyses.map(task => ({
-      id: task.id,
-      slug: task.appSlug,
-      platform: task.platform,
-      appName: task.result ? (task.result as any).app?.name : 'Unknown App',
-      iconUrl: task.result ? (task.result as any).app?.iconUrl : null,
-      status: task.status,
-      progress: task.progress,
-      analyzedAt: task.completedAt || task.createdAt,
-      reviewCount: task.result ? (task.result as any).reviewCount : 0,
-    }));
+    const formatted = recentAnalyses
+      .filter(task => task.result && (task.result as any).app) // 确保有完整数据
+      .map(task => {
+        const result = task.result as any;
+        const app = result.app;
+        return {
+          id: task.id,
+          slug: task.appSlug,
+          platform: task.platform,
+          appName: app.name,
+          iconUrl: app.iconUrl,
+          rating: app.rating || 0,
+          analyzedAt: task.completedAt,
+          reviewCount: result.reviewCount || 0,
+          sentiment: result.analysis?.sentiment || { positive: 0, negative: 0, neutral: 0 },
+        };
+      });
 
     return NextResponse.json({
       analyses: formatted,
+      total: formatted.length,
     });
   } catch (error) {
     console.error('Recent analyses API error:', error);
