@@ -1,8 +1,8 @@
 // Home Page - App Review Analyzer MVP
 'use client';
 
-import { useState } from 'react';
-import { Search, Plus, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus, X, Clock, TrendingUp } from 'lucide-react';
 
 export default function HomePage() {
   const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
@@ -12,6 +12,25 @@ export default function HomePage() {
   const [focusNegative, setFocusNegative] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
+  const [loadingRecent, setLoadingRecent] = useState(true);
+
+  // Fetch recent analyses on component mount
+  useEffect(() => {
+    fetchRecentAnalyses();
+  }, []);
+
+  const fetchRecentAnalyses = async () => {
+    try {
+      const response = await fetch('/api/recent?limit=6');
+      const data = await response.json();
+      setRecentAnalyses(data.analyses || []);
+    } catch (error) {
+      console.error('Failed to fetch recent analyses:', error);
+    } finally {
+      setLoadingRecent(false);
+    }
+  };
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -263,6 +282,86 @@ export default function HomePage() {
             )}
           </button>
         </div>
+
+        {/* Recent Analyses */}
+        {!loadingRecent && recentAnalyses.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Clock className="w-6 h-6 text-blue-600" />
+                Recent Analyses
+              </h3>
+              <a href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                View All →
+              </a>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentAnalyses.map((analysis) => (
+                <a
+                  key={analysis.id}
+                  href={`/analysis/${analysis.slug}`}
+                  className="block p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition border border-gray-100 hover:border-blue-200"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* App Icon */}
+                    {analysis.iconUrl ? (
+                      <img
+                        src={analysis.iconUrl}
+                        alt={analysis.appName}
+                        className="w-12 h-12 rounded-lg flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                        <Search className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+
+                    {/* App Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 truncate">
+                        {analysis.appName}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          analysis.platform === 'ios' 
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {analysis.platform === 'ios' ? 'iOS' : 'Android'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {analysis.reviewCount} reviews
+                        </span>
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="flex items-center gap-1 mt-2">
+                        {analysis.status === 'completed' ? (
+                          <>
+                            <TrendingUp className="w-3 h-3 text-green-600" />
+                            <span className="text-xs text-green-600 font-medium">
+                              Completed
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-3 h-3 rounded-full bg-blue-100 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></div>
+                            </div>
+                            <span className="text-xs text-blue-600 font-medium">
+                              {analysis.progress}% complete
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Features */}
         <div className="grid md:grid-cols-2 gap-6 text-center">
