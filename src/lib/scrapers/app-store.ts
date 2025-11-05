@@ -132,6 +132,7 @@ export function extractAppStoreId(input: string): string | null {
 
 /**
  * Fetch multiple pages of reviews
+ * Note: App Store RSS Feed API has a limit of 10 pages
  */
 export async function fetchAppStoreReviewsMultiPage(
   appId: string,
@@ -139,9 +140,12 @@ export async function fetchAppStoreReviewsMultiPage(
   maxPages: number = 5
 ): Promise<AppStoreReview[]> {
   
+  // Enforce API limit: max 10 pages
+  const safeMaxPages = Math.min(maxPages, 10);
+  
   const allReviews: AppStoreReview[] = [];
   
-  for (let page = 1; page <= maxPages; page++) {
+  for (let page = 1; page <= safeMaxPages; page++) {
     try {
       const reviews = await fetchAppStoreReviews(appId, country, 'mostRecent', page);
       
