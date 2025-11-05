@@ -172,32 +172,42 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { progress: 30 },
+      data: { 
+        progress: 30,
+        currentStep: 'Fetching reviews...',
+      },
     });
 
     // Fetch reviews with intelligent sampling
-    // For MVP: prioritize speed over quantity
+    // ⚡ Optimized for speed: fewer reviews, faster results
     let reviews: any[] = [];
     if (platform === 'ios') {
-      // iOS: Fetch 5 pages (~250 reviews) - enough for insights
-      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', 5);
+      // iOS: Fetch 2 pages (~100 reviews) - fast and sufficient
+      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', 2);
     } else {
-      // Android: Fetch 300 reviews - balanced for speed and quality
+      // Android: Fetch 150 reviews - optimized for Vercel timeout
       reviews = await fetchGooglePlayReviewsMultiPage(appId, {
-        maxReviews: 300,
+        maxReviews: 150,
       });
     }
 
-    // Save reviews to database
-    for (const review of reviews) {
-      await prisma.review.upsert({
-        where: {
-          platform_reviewId: {
-            platform,
-            reviewId: review.id,
-          },
-        },
-        create: {
+    // ⚡ Batch save reviews to database (much faster)
+    // Skip duplicates by checking existing reviews first
+    const existingReviewIds = await prisma.review.findMany({
+      where: {
+        platform,
+        reviewId: { in: reviews.map(r => r.id) },
+      },
+      select: { reviewId: true },
+    });
+    
+    const existingIds = new Set(existingReviewIds.map(r => r.reviewId));
+    const newReviews = reviews.filter(r => !existingIds.has(r.id));
+    
+    // Batch insert new reviews only
+    if (newReviews.length > 0) {
+      await prisma.review.createMany({
+        data: newReviews.map(review => ({
           appId: app.id,
           platform,
           reviewId: review.id,
@@ -208,15 +218,10 @@ async function processAnalysis(
           reviewDate: review.date,
           appVersion: review.appVersion,
           helpfulCount: (review as any).thumbsUp || 0,
-        },
-        update: {},
+        })),
+        skipDuplicates: true,
       });
     }
-
-    await prisma.analysisTask.update({
-      where: { id: taskId },
-      data: { progress: 60 },
-    });
 
     // Filter reviews for analysis (1-3 stars if option set)
     let reviewsToAnalyze = reviews;
@@ -227,8 +232,8 @@ async function processAnalysis(
     }
 
     // Smart sampling: prioritize negative reviews and limit total for speed
-    // For MVP: analyze max 150 reviews (enough for insights, fast results)
-    const maxReviewsForAI = 150;
+    // ⚡ Optimized: analyze max 100 reviews (fast, accurate insights)
+    const maxReviewsForAI = 100;
     
     if (reviewsToAnalyze.length > maxReviewsForAI) {
       // Prioritize low-rating reviews (1-3 stars) as they contain more insights
@@ -248,6 +253,15 @@ async function processAnalysis(
       }
     }
 
+    // Update progress before AI analysis
+    await prisma.analysisTask.update({
+      where: { id: taskId },
+      data: { 
+        progress: 60,
+        currentStep: `Analyzing ${reviewsToAnalyze.length} reviews with AI...`,
+      },
+    });
+
     // Perform AI analysis
     const aiReviews: Review[] = reviewsToAnalyze.map(r => ({
       rating: r.rating,
@@ -262,7 +276,10 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { progress: 90 },
+      data: { 
+        progress: 90,
+        currentStep: 'Finalizing report...',
+      },
     });
 
     // Save result with reviews data

@@ -155,10 +155,8 @@ export async function fetchAppStoreReviewsMultiPage(
       
       allReviews.push(...reviews);
       
-      // Rate limiting: wait 1 second between requests
-      if (page < maxPages) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+      // ⚡ Removed rate limiting for faster scraping
+      // Apple's RSS feed can handle concurrent requests
     } catch (error) {
       console.error(`Error fetching page ${page}:`, error);
       break;
