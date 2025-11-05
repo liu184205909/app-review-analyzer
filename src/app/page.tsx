@@ -287,11 +287,11 @@ export default function HomePage() {
 
         {/* Recent Analyses */}
         {!loadingRecent && recentAnalyses.length > 0 && (
-          <div className="mt-16">
-            <div className="flex items-center justify-between mb-6">
+          <div className="mt-20">
+            <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <Clock className="w-8 h-8 text-blue-600" />
-                最近分析
+                Recent Analyses
               </h2>
               
               {/* Platform Filter */}
@@ -304,7 +304,7 @@ export default function HomePage() {
                       : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
-                  全部
+                  All
                 </button>
                 <button
                   onClick={() => setPlatformFilter('ios')}
@@ -377,7 +377,7 @@ export default function HomePage() {
                       {/* Sentiment Bar */}
                       <div className="mt-3">
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
-                          <span>{analysis.reviewCount} 条评论</span>
+                          <span>{analysis.reviewCount} reviews</span>
                         </div>
                         <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-gray-100">
                           <div 
@@ -394,8 +394,8 @@ export default function HomePage() {
                           />
                         </div>
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          <span>正面 {analysis.sentiment.positive}%</span>
-                          <span>负面 {analysis.sentiment.negative}%</span>
+                          <span>Positive {analysis.sentiment.positive}%</span>
+                          <span>Negative {analysis.sentiment.negative}%</span>
                         </div>
                       </div>
                     </div>
@@ -406,28 +406,104 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Features */}
-        <div className="grid md:grid-cols-2 gap-6 text-center">
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">✓</div>
-            <h3 className="font-semibold mb-2">Dual Platform Support</h3>
-            <p className="text-sm text-gray-600">iOS & Android reviews in one place</p>
+        {/* Why Choose Us Section */}
+        <div className="mt-24 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose ReviewInsight?</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Leverage AI-powered analysis to understand your users better and make data-driven decisions
+            </p>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">🤖</div>
-            <h3 className="font-semibold mb-2">AI-Powered Analysis</h3>
-            <p className="text-sm text-gray-600">Deep insights from Claude & GPT-4</p>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-4xl mb-4">🤖</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">AI-Powered Analysis</h3>
+              <p className="text-sm text-gray-600">
+                Deep insights from Claude & GPT-4 to identify critical issues and opportunities
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-4xl mb-4">⚡</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Lightning Fast</h3>
+              <p className="text-sm text-gray-600">
+                Get comprehensive analysis in under 10 seconds, not hours
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-4xl mb-4">🎯</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Actionable Insights</h3>
+              <p className="text-sm text-gray-600">
+                Prioritized recommendations to improve your app and boost ratings
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+              <div className="text-4xl mb-4">🌍</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Multi-Platform</h3>
+              <p className="text-sm text-gray-600">
+                Analyze both iOS App Store and Google Play Store reviews in one place
+              </p>
+            </div>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">⚔️</div>
-            <h3 className="font-semibold mb-2">Competitor Comparison</h3>
-            <p className="text-sm text-gray-600">SWOT analysis & market opportunities</p>
+        </div>
+
+        {/* How It Works */}
+        <div className="mt-24 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Get actionable insights from app reviews in just 3 simple steps
+            </p>
           </div>
-          <div className="p-6 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">🌍</div>
-            <h3 className="font-semibold mb-2">Multi-Language Support</h3>
-            <p className="text-sm text-gray-600">Analyze reviews in any language</p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">1</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Enter App URL</h3>
+              <p className="text-gray-600">
+                Paste the App Store or Google Play URL of the app you want to analyze
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">2</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">AI Analysis</h3>
+              <p className="text-gray-600">
+                Our AI analyzes hundreds of reviews to identify key issues and patterns
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">3</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Get Insights</h3>
+              <p className="text-gray-600">
+                Receive detailed report with prioritized actions to improve your app
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-24 mb-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to Understand Your Users?</h2>
+          <p className="text-xl mb-8 opacity-90">
+            Get AI-powered insights from app reviews in seconds
+          </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+          >
+            Analyze Your App Now
+          </button>
         </div>
       </main>
     </div>

@@ -15,19 +15,20 @@ export async function GET(request: NextRequest) {
     const where: any = {
       status: 'completed', // 只显示完成的
       isLatest: true,
+      appSlug: { not: null }, // 确保有 slug（旧数据可能没有）
     };
 
     if (platform) {
       where.platform = platform;
     }
 
-    // Fetch completed analyses
+    // Fetch completed analyses (more than needed for deduplication)
     const recentAnalyses = await prisma.analysisTask.findMany({
       where,
       orderBy: sortBy === 'popular' 
         ? { createdAt: 'desc' } // TODO: 后续可以按浏览量排序
         : { completedAt: 'desc' },
-      take: limit,
+      take: limit * 3, // Fetch more for deduplication
       select: {
         id: true,
         appSlug: true,
@@ -38,7 +39,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format response
+    // Format and deduplicate by appSlug
+    const seenSlugs = new Set<string>();
     const formatted = recentAnalyses
       .filter(task => task.result && (task.result as any).app) // 确保有完整数据
       .map(task => {
@@ -55,7 +57,16 @@ export async function GET(request: NextRequest) {
           reviewCount: result.reviewCount || 0,
           sentiment: result.analysis?.sentiment || { positive: 0, negative: 0, neutral: 0 },
         };
-      });
+      })
+      .filter(item => {
+        // Deduplicate by slug
+        if (seenSlugs.has(item.slug)) {
+          return false;
+        }
+        seenSlugs.add(item.slug);
+        return true;
+      })
+      .slice(0, limit); // Take only the requested number after deduplication
 
     return NextResponse.json({
       analyses: formatted,
