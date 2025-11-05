@@ -73,6 +73,11 @@ model AnalysisTask {
   status      TaskStatus @default(pending)
   progress    Int       @default(0)
   
+  // 增量抓取相关字段
+  isIncremental Boolean   @default(false)  // 是否启用增量抓取
+  reviewCount   Int       @default(0)      // 当前已抓取评论数
+  targetCount   Int?                       // 目标评论数
+  
   // App identification (for single app analysis)
   platform    Platform? // App platform
   appStoreId  String?   // App Store ID or Package Name
@@ -108,6 +113,7 @@ enum TaskType {
 enum TaskStatus {
   pending
   processing
+  partial      // 新增：部分完成，继续后台抓取
   completed
   failed
 }
