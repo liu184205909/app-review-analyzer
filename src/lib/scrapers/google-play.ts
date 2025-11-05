@@ -54,7 +54,7 @@ export async function fetchGooglePlayReviews(
       num,
       lang,
       country,
-    });
+    }) as any;
 
     return reviews.data.map((review: any) => ({
       id: review.id,
