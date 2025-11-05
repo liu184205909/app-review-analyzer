@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { fetchAppStoreReviewsMultiPage, fetchAppStoreApp, extractAppStoreId } from '@/lib/scrapers/app-store';
 import { fetchGooglePlayReviewsMultiPage, fetchGooglePlayApp, extractGooglePlayId } from '@/lib/scrapers/google-play';
+import { fetchQuickReviews, fetchIncrementalReviews } from '@/lib/scrapers/quick-fetch';
 import { analyzeSingleApp, Review } from '@/lib/ai/openrouter';
 import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug';
 
@@ -176,15 +177,19 @@ async function processAnalysis(
     });
 
     // Fetch reviews with intelligent sampling
-    // ⚡ Optimized for speed: fewer reviews, faster results
+    // 🚀 方案A简化版：增加评论数量，保持速度
+    // 使用选项控制抓取数量
+    const reviewTarget = options?.deepMode ? 500 : 150;
+    
     let reviews: any[] = [];
     if (platform === 'ios') {
-      // iOS: Fetch 2 pages (~100 reviews) - fast and sufficient
-      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', 2);
+      // iOS: Fetch 2-5 pages (100-250 reviews)
+      const pages = options?.deepMode ? 5 : 2;
+      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages);
     } else {
-      // Android: Fetch 150 reviews - optimized for Vercel timeout
+      // Android: Fetch 150-500 reviews
       reviews = await fetchGooglePlayReviewsMultiPage(appId, {
-        maxReviews: 150,
+        maxReviews: reviewTarget,
       });
     }
 
