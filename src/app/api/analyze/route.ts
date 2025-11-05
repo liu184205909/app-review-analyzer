@@ -175,17 +175,16 @@ async function processAnalysis(
       data: { progress: 30 },
     });
 
-    // Fetch reviews (increased limits for better analysis)
+    // Fetch reviews with intelligent sampling
+    // For MVP: prioritize speed over quantity
     let reviews: any[] = [];
     if (platform === 'ios') {
-      // iOS: Fetch up to 20 pages (~1000 reviews)
-      // Each page has ~50 reviews, RSS feed is free
-      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', 20);
+      // iOS: Fetch 5 pages (~250 reviews) - enough for insights
+      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', 5);
     } else {
-      // Android: Fetch up to 2000 reviews
-      // Note: May fail in China due to Google Play blocking
+      // Android: Fetch 300 reviews - balanced for speed and quality
       reviews = await fetchGooglePlayReviewsMultiPage(appId, {
-        maxReviews: 2000,
+        maxReviews: 300,
       });
     }
 
@@ -225,6 +224,28 @@ async function processAnalysis(
       reviewsToAnalyze = reviews.filter(r =>
         options.ratingFilter.includes(r.rating)
       );
+    }
+
+    // Smart sampling: prioritize negative reviews and limit total for speed
+    // For MVP: analyze max 150 reviews (enough for insights, fast results)
+    const maxReviewsForAI = 150;
+    
+    if (reviewsToAnalyze.length > maxReviewsForAI) {
+      // Prioritize low-rating reviews (1-3 stars) as they contain more insights
+      const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
+      const highRating = reviewsToAnalyze.filter(r => r.rating > 3);
+      
+      if (lowRating.length >= maxReviewsForAI) {
+        // Use only low-rating reviews
+        reviewsToAnalyze = lowRating.slice(0, maxReviewsForAI);
+      } else {
+        // Mix: all low-rating + some high-rating for balance
+        const remainingSlots = maxReviewsForAI - lowRating.length;
+        reviewsToAnalyze = [
+          ...lowRating,
+          ...highRating.slice(0, remainingSlots)
+        ];
+      }
     }
 
     // Perform AI analysis
