@@ -64,6 +64,8 @@ export default function AnalysisResultPage() {
   const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
+  const [expandedExperienceIssues, setExpandedExperienceIssues] = useState<Set<number>>(new Set());
+  const [expandedFeatureRequests, setExpandedFeatureRequests] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,6 +118,30 @@ export default function AnalysisResultPage() {
 
   const toggleIssueExpand = (index: number) => {
     setExpandedIssues(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleExperienceIssueExpand = (index: number) => {
+    setExpandedExperienceIssues(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleFeatureRequestExpand = (index: number) => {
+    setExpandedFeatureRequests(prev => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
@@ -245,7 +271,7 @@ export default function AnalysisResultPage() {
             <div className="flex-1">
               {/* SEO-optimized H1: 长且描述性 */}
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {app.name} User Review Analysis Report - Deep Insights from {analyzedCount} Real User Feedback
+                {app.name} User Review Analysis Report
               </h1>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1">
@@ -382,14 +408,61 @@ export default function AnalysisResultPage() {
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               {analysis.experienceIssues.map((issue, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
-                  <span className="flex-shrink-0 w-6 h-6 bg-orange-200 text-orange-700 rounded-full flex items-center justify-center text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900">{issue.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">{issue.frequency} mentions</div>
+                <div key={index} className="p-4 bg-orange-50 rounded-lg border border-orange-100 hover:border-orange-200 transition">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="flex-shrink-0 w-6 h-6 bg-orange-200 text-orange-700 rounded-full flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <span className="font-semibold text-gray-900">{issue.title}</span>
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                          {issue.frequency} mentions
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* 展开/收起按钮 */}
+                    {issue.examples && issue.examples.length > 1 && (
+                      <button
+                        onClick={() => toggleExperienceIssueExpand(index)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium ml-2"
+                      >
+                        {expandedExperienceIssues.has(index) ? (
+                          <>
+                            <span>Collapse</span>
+                            <ChevronUp className="w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>View {issue.examples.length} reviews</span>
+                            <ChevronDown className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
+                  
+                  {/* 示例评论 */}
+                  {issue.examples && issue.examples.length > 0 && (
+                    <div className="space-y-2">
+                      {/* 始终显示第一条 */}
+                      <div className="bg-white p-3 rounded-lg border border-orange-200">
+                        <p className="text-sm text-gray-700 leading-relaxed italic">
+                          "{issue.examples[0]}"
+                        </p>
+                      </div>
+                      
+                      {/* 展开显示更多 */}
+                      {expandedExperienceIssues.has(index) && issue.examples.slice(1).map((example, exIndex) => (
+                        <div key={exIndex} className="bg-white p-3 rounded-lg border border-orange-200">
+                          <p className="text-sm text-gray-700 leading-relaxed italic">
+                            "{example}"
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -408,14 +481,61 @@ export default function AnalysisResultPage() {
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               {analysis.featureRequests.map((request, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                  <span className="flex-shrink-0 w-6 h-6 bg-yellow-200 text-yellow-700 rounded-full flex items-center justify-center text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900">{request.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">{request.frequency} mentions</div>
+                <div key={index} className="p-4 bg-yellow-50 rounded-lg border border-yellow-100 hover:border-yellow-200 transition">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="flex-shrink-0 w-6 h-6 bg-yellow-200 text-yellow-700 rounded-full flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <span className="font-semibold text-gray-900">{request.title}</span>
+                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                          {request.frequency} mentions
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* 展开/收起按钮 */}
+                    {request.examples && request.examples.length > 1 && (
+                      <button
+                        onClick={() => toggleFeatureRequestExpand(index)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium ml-2"
+                      >
+                        {expandedFeatureRequests.has(index) ? (
+                          <>
+                            <span>Collapse</span>
+                            <ChevronUp className="w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>View {request.examples.length} reviews</span>
+                            <ChevronDown className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
+                  
+                  {/* 示例评论 */}
+                  {request.examples && request.examples.length > 0 && (
+                    <div className="space-y-2">
+                      {/* 始终显示第一条 */}
+                      <div className="bg-white p-3 rounded-lg border border-yellow-200">
+                        <p className="text-sm text-gray-700 leading-relaxed italic">
+                          "{request.examples[0]}"
+                        </p>
+                      </div>
+                      
+                      {/* 展开显示更多 */}
+                      {expandedFeatureRequests.has(index) && request.examples.slice(1).map((example, exIndex) => (
+                        <div key={exIndex} className="bg-white p-3 rounded-lg border border-yellow-200">
+                          <p className="text-sm text-gray-700 leading-relaxed italic">
+                            "{example}"
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

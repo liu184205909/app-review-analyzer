@@ -179,15 +179,16 @@ async function processAnalysis(
     // Fetch reviews with intelligent sampling
     // 🚀 方案A简化版：增加评论数量，保持速度
     // 使用选项控制抓取数量
-    const reviewTarget = options?.deepMode ? 500 : 150;
+    const reviewTarget = options?.deepMode ? 500 : 200;
     
     let reviews: any[] = [];
     if (platform === 'ios') {
-      // iOS: Fetch 2-5 pages (100-250 reviews)
-      const pages = options?.deepMode ? 5 : 2;
+      // iOS: Fetch 3-5 pages (150-250 reviews)
+      // App Store RSS Feed returns ~50 reviews per page
+      const pages = options?.deepMode ? 5 : 3;
       reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages);
     } else {
-      // Android: Fetch 150-500 reviews
+      // Android: Fetch 200-500 reviews
       reviews = await fetchGooglePlayReviewsMultiPage(appId, {
         maxReviews: reviewTarget,
       });
