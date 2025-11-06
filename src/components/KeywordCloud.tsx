@@ -154,9 +154,9 @@ export default function KeywordCloud({
 
 // 辅助函数：从分析结果中提取关键词
 export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
-  const keywords: KeywordData[] = [];
+  const keywordMap = new Map<string, KeywordData>();
 
-  // 常见停用词
+  // 增强停用词列表
   const stopWords = new Set([
     'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
     'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above',
@@ -174,101 +174,136 @@ export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
     'tried', 'trying', 'feel', 'feels', 'felt', 'feeling', 'seem', 'seems', 'seemed',
     'time', 'way', 'day', 'thing', 'people', 'man', 'woman', 'child', 'world', 'life',
     'hand', 'part', 'eye', 'place', 'case', 'point', 'problem', 'question', 'issue',
-    'app', 'application', 'software', 'program', 'system', 'feature', 'function',
-    'option', 'setting', 'button', 'screen', 'page', 'menu', 'user', 'interface',
-    'design', 'layout', 'performance', 'speed', 'loading', 'crash', 'bug', 'error'
+    'app', 'application', 'software', 'program', 'system', 'interface', 'option', 'setting',
+    'button', 'screen', 'page', 'menu', 'loading', 'error', 'data', 'file', 'image', 'video'
   ]);
 
-  // 清理和提取关键词
-  const extractWords = (text: string, frequency: number, category: string) => {
-    // 移除标点符号并转换为小写
+  // 应用特定关键词排除
+  const appSpecificWords = new Set([
+    'instagram', 'tiktok', 'facebook', 'twitter', 'youtube', 'snapchat', 'whatsapp',
+    'chrome', 'safari', 'firefox', 'edge', 'gmail', 'outlook', 'telegram', 'signal',
+    'spotify', 'netflix', 'amazon', 'google', 'apple', 'microsoft', 'zoom', 'teams'
+  ]);
+
+  // 重要关键词权重
+  const importantKeywords = new Set([
+    'crash', 'slow', 'freeze', 'bug', 'lag', 'error', 'fail', 'broken', 'slowly',
+    'fast', 'quick', 'smooth', 'responsive', 'stable', 'reliable', 'working', 'fixed',
+    'design', 'layout', 'ui', 'ux', 'interface', 'navigation', 'menu', 'search', 'filter',
+    'video', 'audio', 'photo', 'image', 'camera', 'quality', 'hd', 'resolution', 'sound',
+    'notification', 'alert', 'message', 'chat', 'post', 'share', 'upload', 'download',
+    'account', 'login', 'password', 'security', 'privacy', 'storage', 'memory', 'cache'
+  ]);
+
+  const extractWords = (text: string, baseWeight: number, category: string) => {
     const cleanText = text.toLowerCase().replace(/[^\w\s]/g, ' ');
     const words = cleanText.split(/\s+/).filter((word: string) =>
-      word.length > 2 &&
+      word.length >= 3 && word.length <= 15 &&
       !stopWords.has(word) &&
-      !/^\d+$/.test(word) // 排除纯数字
+      !appSpecificWords.has(word) &&
+      !/^\d+$/.test(word) &&
+      !/^\d+\w+$/.test(word)
     );
 
     words.forEach((word: string) => {
-      keywords.push({
-        text: word,
-        value: frequency || 1,
-        category: category as any
-      });
+      const keywordKey = word;
+      const weightMultiplier = importantKeywords.has(word) ? 1.5 : 1;
+      const weightedValue = Math.max(Math.ceil(baseWeight * weightMultiplier), 5);
+
+      if (keywordMap.has(keywordKey)) {
+        const existing = keywordMap.get(keywordKey)!;
+        existing.value += weightedValue;
+        const categoryPriority: Record<string, number> = { 'issue': 4, 'feature': 3, 'negative': 2, 'positive': 1, 'neutral': 0 };
+        if (categoryPriority[category] > categoryPriority[existing.category as string]) {
+          existing.category = category as any;
+        }
+      } else {
+        keywordMap.set(keywordKey, {
+          text: word,
+          value: weightedValue,
+          category: category as any
+        });
+      }
     });
   };
 
-  // 从关键问题中提取关键词
   if (analysis.criticalIssues) {
     analysis.criticalIssues.forEach((issue: any) => {
-      extractWords(issue.title, issue.frequency || 1, 'issue');
-      // 从示例中提取更多关键词
+      extractWords(issue.title, (issue.frequency || 5) * 2, 'issue');
       if (issue.examples) {
         issue.examples.forEach((example: string) => {
-          extractWords(example, (issue.frequency || 1) * 0.5, 'issue'); // 示例权重较低
+          extractWords(example, (issue.frequency || 2) * 1.5, 'issue');
         });
       }
     });
   }
 
-  // 从体验问题中提取关键词
   if (analysis.experienceIssues) {
     analysis.experienceIssues.forEach((issue: any) => {
-      extractWords(issue.title, issue.frequency || 1, 'issue');
+      extractWords(issue.title, (issue.frequency || 3) * 1.8, 'issue');
       if (issue.examples) {
         issue.examples.forEach((example: string) => {
-          extractWords(example, (issue.frequency || 1) * 0.5, 'issue');
+          extractWords(example, (issue.frequency || 1) * 1.2, 'issue');
         });
       }
     });
   }
 
-  // 从功能请求中提取关键词
   if (analysis.featureRequests) {
     analysis.featureRequests.forEach((request: any) => {
-      extractWords(request.title, request.frequency || 1, 'feature');
+      extractWords(request.title, (request.frequency || 3) * 1.5, 'feature');
       if (request.examples) {
         request.examples.forEach((example: string) => {
-          extractWords(example, (request.frequency || 1) * 0.5, 'feature');
+          extractWords(example, (request.frequency || 1) * 1.2, 'feature');
         });
       }
     });
   }
 
-  // 从洞察中提取关键词（正面和负面）
   if (analysis.insights) {
     const insightWords = analysis.insights.split('.');
     insightWords.forEach((sentence: string) => {
       if (sentence.trim()) {
-        const sentiment = sentence.toLowerCase().includes('problem') ||
-                         sentence.toLowerCase().includes('issue') ||
-                         sentence.toLowerCase().includes('difficult') ? 'negative' : 'positive';
+        const text = sentence.toLowerCase();
+        let sentiment: string = 'neutral';
+
+        if (text.includes('problem') || text.includes('issue') || text.includes('bug') ||
+            text.includes('crash') || text.includes('error') || text.includes('difficult') ||
+            text.includes('slow') || text.includes('poor') || text.includes('fail')) {
+          sentiment = 'negative';
+        } else if (text.includes('great') || text.includes('excellent') || text.includes('good') ||
+                   text.includes('love') || text.includes('perfect') || text.includes('amazing')) {
+          sentiment = 'positive';
+        }
+
         extractWords(sentence, 1, sentiment);
       }
     });
   }
 
-  // 合并相同的关键词
-  const mergedKeywords = keywords.reduce((acc: KeywordData[], current) => {
-    const existing = acc.find(k => k.text === current.text);
-    if (existing) {
-      existing.value += current.value;
-      // 如果类别不同，优先使用issue或feature
-      if (current.category === 'issue' || current.category === 'feature') {
-        existing.category = current.category;
-      }
-    } else {
-      acc.push({ ...current });
-    }
-    return acc;
-  }, []);
-
-  // 按频率排序并返回前50个
-  return mergedKeywords
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 50)
+  const resultKeywords = Array.from(keywordMap.values())
+    .sort((a, b) => {
+      const categoryPriority: Record<string, number> = { 'issue': 4, 'feature': 3, 'negative': 2, 'positive': 1, 'neutral': 0 };
+      const categoryDiff = categoryPriority[b.category as string] - categoryPriority[a.category as string];
+      if (categoryDiff !== 0) return categoryDiff;
+      return b.value - a.value;
+    })
+    .slice(0, 60)
     .map(keyword => ({
       ...keyword,
-      value: Math.max(keyword.value, 10) // 确保最小值
+      value: Math.max(keyword.value, 8)
     }));
+
+  if (resultKeywords.length < 10) {
+    const defaultKeywords: KeywordData[] = [
+      { text: 'performance', value: 15, category: 'neutral' },
+      { text: 'usability', value: 12, category: 'neutral' },
+      { text: 'features', value: 10, category: 'neutral' },
+      { text: 'design', value: 8, category: 'neutral' },
+      { text: 'stability', value: 7, category: 'neutral' },
+    ];
+    resultKeywords.push(...defaultKeywords);
+  }
+
+  return resultKeywords;
 }
