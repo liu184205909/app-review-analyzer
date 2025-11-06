@@ -40,5 +40,11 @@
     "eslint-config-next": "14.2.18",
     "prisma": "^6.18.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "react-wordcloud": {
+      "react": "^18.3.1",
+      "react-dom": "^18.3.1"
+    }
   }
 }
