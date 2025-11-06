@@ -44,17 +44,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch app info to get name for slug
+    // Fetch app info to get name for slug with retry mechanism
     let appInfo: any;
-    if (platform === 'ios') {
-      appInfo = await fetchAppStoreApp(appId);
-    } else {
-      appInfo = await fetchGooglePlayApp(appId);
+    let lastError: any = null;
+
+    // Retry up to 3 times with different strategies
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        if (platform === 'ios') {
+          console.log(`[iOS] Fetching app info for: ${appId} (attempt ${attempt}/3)`);
+          appInfo = await fetchAppStoreApp(appId);
+
+          // If failed and this is not the last attempt, try with different country
+          if (!appInfo && attempt < 3) {
+            console.log(`[iOS] Retrying with different country...`);
+            appInfo = await fetchAppStoreApp(appId, 'gb'); // Try UK store
+            if (!appInfo) {
+              appInfo = await fetchAppStoreApp(appId, 'cn'); // Try China store
+            }
+          }
+        } else {
+          console.log(`[Google Play] Fetching app info for: ${appId} (attempt ${attempt}/3)`);
+          appInfo = await fetchGooglePlayApp(appId);
+        }
+
+        if (appInfo) {
+          break; // Success, exit retry loop
+        }
+      } catch (error) {
+        lastError = error;
+        console.error(`Attempt ${attempt} failed:`, error);
+
+        // Wait before retry (exponential backoff)
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+      }
     }
 
     if (!appInfo) {
+      const errorMessage = platform === 'ios'
+        ? `iOS App not found. The app ID "${appId}" may be invalid or the app may not be available in your region. Please check the App Store URL.`
+        : `Android App not found. The package name "${appId}" may be invalid or the app may not be available on Google Play. Please check the Play Store URL.`;
+
       return NextResponse.json(
-        { error: 'App not found' },
+        {
+          error: errorMessage,
+          details: {
+            platform,
+            appId,
+            originalError: lastError?.message || 'Unknown error',
+            suggestions: platform === 'ios' ? [
+              'Verify the App Store URL is correct',
+              'Try the US version of the App Store URL',
+              'Check if the app is still available on the App Store'
+            ] : [
+              'Verify the Google Play URL is correct',
+              'Check if the app is still available on Google Play',
+              'Try using a VPN if you are in a restricted region'
+            ]
+          }
+        },
         { status: 404 }
       );
     }

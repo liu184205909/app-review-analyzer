@@ -86,20 +86,37 @@ export async function fetchAppStoreApp(
   appId: string,
   country: string = 'us'
 ): Promise<AppStoreApp | null> {
-  
+
   const cleanAppId = appId.replace(/^id/, '');
   const url = `https://itunes.apple.com/lookup?id=${cleanAppId}&country=${country}`;
-  
+
   try {
-    const response = await fetch(url);
+    console.log(`[App Store] Fetching from: ${country} store for app: ${cleanAppId}`);
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+      },
+      timeout: 15000, // 15 second timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
-    
+
     if (!data.results || data.results.length === 0) {
+      console.log(`[App Store] No results found for app ${cleanAppId} in ${country} store`);
       return null;
     }
 
     const app = data.results[0];
-    
+    console.log(`[App Store] Found app: ${app.trackName} (${app.bundleId})`);
+
     return {
       id: app.trackId.toString(),
       name: app.trackName,
@@ -110,8 +127,13 @@ export async function fetchAppStoreApp(
       developer: app.artistName,
       category: app.primaryGenreName || app.genres?.[0] || undefined, // Primary genre/category
     };
-  } catch (error) {
-    console.error('Error fetching App Store app info:', error);
+  } catch (error: any) {
+    console.error(`[App Store] Error fetching app info (${country}):`, {
+      appId: cleanAppId,
+      error: error.message,
+      status: error.status || 'N/A',
+      url: url.replace(/id=\d+/, 'id=***') // Hide app ID in logs
+    });
     return null;
   }
 }

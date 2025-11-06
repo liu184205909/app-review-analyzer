@@ -93,7 +93,16 @@ export default function HomePage() {
         const urlPath = data.slug || data.appSlug || data.taskId;
         window.location.href = `/analysis/${urlPath}`;
       } else {
-        alert(`Error: ${data.error}`);
+        // Enhanced error handling with suggestions
+        const errorMessage = data.error || 'Unknown error occurred';
+        const errorDetails = data.details;
+
+        if (errorDetails && errorDetails.suggestions) {
+          const suggestions = errorDetails.suggestions.join('\n• ');
+          alert(`❌ ${errorMessage}\n\nSuggestions:\n• ${suggestions}`);
+        } else {
+          alert(`❌ ${errorMessage}`);
+        }
       }
     } catch (error) {
       console.error('Analysis error:', error);

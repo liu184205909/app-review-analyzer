@@ -81,17 +81,25 @@ export async function fetchGooglePlayApp(
   country: string = 'us',
   lang: string = 'en'
 ): Promise<GooglePlayApp | null> {
-  
+
   try {
-    console.log(`[Google Play] Fetching app info for: ${appId}`);
-    
-    const app = await gplay.app({
+    console.log(`[Google Play] Fetching from: ${country} store for app: ${appId}`);
+
+    // Set timeout for the request
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000);
+    });
+
+    const appPromise = gplay.app({
       appId,
       lang,
       country,
+      throttle: 10, // Add throttling to avoid being blocked
     });
 
-    console.log(`[Google Play] Successfully fetched: ${app.title}`);
+    const app = await Promise.race([appPromise, timeoutPromise]) as any;
+
+    console.log(`[Google Play] Successfully fetched: ${app.title} (${app.appId})`);
 
     return {
       id: app.appId,
@@ -105,12 +113,44 @@ export async function fetchGooglePlayApp(
     };
   } catch (error: any) {
     console.error('❌ [Google Play] Error details:', {
-      appId,
+      appId: appId.replace(/([a-zA-Z0-9])\w+@/, '$1***@'), // Hide part of package ID
       error: error.message,
-      stack: error.stack,
-      code: error.code,
+      code: error.code || 'N/A',
+      country,
+      lang,
+      isNetworkError: error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND',
+      isPermissionError: error.message?.includes('403') || error.message?.includes('Forbidden'),
     });
-    return null;
+
+    // Don't return null immediately, try alternative approach
+    try {
+      console.log(`[Google Play] Trying alternative approach for: ${appId}`);
+
+      // Try with different country
+      const fallbackApp = await gplay.app({
+        appId,
+        lang: 'en',
+        country: 'us', // Always try US as fallback
+        throttle: 5,
+      });
+
+      return {
+        id: fallbackApp.appId,
+        name: fallbackApp.title,
+        bundleId: fallbackApp.appId,
+        iconUrl: fallbackApp.icon,
+        rating: fallbackApp.score || 0,
+        reviewCount: fallbackApp.reviews || 0,
+        developer: fallbackApp.developer,
+        category: fallbackApp.genre || fallbackApp.category || undefined,
+      };
+    } catch (fallbackError: any) {
+      console.error('❌ [Google Play] Fallback also failed:', {
+        appId: appId.replace(/([a-zA-Z0-9])\w+@/, '$1***@'),
+        error: fallbackError.message,
+      });
+      return null;
+    }
   }
 }
 
