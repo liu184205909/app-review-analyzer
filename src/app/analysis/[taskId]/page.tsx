@@ -409,13 +409,18 @@ export default function AnalysisResultPage() {
           </div>
         )}
 
-        {/* Experience Issues */}
-        {analysis.experienceIssues && analysis.experienceIssues.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingDown className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
-            </div>
+        {/* Experience Issues & Feature Requests - Two Column Layout */}
+        {(analysis.experienceIssues && analysis.experienceIssues.length > 0) ||
+         (analysis.featureRequests && analysis.featureRequests.length > 0) ? (
+          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+
+            {/* Experience Issues */}
+            {analysis.experienceIssues && analysis.experienceIssues.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingDown className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
+                </div>
             <p className="text-gray-600 mb-6">
               UX problems and friction points that users encounter during usage, affecting the overall app experience.
             </p>
@@ -453,16 +458,10 @@ export default function AnalysisResultPage() {
                     )}
                   </div>
                   
-                  {/* Comments */}
+                  {/* Comments - Match frequency number */}
                   {issue.examples && issue.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <div className="bg-white p-3 rounded border border-gray-200">
-                        <p className="text-sm text-gray-700 leading-relaxed italic">
-                          "{issue.examples[0]}"
-                        </p>
-                      </div>
-                      
-                      {expandedExperienceIssues.has(index) && issue.examples.slice(1).map((example, exIndex) => (
+                      {issue.examples.slice(0, issue.frequency).map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
@@ -474,16 +473,15 @@ export default function AnalysisResultPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Feature Requests */}
-        {analysis.featureRequests && analysis.featureRequests.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Lightbulb className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-bold text-gray-900">Feature Requests</h2>
-            </div>
+            {analysis.featureRequests && analysis.featureRequests.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="w-6 h-6 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-gray-900">Feature Requests</h2>
+                </div>
             <p className="text-gray-600 mb-6">
               Most requested new features that users want to see, helping your product stay competitive.
             </p>
@@ -521,16 +519,10 @@ export default function AnalysisResultPage() {
                     )}
                   </div>
                   
-                  {/* Comments */}
+                  {/* Comments - Match frequency number */}
                   {request.examples && request.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <div className="bg-white p-3 rounded border border-gray-200">
-                        <p className="text-sm text-gray-700 leading-relaxed italic">
-                          "{request.examples[0]}"
-                        </p>
-                      </div>
-                      
-                      {expandedFeatureRequests.has(index) && request.examples.slice(1).map((example, exIndex) => (
+                      {request.examples.slice(0, request.frequency).map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
@@ -542,8 +534,11 @@ export default function AnalysisResultPage() {
                 </div>
               ))}
             </div>
+              </div>
+            )}
+
           </div>
-        )}
+        ) : null}
 
         {/* Insights */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
