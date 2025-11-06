@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, X, Clock, TrendingUp } from 'lucide-react';
+import { Search, Plus, X, Clock, TrendingUp, Flame } from 'lucide-react';
 
 export default function HomePage() {
   const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
@@ -15,11 +15,19 @@ export default function HomePage() {
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [platformFilter, setPlatformFilter] = useState<'all' | 'ios' | 'android'>('all');
+  const [popularAnalyses, setPopularAnalyses] = useState<any[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(true);
+  const [popularPlatformFilter, setPopularPlatformFilter] = useState<'all' | 'ios' | 'android'>('all');
 
   // Fetch recent analyses on component mount
   useEffect(() => {
     fetchRecentAnalyses();
   }, [platformFilter]);
+
+  // Fetch popular analyses on component mount
+  useEffect(() => {
+    fetchPopularAnalyses();
+  }, [popularPlatformFilter]);
 
   const fetchRecentAnalyses = async () => {
     try {
@@ -31,6 +39,19 @@ export default function HomePage() {
       console.error('Failed to fetch recent analyses:', error);
     } finally {
       setLoadingRecent(false);
+    }
+  };
+
+  const fetchPopularAnalyses = async () => {
+    try {
+      const platformParam = popularPlatformFilter === 'all' ? '' : `&platform=${popularPlatformFilter}`;
+      const response = await fetch(`/api/popular?limit=12${platformParam}`);
+      const data = await response.json();
+      setPopularAnalyses(data.analyses || []);
+    } catch (error) {
+      console.error('Failed to fetch popular analyses:', error);
+    } finally {
+      setLoadingPopular(false);
     }
   };
 
@@ -378,6 +399,134 @@ export default function HomePage() {
                       <div className="mt-3">
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
                           <span>{analysis.reviewCount} reviews</span>
+                        </div>
+                        <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-gray-100">
+                          <div 
+                            className="bg-green-500"
+                            style={{ width: `${analysis.sentiment.positive}%` }}
+                          />
+                          <div 
+                            className="bg-yellow-400"
+                            style={{ width: `${analysis.sentiment.neutral}%` }}
+                          />
+                          <div 
+                            className="bg-red-500"
+                            style={{ width: `${analysis.sentiment.negative}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Positive {analysis.sentiment.positive}%</span>
+                          <span>Negative {analysis.sentiment.negative}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Popular Analyses */}
+        {!loadingPopular && popularAnalyses.length > 0 && (
+          <div className="mt-24">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <Flame className="w-8 h-8 text-orange-500" />
+                Popular Analysis
+              </h2>
+              
+              {/* Platform Filter */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPopularPlatformFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    popularPlatformFilter === 'all'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  All Apps
+                </button>
+                <button
+                  onClick={() => setPopularPlatformFilter('ios')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    popularPlatformFilter === 'ios'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  iOS
+                </button>
+                <button
+                  onClick={() => setPopularPlatformFilter('android')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    popularPlatformFilter === 'android'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Android
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {popularAnalyses.map((analysis) => (
+                <a
+                  key={`${analysis.slug}-${analysis.platform}`}
+                  href={`/analysis/${analysis.slug}`}
+                  className="group block p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-gray-100 hover:border-orange-200"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* App Icon */}
+                    {analysis.iconUrl ? (
+                      <img
+                        src={analysis.iconUrl}
+                        alt={analysis.appName}
+                        className="w-14 h-14 rounded-xl flex-shrink-0 group-hover:scale-105 transition"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
+                        <Flame className="w-7 h-7 text-white" />
+                      </div>
+                    )}
+
+                    {/* App Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 truncate text-lg group-hover:text-orange-600 transition">
+                        {analysis.appName}
+                      </h3>
+                      
+                      {/* Rating & Platform */}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-500 text-sm">★</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {analysis.rating.toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="text-gray-300">·</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                          analysis.platform === 'ios' 
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {analysis.platform === 'ios' ? 'iOS' : 'Android'}
+                        </span>
+                      </div>
+
+                      {/* Total Reviews Badge */}
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
+                          {analysis.appReviewCount?.toLocaleString() || '0'} total reviews
+                        </span>
+                      </div>
+
+                      {/* Sentiment Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
+                          <span>{analysis.reviewCount} analyzed</span>
                         </div>
                         <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-gray-100">
                           <div 
