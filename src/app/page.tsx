@@ -287,11 +287,11 @@ export default function HomePage() {
 
         {/* Recent Analyses */}
         {!loadingRecent && recentAnalyses.length > 0 && (
-          <div className="mt-20">
+          <div className="mt-24">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <Clock className="w-8 h-8 text-blue-600" />
-                Recent Analyses
+                Latest Analysis
               </h2>
               
               {/* Platform Filter */}
@@ -304,7 +304,7 @@ export default function HomePage() {
                       : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
-                  All
+                  All Apps
                 </button>
                 <button
                   onClick={() => setPlatformFilter('ios')}
@@ -332,7 +332,7 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recentAnalyses.map((analysis) => (
                 <a
-                  key={analysis.id}
+                  key={`${analysis.slug}-${analysis.platform}`}
                   href={`/analysis/${analysis.slug}`}
                   className="group block p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-gray-100 hover:border-blue-200"
                 >
@@ -405,6 +405,42 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Use Cases Section */}
+        <div className="mt-24 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Who Uses ReviewInsight?</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Trusted by product teams, developers, and marketers worldwide
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+              <div className="text-4xl mb-4">👨‍💻</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Product Teams</h3>
+              <p className="text-sm text-gray-600">
+                Discover user pain points and feature requests to prioritize your roadmap and improve product-market fit
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+              <div className="text-4xl mb-4">🎯</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">App Developers</h3>
+              <p className="text-sm text-gray-600">
+                Identify bugs and crashes mentioned in reviews to fix issues faster and boost app ratings
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Marketers & Analysts</h3>
+              <p className="text-sm text-gray-600">
+                Analyze competitor apps and understand market sentiment to refine your positioning strategy
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Why Choose Us Section */}
         <div className="mt-24 mb-16">
@@ -488,6 +524,102 @@ export default function HomePage() {
               <p className="text-gray-600">
                 Receive detailed report with prioritized actions to improve your app
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* What You Get Section */}
+        <div className="mt-24 mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">What You Get in Every Report</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Comprehensive analysis delivered in a beautiful, easy-to-understand format
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">🚨</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Critical Issues</h3>
+                <p className="text-sm text-gray-600">
+                  Most urgent problems affecting user experience, with real review examples
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📉</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Experience Issues</h3>
+                <p className="text-sm text-gray-600">
+                  UX problems and friction points that frustrate your users
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">💡</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Feature Requests</h3>
+                <p className="text-sm text-gray-600">
+                  Most requested features to help you prioritize your product roadmap
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">✅</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Action Plan</h3>
+                <p className="text-sm text-gray-600">
+                  Prioritized recommendations to improve ratings and user satisfaction
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Sentiment Analysis</h3>
+                <p className="text-sm text-gray-600">
+                  Overall sentiment breakdown and emotional tone of user feedback
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">💬</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Real Review Examples</h3>
+                <p className="text-sm text-gray-600">
+                  Actual user quotes to understand the voice of your customers
+                </p>
+              </div>
             </div>
           </div>
         </div>

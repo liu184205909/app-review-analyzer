@@ -39,10 +39,22 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format and deduplicate by appSlug
-    const seenSlugs = new Set<string>();
+    // Format and deduplicate by appStoreId + platform
+    const seenApps = new Set<string>();
     const formatted = recentAnalyses
-      .filter(task => task.result && (task.result as any).app) // 确保有完整数据
+      .filter(task => {
+        // Ensure valid data and slug
+        if (!task.result || !(task.result as any).app || !task.appSlug || !task.appStoreId) {
+          return false;
+        }
+        // Deduplicate by appStoreId + platform
+        const appKey = `${task.appStoreId}-${task.platform}`;
+        if (seenApps.has(appKey)) {
+          return false;
+        }
+        seenApps.add(appKey);
+        return true;
+      })
       .map(task => {
         const result = task.result as any;
         const app = result.app;
@@ -57,14 +69,6 @@ export async function GET(request: NextRequest) {
           reviewCount: result.reviewCount || 0,
           sentiment: result.analysis?.sentiment || { positive: 0, negative: 0, neutral: 0 },
         };
-      })
-      .filter(item => {
-        // Deduplicate by slug
-        if (seenSlugs.has(item.slug)) {
-          return false;
-        }
-        seenSlugs.add(item.slug);
-        return true;
       })
       .slice(0, limit); // Take only the requested number after deduplication
 
