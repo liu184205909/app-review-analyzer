@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
+import KeywordCloud, { extractKeywordsFromAnalysis } from '@/components/KeywordCloud';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
 interface AnalysisData {
@@ -340,6 +341,13 @@ export default function AnalysisResultPage() {
             </div>
           </div>
         </div>
+
+        {/* Keywords Cloud */}
+        <KeywordCloud
+          keywords={extractKeywordsFromAnalysis(analysis)}
+          title="🔍 Keywords Analysis"
+          className="mb-6"
+        />
 
         {/* Critical Issues with expandable reviews */}
         {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (

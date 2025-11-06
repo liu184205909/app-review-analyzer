@@ -1,10 +1,30 @@
 // API Route: POST /api/analyze
-// Single app analysis
+// Single app analysis with enhanced error handling
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { fetchAppStoreReviewsMultiPage, fetchAppStoreApp, extractAppStoreId } from '@/lib/scrapers/app-store';
-import { fetchGooglePlayReviewsMultiPage, fetchGooglePlayApp, extractGooglePlayId } from '@/lib/scrapers/google-play';
+import {
+  AppAnalysisError,
+  createError,
+  formatErrorResponse,
+  retryWithBackoff,
+  handlePlatformError,
+  validateAppUrl,
+  sanitizeAppUrl,
+  logError
+} from '@/lib/error-handler';
+import {
+  fetchAppStoreReviewsMultiPage,
+  fetchAppStoreReviewsMultiCountry,
+  fetchAppStoreApp,
+  extractAppStoreId
+} from '@/lib/scrapers/app-store';
+import {
+  fetchGooglePlayReviewsMultiPage,
+  fetchGooglePlayReviewsMultiCountry,
+  fetchGooglePlayApp,
+  extractGooglePlayId
+} from '@/lib/scrapers/google-play';
 import { fetchQuickReviews, fetchIncrementalReviews } from '@/lib/scrapers/quick-fetch';
 import { analyzeSingleApp, Review } from '@/lib/ai/openrouter';
 import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug';
@@ -15,12 +35,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { appUrl, platform, options } = body;
 
-    // Validate input
+    // Enhanced validation
     if (!appUrl || !platform) {
-      return NextResponse.json(
-        { error: 'Missing required fields: appUrl, platform' },
-        { status: 400 }
+      return formatErrorResponse(
+        createError('INVALID_URL', 'Missing required fields: appUrl, platform')
       );
+    }
+
+    if (!['ios', 'android'].includes(platform)) {
+      return formatErrorResponse(
+        createError('INVALID_PLATFORM', `Invalid platform: ${platform}. Supported platforms: ios, android`)
+      );
+    }
+
+    // Sanitize URL
+    const sanitizedUrl = sanitizeAppUrl(appUrl);
+
+    // URL validation
+    let isValidUrl = false;
+    const examples: Record<string, string> = {
+      ios: 'https://apps.apple.com/us/app/instagram/id389801252',
+      android: 'https://play.google.com/store/apps/details?id=com.instagram.android'
+    };
+
+    isValidUrl = validateAppUrl(sanitizedUrl, platform);
+
+    if (!isValidUrl) {
+      const urlError = createError('INVALID_URL', 'Invalid app URL format');
+      urlError.suggestions.push(`Example for ${platform}: ${examples[platform]}`);
+      return formatErrorResponse(urlError);
     }
 
     // Extract app ID from URL
@@ -32,81 +75,73 @@ export async function POST(request: NextRequest) {
     }
 
     if (!appId) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid app URL. Please enter a complete App Store or Google Play URL.',
-          examples: {
-            ios: 'https://apps.apple.com/us/app/instagram/id389801252',
-            android: 'https://play.google.com/store/apps/details?id=com.instagram.android'
-          }
-        },
-        { status: 400 }
+      const urlError = createError('INVALID_URL', 'Could not extract app ID from URL');
+      urlError.suggestions.push(
+        'Use the complete App Store or Google Play URL',
+        'Example iOS: https://apps.apple.com/us/app/instagram/id389801252',
+        'Example Android: https://play.google.com/store/apps/details?id=com.instagram.android'
       );
+      return formatErrorResponse(urlError);
     }
 
-    // Fetch app info to get name for slug with retry mechanism
+    // Enhanced app info fetching with retry mechanism
     let appInfo: any;
-    let lastError: any = null;
 
-    // Retry up to 3 times with different strategies
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
+    try {
+      appInfo = await retryWithBackoff(async () => {
         if (platform === 'ios') {
-          console.log(`[iOS] Fetching app info for: ${appId} (attempt ${attempt}/3)`);
-          appInfo = await fetchAppStoreApp(appId);
+          console.log(`[iOS] Fetching app info for: ${appId}`);
+          let info = await fetchAppStoreApp(appId);
 
-          // If failed and this is not the last attempt, try with different country
-          if (!appInfo && attempt < 3) {
-            console.log(`[iOS] Retrying with different country...`);
-            appInfo = await fetchAppStoreApp(appId, 'gb'); // Try UK store
-            if (!appInfo) {
-              appInfo = await fetchAppStoreApp(appId, 'cn'); // Try China store
-            }
+          // Try different countries if primary fails
+          if (!info) {
+            console.log(`[iOS] Trying UK store...`);
+            info = await fetchAppStoreApp(appId, 'gb');
           }
+          if (!info) {
+            console.log(`[iOS] Trying China store...`);
+            info = await fetchAppStoreApp(appId, 'cn');
+          }
+
+          if (!info) {
+            throw createError('APP_NOT_FOUND', `iOS app not found: ${appId}`);
+          }
+
+          return info;
         } else {
-          console.log(`[Google Play] Fetching app info for: ${appId} (attempt ${attempt}/3)`);
-          appInfo = await fetchGooglePlayApp(appId);
-        }
+          console.log(`[Google Play] Fetching app info for: ${appId}`);
+          const info = await fetchGooglePlayApp(appId);
 
-        if (appInfo) {
-          break; // Success, exit retry loop
-        }
-      } catch (error) {
-        lastError = error;
-        console.error(`Attempt ${attempt} failed:`, error);
-
-        // Wait before retry (exponential backoff)
-        if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-        }
-      }
-    }
-
-    if (!appInfo) {
-      const errorMessage = platform === 'ios'
-        ? `iOS App not found. The app ID "${appId}" may be invalid or the app may not be available in your region. Please check the App Store URL.`
-        : `Android App not found. The package name "${appId}" may be invalid or the app may not be available on Google Play. Please check the Play Store URL.`;
-
-      return NextResponse.json(
-        {
-          error: errorMessage,
-          details: {
-            platform,
-            appId,
-            originalError: lastError?.message || 'Unknown error',
-            suggestions: platform === 'ios' ? [
-              'Verify the App Store URL is correct',
-              'Try the US version of the App Store URL',
-              'Check if the app is still available on the App Store'
-            ] : [
-              'Verify the Google Play URL is correct',
-              'Check if the app is still available on Google Play',
-              'Try using a VPN if you are in a restricted region'
-            ]
+          if (!info) {
+            throw createError('APP_NOT_FOUND', `Android app not found: ${appId}`);
           }
-        },
-        { status: 404 }
-      );
+
+          return info;
+        }
+      }, 3, 1000);
+    } catch (error) {
+      logError(error as Error, {
+        platform,
+        appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'), // Partially hide for privacy
+        sanitizedUrl
+      });
+
+      const platformError = handlePlatformError(platform, error as Error);
+
+      // Add platform-specific suggestions
+      if (platform === 'ios') {
+        platformError.suggestions.push(
+          'Try the US version of the App Store URL',
+          'Check if the app is available in your region'
+        );
+      } else {
+        platformError.suggestions.push(
+          'Try using a VPN if you are in a restricted region',
+          'Check if the app is still available on Google Play'
+        );
+      }
+
+      return formatErrorResponse(platformError);
     }
 
     // Generate SEO-friendly slug (clean and short)
@@ -173,10 +208,17 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Analysis API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    logError(error as Error, {
+      endpoint: 'POST /api/analyze'
+    });
+
+    if (error instanceof AppAnalysisError) {
+      return formatErrorResponse(error);
+    }
+
+    // Handle unexpected errors
+    return formatErrorResponse(
+      createError('AI_SERVICE_ERROR', 'Analysis service temporarily unavailable')
     );
   }
 }
@@ -229,22 +271,37 @@ async function processAnalysis(
       data: { progress: 30 },
     });
 
-    // Fetch reviews with intelligent sampling
-    // 🚀 方案A简化版：增加评论数量，保持速度
-    // 使用选项控制抓取数量
-    const reviewTarget = options?.deepMode ? 500 : 200;
-    
+    // Fetch reviews with enhanced sampling and multi-country support
+    // 🚀 Enhanced: Support 1000+ reviews with intelligent sampling
+    const reviewTarget = options?.deepMode ? 1000 : (options?.multiCountry ? 800 : 300);
+    const useMultiCountry = options?.multiCountry || options?.deepMode;
+
     let reviews: any[] = [];
+
     if (platform === 'ios') {
-      // iOS: Fetch 3-5 pages (150-250 reviews)
-      // App Store RSS Feed returns ~50 reviews per page
-      const pages = options?.deepMode ? 5 : 3;
-      reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages);
+      if (useMultiCountry) {
+        // Multi-country fetching for iOS (500-1000+ reviews)
+        console.log(`[iOS] Multi-country fetching: ${reviewTarget} target reviews`);
+        reviews = await fetchAppStoreReviewsMultiCountry(appId, reviewTarget);
+      } else {
+        // Single country with more pages
+        const pages = options?.deepMode ? 10 : 5; // Max 10 pages (500 reviews)
+        console.log(`[iOS] Single country fetching: ${pages} pages from US store`);
+        reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages, reviewTarget);
+      }
     } else {
-      // Android: Fetch 200-500 reviews
-      reviews = await fetchGooglePlayReviewsMultiPage(appId, {
-        maxReviews: reviewTarget,
-      });
+      // Android with enhanced options
+      if (useMultiCountry) {
+        // Multi-country fetching for Android (800-1000+ reviews)
+        console.log(`[Android] Multi-country fetching: ${reviewTarget} target reviews`);
+        reviews = await fetchGooglePlayReviewsMultiCountry(appId, reviewTarget);
+      } else {
+        // Single country with deep mode
+        reviews = await fetchGooglePlayReviewsMultiPage(appId, {
+          maxReviews: reviewTarget,
+          deepMode: options?.deepMode,
+        });
+      }
     }
 
     // ⚡ Batch save reviews to database (much faster)
@@ -288,24 +345,47 @@ async function processAnalysis(
     }
 
     // Smart sampling: prioritize negative reviews and limit total for speed
-    // ⚡ Optimized: analyze max 100 reviews (fast, accurate insights)
-    const maxReviewsForAI = 100;
-    
+    // 🚀 Enhanced: Adaptive sampling based on review count and options
+    const baseMaxReviews = 100;
+    const maxReviewsForAI = options?.deepMode ? 200 : baseMaxReviews;
+
     if (reviewsToAnalyze.length > maxReviewsForAI) {
-      // Prioritize low-rating reviews (1-3 stars) as they contain more insights
-      const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
-      const highRating = reviewsToAnalyze.filter(r => r.rating > 3);
-      
-      if (lowRating.length >= maxReviewsForAI) {
-        // Use only low-rating reviews
-        reviewsToAnalyze = lowRating.slice(0, maxReviewsForAI);
-      } else {
-        // Mix: all low-rating + some high-rating for balance
-        const remainingSlots = maxReviewsForAI - lowRating.length;
+      // Enhanced sampling strategy for deep mode
+      if (options?.deepMode) {
+        // For deep mode: 70% negative reviews, 20% positive, 10% neutral
+        const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
+        const highRating = reviewsToAnalyze.filter(r => r.rating === 4 || r.rating === 5);
+        const neutralRating = reviewsToAnalyze.filter(r => r.rating === 3);
+
+        const lowRatingCount = Math.floor(maxReviewsForAI * 0.7);
+        const highRatingCount = Math.floor(maxReviewsForAI * 0.2);
+        const neutralCount = maxReviewsForAI - lowRatingCount - highRatingCount;
+
         reviewsToAnalyze = [
-          ...lowRating,
-          ...highRating.slice(0, remainingSlots)
+          ...lowRating.slice(0, lowRatingCount),
+          ...highRating.slice(0, highRatingCount),
+          ...neutralRating.slice(0, neutralCount)
         ];
+
+        console.log(`[AI] Deep mode sampling: ${lowRatingCount} negative, ${highRatingCount} positive, ${neutralCount} neutral reviews`);
+      } else {
+        // Standard mode: prioritize negative reviews
+        const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
+        const highRating = reviewsToAnalyze.filter(r => r.rating > 3);
+
+        if (lowRating.length >= maxReviewsForAI) {
+          // Use only low-rating reviews
+          reviewsToAnalyze = lowRating.slice(0, maxReviewsForAI);
+          console.log(`[AI] Standard mode sampling: ${reviewsToAnalyze.length} reviews (${lowRating.length} negative, 0 positive)`);
+        } else {
+          // Mix: all low-rating + some high-rating for balance
+          const remainingSlots = maxReviewsForAI - lowRating.length;
+          reviewsToAnalyze = [
+            ...lowRating,
+            ...highRating.slice(0, remainingSlots)
+          ];
+          console.log(`[AI] Standard mode sampling: ${reviewsToAnalyze.length} reviews (${lowRating.length} negative, ${Math.min(remainingSlots, highRating.length)} positive)`);
+        }
       }
     }
 
@@ -366,12 +446,33 @@ async function processAnalysis(
     });
 
   } catch (error: any) {
-    console.error('Processing error:', error);
+    logError(error, {
+      taskId,
+      platform,
+      appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'),
+      phase: 'processing'
+    });
+
+    // Enhanced error handling for different failure scenarios
+    let errorMessage = 'Analysis failed';
+    let errorCode = 'ANALYSIS_ERROR';
+
+    if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+      errorMessage = 'Analysis timeout - please try with fewer reviews';
+      errorCode = 'ANALYSIS_TIMEOUT';
+    } else if (error.message.includes('memory') || error.message.includes('heap')) {
+      errorMessage = 'Too much data - try disabling deep mode';
+      errorCode = 'ANALYSIS_TIMEOUT';
+    } else if (error.message.includes('AI') || error.message.includes('OpenAI')) {
+      errorMessage = 'AI service error - please try again';
+      errorCode = 'AI_SERVICE_ERROR';
+    }
+
     await prisma.analysisTask.update({
       where: { id: taskId },
       data: {
         status: 'failed',
-        errorMsg: error.message,
+        errorMsg: `${errorMessage}: ${error.message}`,
       },
     });
   }

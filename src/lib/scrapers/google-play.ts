@@ -170,7 +170,7 @@ export function extractGooglePlayId(input: string): string | null {
 }
 
 /**
- * Fetch reviews with pagination
+ * Fetch reviews with pagination and enhanced options
  */
 export async function fetchGooglePlayReviewsMultiPage(
   appId: string,
@@ -178,29 +178,118 @@ export async function fetchGooglePlayReviewsMultiPage(
     country?: string;
     lang?: string;
     maxReviews?: number;
+    deepMode?: boolean;
   } = {}
 ): Promise<GooglePlayReview[]> {
-  
+
   const {
     country = 'us',
     lang = 'en',
-    maxReviews = 500,
+    maxReviews = 1000,
+    deepMode = false,
   } = options;
 
   try {
-    // Google Play Scraper has built-in pagination
-    const reviews = await fetchGooglePlayReviews(appId, {
+    // Google Play Scraper has a limit of 500 reviews per request
+    // For deep mode, we'll fetch multiple batches with different sorting
+    const targetReviews = Math.min(maxReviews, 1000);
+    const batchSize = Math.min(500, targetReviews);
+
+    // First batch: most recent reviews
+    const recentReviews = await fetchGooglePlayReviews(appId, {
       country,
       lang,
-      num: Math.min(maxReviews, 500),
+      num: batchSize,
       sort: 'NEWEST',
     });
 
-    return reviews;
+    console.log(`[Google Play] Fetched ${recentReviews.length} recent reviews`);
+
+    // If we need more reviews and deep mode is enabled, fetch additional batches
+    if (deepMode && recentReviews.length < targetReviews) {
+      try {
+        // Second batch: most helpful reviews (different sorting)
+        const helpfulReviews = await fetchGooglePlayReviews(appId, {
+          country,
+          lang,
+          num: Math.min(500, targetReviews - recentReviews.length),
+          sort: 'HELPFULNESS',
+        });
+
+        console.log(`[Google Play] Fetched ${helpfulReviews.length} helpful reviews`);
+
+        // Combine and deduplicate
+        const allReviews = [...recentReviews];
+        const seenIds = new Set(recentReviews.map(r => r.id));
+
+        for (const review of helpfulReviews) {
+          if (!seenIds.has(review.id)) {
+            allReviews.push(review);
+            seenIds.add(review.id);
+          }
+        }
+
+        console.log(`[Google Play] Total unique reviews: ${allReviews.length}`);
+        return allReviews.slice(0, targetReviews);
+      } catch (error) {
+        console.warn('[Google Play] Failed to fetch additional reviews, using only recent reviews:', error);
+        return recentReviews;
+      }
+    }
+
+    return recentReviews.slice(0, targetReviews);
   } catch (error) {
     console.error('Error fetching Google Play reviews:', error);
     throw new Error('Failed to fetch Google Play reviews');
   }
+}
+
+/**
+ * Fetch reviews from multiple countries for comprehensive coverage
+ */
+export async function fetchGooglePlayReviewsMultiCountry(
+  appId: string,
+  targetCount: number = 1000
+): Promise<GooglePlayReview[]> {
+  const countries = ['us', 'gb', 'ca', 'au', 'de', 'fr', 'in', 'br'];
+  const allReviews: GooglePlayReview[] = [];
+  const seenIds = new Set<string>();
+
+  for (const country of countries) {
+    if (allReviews.length >= targetCount) {
+      break;
+    }
+
+    try {
+      const reviews = await fetchGooglePlayReviewsMultiPage(appId, {
+        country,
+        maxReviews: Math.min(500, targetCount - allReviews.length),
+        deepMode: false, // Don't use deep mode for multi-country
+      });
+
+      // Deduplicate reviews by ID
+      const newReviews = reviews.filter(review => {
+        if (seenIds.has(review.id)) {
+          return false;
+        }
+        seenIds.add(review.id);
+        return true;
+      });
+
+      allReviews.push(...newReviews);
+      console.log(`[Google Play] ${country}: ${newReviews.length} new reviews (total: ${allReviews.length})`);
+
+      // Add delay between countries to avoid rate limiting
+      if (country !== countries[countries.length - 1]) {
+        await delay(1000);
+      }
+    } catch (error) {
+      console.error(`Error fetching from ${country}:`, error);
+    }
+  }
+
+  console.log(`[Google Play] Total unique reviews: ${allReviews.length}`);
+  return allReviews;
 }
 
 /**

@@ -162,37 +162,92 @@ export function extractAppStoreId(input: string): string | null {
 
 /**
  * Fetch multiple pages of reviews
- * Note: App Store RSS Feed API has a limit of 10 pages
+ * Note: App Store RSS Feed API has a limit of 10 pages (500 reviews max)
  */
 export async function fetchAppStoreReviewsMultiPage(
   appId: string,
   country: string = 'us',
-  maxPages: number = 5
+  maxPages: number = 10,
+  targetCount?: number
 ): Promise<AppStoreReview[]> {
-  
-  // Enforce API limit: max 10 pages
+
+  // Enforce API limit: max 10 pages (500 reviews max due to RSS feed limits)
   const safeMaxPages = Math.min(maxPages, 10);
-  
+
   const allReviews: AppStoreReview[] = [];
-  
+
   for (let page = 1; page <= safeMaxPages; page++) {
     try {
       const reviews = await fetchAppStoreReviews(appId, country, 'mostRecent', page);
-      
+
       if (reviews.length === 0) {
         break; // No more reviews
       }
-      
+
       allReviews.push(...reviews);
-      
-      // ⚡ Removed rate limiting for faster scraping
-      // Apple's RSS feed can handle concurrent requests
+
+      // Stop if we have enough reviews
+      if (targetCount && allReviews.length >= targetCount) {
+        break;
+      }
+
+      // Add small delay to be respectful to Apple's servers
+      if (page < safeMaxPages) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     } catch (error) {
       console.error(`Error fetching page ${page}:`, error);
       break;
     }
   }
-  
+
+  console.log(`[App Store] Fetched ${allReviews.length} reviews from ${appId}`);
+  return allReviews;
+}
+
+/**
+ * Fetch reviews from multiple countries for comprehensive coverage
+ * This helps reach the target of 1000+ reviews
+ */
+export async function fetchAppStoreReviewsMultiCountry(
+  appId: string,
+  targetCount: number = 1000
+): Promise<AppStoreReview[]> {
+  const countries = ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp'];
+  const allReviews: AppStoreReview[] = [];
+  const seenIds = new Set<string>();
+
+  for (const country of countries) {
+    if (allReviews.length >= targetCount) {
+      break;
+    }
+
+    try {
+      const reviews = await fetchAppStoreReviewsMultiPage(
+        appId,
+        country,
+        10, // Max pages
+        Math.min(500, targetCount - allReviews.length)
+      );
+
+      // Deduplicate reviews by ID
+      const newReviews = reviews.filter(review => {
+        if (seenIds.has(review.id)) {
+          return false;
+        }
+        seenIds.add(review.id);
+        return true;
+      });
+
+      allReviews.push(...newReviews);
+      console.log(`[App Store] ${country}: ${newReviews.length} new reviews (total: ${allReviews.length})`);
+
+    } catch (error) {
+      console.error(`Error fetching from ${country}:`, error);
+    }
+  }
+
+  console.log(`[App Store] Total unique reviews: ${allReviews.length}`);
   return allReviews;
 }
 

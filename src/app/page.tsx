@@ -10,6 +10,8 @@ export default function HomePage() {
   const [appUrl, setAppUrl] = useState('');
   const [competitorUrls, setCompetitorUrls] = useState<string[]>(['']);
   const [focusNegative, setFocusNegative] = useState(true);
+  const [deepMode, setDeepMode] = useState(false);
+  const [multiCountry, setMultiCountry] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
@@ -61,12 +63,14 @@ export default function HomePage() {
     try {
       const endpoint = mode === 'single' ? '/api/analyze' : '/api/compare';
       
-      const body = mode === 'single' 
+      const body = mode === 'single'
         ? {
             appUrl,
             platform,
             options: {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
+              deepMode,
+              multiCountry,
             },
           }
         : {
@@ -76,6 +80,8 @@ export default function HomePage() {
               .map(url => ({ appUrl: url, platform })),
             options: {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
+              deepMode,
+              multiCountry,
             },
           };
 
@@ -282,7 +288,7 @@ export default function HomePage() {
           )}
 
           {/* Options */}
-          <div className="mb-6">
+          <div className="mb-6 space-y-3">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -294,6 +300,70 @@ export default function HomePage() {
                 🔥 Focus on negative reviews (1-3⭐) - Recommended
               </span>
             </label>
+
+            <div className="border-t pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  ⚙️ Advanced Options
+                </span>
+              </div>
+
+              <div className="space-y-2 pl-0">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={deepMode}
+                    onChange={(e) => setDeepMode(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-700">
+                      🚀 Deep Analysis Mode
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Analyze 1000+ reviews from multiple countries for comprehensive insights (slower)
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={multiCountry}
+                    onChange={(e) => {
+                      setMultiCountry(e.target.checked);
+                      if (e.target.checked) setDeepMode(true); // Enable deep mode automatically
+                    }}
+                    className="w-4 h-4 text-green-600 rounded"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-700">
+                      🌍 Multi-Country Reviews
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Include reviews from US, UK, Canada, Australia, and more regions
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Review Count Preview */}
+            {(deepMode || multiCountry) && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">
+                    Expected Review Analysis:
+                  </span>
+                  <span className="text-sm font-bold text-purple-700">
+                    {multiCountry ? '800-1000+' : deepMode ? '400-600' : '200-300'} reviews
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 mt-1">
+                  ⏱️ Estimated time: {multiCountry ? '2-4 minutes' : deepMode ? '1-2 minutes' : '30-60 seconds'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Analyze Button */}
