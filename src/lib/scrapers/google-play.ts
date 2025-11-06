@@ -20,6 +20,7 @@ export interface GooglePlayApp {
   rating: number;
   reviewCount: number;
   developer: string;
+  category?: string; // App category/genre
 }
 
 /**
@@ -100,6 +101,7 @@ export async function fetchGooglePlayApp(
       rating: app.score || 0,
       reviewCount: app.reviews || 0,
       developer: app.developer,
+      category: app.genre || app.category || undefined, // App category/genre
     };
   } catch (error: any) {
     console.error('❌ [Google Play] Error details:', {

@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
+import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
 interface AnalysisData {
   taskId: string;
@@ -243,6 +244,12 @@ export default function AnalysisResultPage() {
   }
 
   const { app, analysis, analyzedCount } = data.result;
+  
+  // Get category display info
+  const appCategory = (app as any).category || null;
+  const categoryDisplay = appCategory ? getCategoryDisplay(appCategory) : null;
+  const normalizedCategory = appCategory ? normalizeCategory(appCategory) : null;
+  const browseCategoryUrl = normalizedCategory ? `/browse?category=${encodeURIComponent(normalizedCategory)}&platform=${(data.result as any).app?.platform || 'all'}` : '/browse';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -273,7 +280,7 @@ export default function AnalysisResultPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {app.name} User Review Analysis Report
               </h1>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                 <span className="flex items-center gap-1">
                   <span className="text-yellow-500">★</span>
                   <span className="font-semibold">{app.rating.toFixed(1)}</span>
@@ -282,7 +289,26 @@ export default function AnalysisResultPage() {
                 <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
                   {analyzedCount} analyzed
                 </span>
+                {/* Category Badge */}
+                {categoryDisplay && (
+                  <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md font-medium flex items-center gap-1">
+                    <span>{categoryDisplay.icon}</span>
+                    <span>{categoryDisplay.name}</span>
+                  </span>
+                )}
               </div>
+              {/* View Similar Apps Link */}
+              {categoryDisplay && (
+                <div className="mt-2">
+                  <a
+                    href={browseCategoryUrl}
+                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium transition"
+                  >
+                    <span>View more {categoryDisplay.name} apps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
             </div>
           </div>
           

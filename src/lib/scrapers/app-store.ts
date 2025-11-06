@@ -18,6 +18,7 @@ export interface AppStoreApp {
   rating: number;
   reviewCount: number;
   developer: string;
+  category?: string; // Primary genre/category
 }
 
 /**
@@ -107,6 +108,7 @@ export async function fetchAppStoreApp(
       rating: app.averageUserRating || 0,
       reviewCount: app.userRatingCount || 0,
       developer: app.artistName,
+      category: app.primaryGenreName || app.genres?.[0] || undefined, // Primary genre/category
     };
   } catch (error) {
     console.error('Error fetching App Store app info:', error);

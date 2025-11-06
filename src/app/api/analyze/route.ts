@@ -8,6 +8,7 @@ import { fetchGooglePlayReviewsMultiPage, fetchGooglePlayApp, extractGooglePlayI
 import { fetchQuickReviews, fetchIncrementalReviews } from '@/lib/scrapers/quick-fetch';
 import { analyzeSingleApp, Review } from '@/lib/ai/openrouter';
 import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug';
+import { normalizeCategory } from '@/lib/category';
 
 export async function POST(request: NextRequest) {
   try {
@@ -161,12 +162,14 @@ async function processAnalysis(
         rating: appInfo.rating,
         reviewCount: appInfo.reviewCount,
         developer: appInfo.developer,
+        category: normalizeCategory(appInfo.category) || null, // Save normalized category
         lastCrawledAt: new Date(),
       },
       update: {
         name: appInfo.name,
         rating: appInfo.rating,
         reviewCount: appInfo.reviewCount,
+        category: appInfo.category || null, // Update category
         lastCrawledAt: new Date(),
       },
     });
@@ -279,6 +282,9 @@ async function processAnalysis(
       data: { progress: 90 },
     });
 
+    // Get category from database (in case appInfo doesn't have it)
+    const appCategory = app.category || normalizeCategory(appInfo.category) || null;
+    
     // Save result with reviews data
     await prisma.analysisTask.update({
       where: { id: taskId },
@@ -286,7 +292,11 @@ async function processAnalysis(
         status: 'completed',
         progress: 100,
         result: {
-          app: appInfo,
+          app: {
+            ...appInfo,
+            category: appCategory, // Ensure category is included
+            platform, // Include platform for filtering
+          },
           reviewCount: reviews.length,
           analyzedCount: reviewsToAnalyze.length,
           analysis: analysisResult,
