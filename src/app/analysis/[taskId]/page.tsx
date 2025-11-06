@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
@@ -353,33 +353,23 @@ export default function AnalysisResultPage() {
             </p>
             <div className="space-y-4">
               {analysis.criticalIssues.map((issue, index) => (
-                <div key={index} className="border border-red-100 rounded-lg p-4 hover:border-red-200 transition">
+                <div key={index} className="bg-red-50 rounded-lg p-4 border border-red-100">
                   <div className="flex items-start justify-between mb-3">
-                    {/* 移除 H3，使用加粗文本 */}
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-gray-900">{issue.title}</span>
-                        <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                          {issue.frequency} mentions
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-gray-900">{issue.title}</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
+                          <MessageSquare className="w-3 h-3" />
+                          {issue.frequency}
                         </span>
                       </div>
-                      {issue.severity && (
-                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
-                          issue.severity === 'high' ? 'bg-red-100 text-red-700' :
-                          issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {issue.severity === 'high' ? 'High' : 
-                           issue.severity === 'medium' ? 'Medium' : 'Low'}
-                        </span>
-                      )}
                     </div>
                     
-                    {/* 展开/收起按钮 */}
-                    {issue.examples && issue.examples.length > 1 && (
+                    {/* View Reviews Button */}
+                    {issue.examples && issue.examples.length > 0 && (
                       <button
                         onClick={() => toggleIssueExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                       >
                         {expandedIssues.has(index) ? (
                           <>
@@ -396,19 +386,17 @@ export default function AnalysisResultPage() {
                     )}
                   </div>
                   
-                  {/* 示例评论 */}
+                  {/* Comments - Show first one by default, more when expanded */}
                   {issue.examples && issue.examples.length > 0 && (
-                    <div className="space-y-2">
-                      {/* 始终显示第一条 */}
-                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="space-y-2 mt-3">
+                      <div className="bg-white p-3 rounded border border-gray-200">
                         <p className="text-sm text-gray-700 leading-relaxed italic">
                           "{issue.examples[0]}"
                         </p>
                       </div>
                       
-                      {/* 展开显示更多 */}
                       {expandedIssues.has(index) && issue.examples.slice(1).map((example, exIndex) => (
-                        <div key={exIndex} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
                           </p>
@@ -432,27 +420,25 @@ export default function AnalysisResultPage() {
             <p className="text-gray-600 mb-6">
               UX problems and friction points that users encounter during usage, affecting the overall app experience.
             </p>
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {analysis.experienceIssues.map((issue, index) => (
-                <div key={index} className="p-4 bg-orange-50 rounded-lg border border-orange-100 hover:border-orange-200 transition">
+                <div key={index} className="bg-orange-50 rounded-lg p-4 border border-orange-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="flex-shrink-0 w-6 h-6 bg-orange-200 text-orange-700 rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
+                      <div className="flex items-center gap-3">
                         <span className="font-semibold text-gray-900">{issue.title}</span>
-                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                          {issue.frequency} mentions
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
+                          <MessageSquare className="w-3 h-3" />
+                          {issue.frequency}
                         </span>
                       </div>
                     </div>
                     
-                    {/* 展开/收起按钮 */}
-                    {issue.examples && issue.examples.length > 1 && (
+                    {/* View Reviews Button */}
+                    {issue.examples && issue.examples.length > 0 && (
                       <button
                         onClick={() => toggleExperienceIssueExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium ml-2"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                       >
                         {expandedExperienceIssues.has(index) ? (
                           <>
@@ -469,19 +455,17 @@ export default function AnalysisResultPage() {
                     )}
                   </div>
                   
-                  {/* 示例评论 */}
+                  {/* Comments */}
                   {issue.examples && issue.examples.length > 0 && (
-                    <div className="space-y-2">
-                      {/* 始终显示第一条 */}
-                      <div className="bg-white p-3 rounded-lg border border-orange-200">
+                    <div className="space-y-2 mt-3">
+                      <div className="bg-white p-3 rounded border border-gray-200">
                         <p className="text-sm text-gray-700 leading-relaxed italic">
                           "{issue.examples[0]}"
                         </p>
                       </div>
                       
-                      {/* 展开显示更多 */}
                       {expandedExperienceIssues.has(index) && issue.examples.slice(1).map((example, exIndex) => (
-                        <div key={exIndex} className="bg-white p-3 rounded-lg border border-orange-200">
+                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
                           </p>
@@ -505,27 +489,25 @@ export default function AnalysisResultPage() {
             <p className="text-gray-600 mb-6">
               Most requested new features that users want to see, helping your product stay competitive.
             </p>
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {analysis.featureRequests.map((request, index) => (
-                <div key={index} className="p-4 bg-yellow-50 rounded-lg border border-yellow-100 hover:border-yellow-200 transition">
+                <div key={index} className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="flex-shrink-0 w-6 h-6 bg-yellow-200 text-yellow-700 rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
+                      <div className="flex items-center gap-3">
                         <span className="font-semibold text-gray-900">{request.title}</span>
-                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                          {request.frequency} mentions
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
+                          <MessageSquare className="w-3 h-3" />
+                          {request.frequency}
                         </span>
                       </div>
                     </div>
                     
-                    {/* 展开/收起按钮 */}
-                    {request.examples && request.examples.length > 1 && (
+                    {/* View Reviews Button */}
+                    {request.examples && request.examples.length > 0 && (
                       <button
                         onClick={() => toggleFeatureRequestExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium ml-2"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                       >
                         {expandedFeatureRequests.has(index) ? (
                           <>
@@ -542,19 +524,17 @@ export default function AnalysisResultPage() {
                     )}
                   </div>
                   
-                  {/* 示例评论 */}
+                  {/* Comments */}
                   {request.examples && request.examples.length > 0 && (
-                    <div className="space-y-2">
-                      {/* 始终显示第一条 */}
-                      <div className="bg-white p-3 rounded-lg border border-yellow-200">
+                    <div className="space-y-2 mt-3">
+                      <div className="bg-white p-3 rounded border border-gray-200">
                         <p className="text-sm text-gray-700 leading-relaxed italic">
                           "{request.examples[0]}"
                         </p>
                       </div>
                       
-                      {/* 展开显示更多 */}
                       {expandedFeatureRequests.has(index) && request.examples.slice(1).map((example, exIndex) => (
-                        <div key={exIndex} className="bg-white p-3 rounded-lg border border-yellow-200">
+                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
                           </p>
