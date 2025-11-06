@@ -109,7 +109,7 @@ export async function fetchGooglePlayApp(
       rating: app.score || 0,
       reviewCount: app.reviews || 0,
       developer: app.developer,
-      category: app.genre || app.category || undefined, // App category/genre
+      category: app.genre || (app as any).category || undefined, // App category/genre
     };
   } catch (error: any) {
     console.error('❌ [Google Play] Error details:', {
@@ -142,7 +142,7 @@ export async function fetchGooglePlayApp(
         rating: fallbackApp.score || 0,
         reviewCount: fallbackApp.reviews || 0,
         developer: fallbackApp.developer,
-        category: fallbackApp.genre || fallbackApp.category || undefined,
+        category: fallbackApp.genre || (fallbackApp as any).category || undefined,
       };
     } catch (fallbackError: any) {
       console.error('❌ [Google Play] Fallback also failed:', {
