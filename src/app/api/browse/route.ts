@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { normalizeCategory, getCategoryDisplay } from '@/lib/category';
 
 export async function GET(request: NextRequest) {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       status: 'completed',
       isLatest: true,
       appSlug: { not: null },
-      result: { not: null },
+      result: { not: Prisma.JsonNull },
     };
 
     if (platform) {
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
       where: {
         status: 'completed',
         isLatest: true,
-        result: { not: null },
+        result: { not: Prisma.JsonNull },
       },
       select: {
         result: true,
