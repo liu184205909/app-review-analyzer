@@ -94,14 +94,14 @@ export default function AnalysisResultPage() {
   useEffect(() => {
     if (data?.result?.app) {
       const app = data.result.app;
-      const platform = data.result.analysis ? 
-        (data.result.analysis.sentiment.negative > 50 ? '用户反馈较差' : '用户反馈分析') : '评论分析';
+      const sentimentText = data.result.analysis ? 
+        (data.result.analysis.sentiment.negative > 50 ? 'User Feedback Analysis' : 'Review Analysis') : 'Review Analysis';
       
-      document.title = `${app.name} ${platform} - AI智能分析报告 | ReviewInsight`;
+      document.title = `${app.name} ${sentimentText} - AI-Powered Insights Report | ReviewInsight`;
       
       // 设置 meta description
       const metaDesc = document.querySelector('meta[name="description"]');
-      const description = `${app.name} 深度评论分析：${data.result.analyzedCount || 0}条评论，发现${data.result.analysis?.criticalIssues?.length || 0}个关键问题。查看完整用户反馈洞察和改进建议。`;
+      const description = `Deep analysis of ${app.name}: ${data.result.analyzedCount || 0} reviews analyzed, ${data.result.analysis?.criticalIssues?.length || 0} critical issues identified. Get full user feedback insights and improvement recommendations.`;
       
       if (metaDesc) {
         metaDesc.setAttribute('content', description);
@@ -239,22 +239,22 @@ export default function AnalysisResultPage() {
           <div className="flex items-center gap-4 mb-4">
             <img 
               src={app.iconUrl} 
-              alt={`${app.name} 应用图标`}
+              alt={`${app.name} app icon`}
               className="w-20 h-20 rounded-xl"
             />
             <div className="flex-1">
               {/* SEO-optimized H1: 长且描述性 */}
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {app.name} 用户评论分析报告 - {analyzedCount} 条真实反馈深度洞察
+                {app.name} User Review Analysis Report - Deep Insights from {analyzedCount} Real User Feedback
               </h1>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1">
                   <span className="text-yellow-500">★</span>
                   <span className="font-semibold">{app.rating.toFixed(1)}</span>
                 </span>
-                <span>{app.reviewCount.toLocaleString()} 条评论</span>
+                <span>{app.reviewCount.toLocaleString()} reviews</span>
                 <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
-                  已分析 {analyzedCount} 条
+                  {analyzedCount} analyzed
                 </span>
               </div>
             </div>
@@ -262,11 +262,11 @@ export default function AnalysisResultPage() {
           
           {/* 简短描述（SEO） */}
           <p className="text-gray-600 leading-relaxed">
-            本报告基于 AI 深度分析了 {app.name} 的 {analyzedCount} 条用户评论，
-            识别出 {analysis.criticalIssues?.length || 0} 个关键问题、
-            {analysis.experienceIssues?.length || 0} 个体验问题和
-            {analysis.featureRequests?.length || 0} 个功能需求。
-            帮助开发者快速了解用户真实反馈，制定产品优化策略。
+            This report provides an AI-powered deep analysis of {analyzedCount} user reviews for {app.name},
+            identifying {analysis.criticalIssues?.length || 0} critical issues,
+            {analysis.experienceIssues?.length || 0} experience problems, and
+            {analysis.featureRequests?.length || 0} feature requests.
+            Help developers quickly understand real user feedback and develop product optimization strategies.
           </p>
         </div>
 
@@ -294,10 +294,10 @@ export default function AnalysisResultPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <AlertCircle className="w-6 h-6 text-red-500" />
-              <h2 className="text-2xl font-bold text-gray-900">关键问题</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Critical Issues</h2>
             </div>
             <p className="text-gray-600 mb-6">
-              以下是用户反馈中最严重的问题，需要优先解决以提升用户体验和应用评分。
+              The most serious problems identified in user feedback that need to be prioritized to improve user experience and app ratings.
             </p>
             <div className="space-y-4">
               {analysis.criticalIssues.map((issue, index) => (
@@ -308,7 +308,7 @@ export default function AnalysisResultPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-gray-900">{issue.title}</span>
                         <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                          {issue.frequency} 次提及
+                          {issue.frequency} mentions
                         </span>
                       </div>
                       {issue.severity && (
@@ -317,8 +317,8 @@ export default function AnalysisResultPage() {
                           issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
-                          {issue.severity === 'high' ? '严重' : 
-                           issue.severity === 'medium' ? '中等' : '轻微'}
+                          {issue.severity === 'high' ? 'High' : 
+                           issue.severity === 'medium' ? 'Medium' : 'Low'}
                         </span>
                       )}
                     </div>
@@ -331,12 +331,12 @@ export default function AnalysisResultPage() {
                       >
                         {expandedIssues.has(index) ? (
                           <>
-                            <span>收起</span>
+                            <span>Collapse</span>
                             <ChevronUp className="w-4 h-4" />
                           </>
                         ) : (
                           <>
-                            <span>查看 {issue.examples.length} 条评论</span>
+                            <span>View {issue.examples.length} reviews</span>
                             <ChevronDown className="w-4 h-4" />
                           </>
                         )}
@@ -375,10 +375,10 @@ export default function AnalysisResultPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <TrendingDown className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-gray-900">体验问题</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
             </div>
             <p className="text-gray-600 mb-6">
-              用户在使用过程中遇到的体验问题，影响应用的整体使用感受。
+              UX problems and friction points that users encounter during usage, affecting the overall app experience.
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               {analysis.experienceIssues.map((issue, index) => (
@@ -388,7 +388,7 @@ export default function AnalysisResultPage() {
                   </span>
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">{issue.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">{issue.frequency} 次提及</div>
+                    <div className="text-xs text-gray-500 mt-1">{issue.frequency} mentions</div>
                   </div>
                 </div>
               ))}
@@ -401,10 +401,10 @@ export default function AnalysisResultPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-bold text-gray-900">功能需求</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Feature Requests</h2>
             </div>
             <p className="text-gray-600 mb-6">
-              用户最希望添加的新功能，这些建议可以帮助产品保持竞争力。
+              Most requested new features that users want to see, helping your product stay competitive.
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               {analysis.featureRequests.map((request, index) => (
@@ -414,7 +414,7 @@ export default function AnalysisResultPage() {
                   </span>
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">{request.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">{request.frequency} 次提及</div>
+                    <div className="text-xs text-gray-500 mt-1">{request.frequency} mentions</div>
                   </div>
                 </div>
               ))}
@@ -424,7 +424,7 @@ export default function AnalysisResultPage() {
 
         {/* Insights */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 关键洞察</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 Key Insights</h2>
           <p className="text-gray-700 leading-relaxed text-lg">{analysis.insights}</p>
         </div>
 
@@ -433,10 +433,10 @@ export default function AnalysisResultPage() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Target className="w-6 h-6 text-green-500" />
-              <h2 className="text-2xl font-bold text-gray-900">优先行动建议</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Priority Actions</h2>
             </div>
             <p className="text-gray-600 mb-6">
-              基于分析结果，以下是我们建议优先解决的行动计划，按重要性排序。
+              Based on the analysis results, here are our recommended priority action plans, sorted by importance.
             </p>
             <ol className="space-y-3">
               {analysis.priorityActions.map((action, index) => (
