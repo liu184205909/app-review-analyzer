@@ -151,7 +151,7 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
                     <span className="text-sm text-gray-500">{formatDate(review.date)}</span>
                   </div>
                   {review.title && (
-                    <h3 className="font-semibold text-gray-900 mb-1">{review.title}</h3>
+                    <p className="font-semibold text-gray-900 mb-1">{review.title}</p>
                   )}
                   <p className="text-sm text-gray-600">by {review.author || 'Anonymous'}</p>
                 </div>

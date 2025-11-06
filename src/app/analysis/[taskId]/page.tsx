@@ -378,7 +378,6 @@ export default function AnalysisResultPage() {
                           </>
                         ) : (
                           <>
-                            <span>View {issue.examples.length} reviews</span>
                             <ChevronDown className="w-4 h-4" />
                           </>
                         )}
@@ -447,7 +446,6 @@ export default function AnalysisResultPage() {
                           </>
                         ) : (
                           <>
-                            <span>View {issue.examples.length} reviews</span>
                             <ChevronDown className="w-4 h-4" />
                           </>
                         )}
@@ -516,7 +514,6 @@ export default function AnalysisResultPage() {
                           </>
                         ) : (
                           <>
-                            <span>View {request.examples.length} reviews</span>
                             <ChevronDown className="w-4 h-4" />
                           </>
                         )}
