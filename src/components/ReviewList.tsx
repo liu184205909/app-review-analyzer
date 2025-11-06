@@ -141,7 +141,7 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
           paginatedReviews.map((review) => (
             <div
               key={review.id}
-              className={`border-l-4 p-4 rounded-lg ${getReviewColor(review.rating)}`}
+              className={`border-l-4 p-4 rounded-lg transition-all duration-200 hover:shadow-md ${getReviewColor(review.rating)}`}
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-2">

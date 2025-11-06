@@ -351,50 +351,28 @@ export default function AnalysisResultPage() {
             <p className="text-gray-600 mb-6">
               The most serious problems identified in user feedback that need to be prioritized to improve user experience and app ratings.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {analysis.criticalIssues.map((issue, index) => (
-                <div key={index} className="bg-red-50 rounded-lg p-4 border border-red-100">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-900">{issue.title}</span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
-                          <MessageSquare className="w-3 h-3" />
-                          {issue.frequency}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* View Reviews Button */}
+                <div key={index} className="bg-red-50/80 rounded-lg p-3 border border-red-200/60">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="font-semibold text-gray-900">{issue.title}</span>
+
+                    {/* Comments Count Button */}
                     {issue.examples && issue.examples.length > 0 && (
                       <button
                         onClick={() => toggleIssueExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
-                        {expandedIssues.has(index) ? (
-                          <>
-                            <span>Collapse</span>
-                            <ChevronUp className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                          </>
-                        )}
+                        <MessageSquare className="w-3 h-3" />
+                        {issue.frequency}
                       </button>
                     )}
                   </div>
                   
-                  {/* Comments - Show first one by default, more when expanded */}
-                  {issue.examples && issue.examples.length > 0 && (
+                  {/* Comments - Expandable */}
+                  {expandedIssues.has(index) && issue.examples && issue.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <div className="bg-white p-3 rounded border border-gray-200">
-                        <p className="text-sm text-gray-700 leading-relaxed italic">
-                          "{issue.examples[0]}"
-                        </p>
-                      </div>
-                      
-                      {expandedIssues.has(index) && issue.examples.slice(1).map((example, exIndex) => (
+                      {issue.examples.slice(0, issue.frequency).map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
@@ -426,40 +404,24 @@ export default function AnalysisResultPage() {
             </p>
             <div className="space-y-3">
               {analysis.experienceIssues.map((issue, index) => (
-                <div key={index} className="bg-orange-50 rounded-lg p-4 border border-orange-100">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-900">{issue.title}</span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
-                          <MessageSquare className="w-3 h-3" />
-                          {issue.frequency}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* View Reviews Button */}
+                <div key={index} className="bg-orange-50/80 rounded-lg p-3 border border-orange-200/60">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="font-semibold text-gray-900">{issue.title}</span>
+
+                    {/* Comments Count Button */}
                     {issue.examples && issue.examples.length > 0 && (
                       <button
                         onClick={() => toggleExperienceIssueExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
-                        {expandedExperienceIssues.has(index) ? (
-                          <>
-                            <span>Collapse</span>
-                            <ChevronUp className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                          </>
-                        )}
+                        <MessageSquare className="w-3 h-3" />
+                        {issue.frequency}
                       </button>
                     )}
                   </div>
                   
-                  {/* Comments - Match frequency number */}
-                  {issue.examples && issue.examples.length > 0 && (
+                  {/* Comments - Expandable */}
+                  {expandedExperienceIssues.has(index) && issue.examples && issue.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
                       {issue.examples.slice(0, issue.frequency).map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
@@ -487,40 +449,24 @@ export default function AnalysisResultPage() {
             </p>
             <div className="space-y-3">
               {analysis.featureRequests.map((request, index) => (
-                <div key={index} className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-900">{request.title}</span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200">
-                          <MessageSquare className="w-3 h-3" />
-                          {request.frequency}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* View Reviews Button */}
+                <div key={index} className="bg-yellow-50/80 rounded-lg p-3 border border-yellow-200/60">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="font-semibold text-gray-900">{request.title}</span>
+
+                    {/* Comments Count Button */}
                     {request.examples && request.examples.length > 0 && (
                       <button
                         onClick={() => toggleFeatureRequestExpand(index)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
-                        {expandedFeatureRequests.has(index) ? (
-                          <>
-                            <span>Collapse</span>
-                            <ChevronUp className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                          </>
-                        )}
+                        <MessageSquare className="w-3 h-3" />
+                        {request.frequency}
                       </button>
                     )}
                   </div>
-                  
-                  {/* Comments - Match frequency number */}
-                  {request.examples && request.examples.length > 0 && (
+
+                  {/* Comments - Expandable */}
+                  {expandedFeatureRequests.has(index) && request.examples && request.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
                       {request.examples.slice(0, request.frequency).map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
