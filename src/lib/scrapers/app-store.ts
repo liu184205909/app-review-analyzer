@@ -93,6 +93,10 @@ export async function fetchAppStoreApp(
   try {
     console.log(`[App Store] Fetching from: ${country} store for app: ${cleanAppId}`);
 
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
@@ -100,8 +104,10 @@ export async function fetchAppStoreApp(
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache',
       },
-      timeout: 15000, // 15 second timeout
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
