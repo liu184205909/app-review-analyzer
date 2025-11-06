@@ -364,15 +364,15 @@ export default function AnalysisResultPage() {
                         className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
                         <MessageSquare className="w-3 h-3" />
-                        {issue.frequency}
+                        {issue.examples.length}
                       </button>
                     )}
                   </div>
-                  
+
                   {/* Comments - Expandable */}
                   {expandedIssues.has(index) && issue.examples && issue.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      {issue.examples.slice(0, issue.frequency).map((example, exIndex) => (
+                      {issue.examples.map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
@@ -415,7 +415,7 @@ export default function AnalysisResultPage() {
                         className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
                         <MessageSquare className="w-3 h-3" />
-                        {issue.frequency}
+                        {issue.examples.length}
                       </button>
                     )}
                   </div>
@@ -423,7 +423,7 @@ export default function AnalysisResultPage() {
                   {/* Comments - Expandable */}
                   {expandedExperienceIssues.has(index) && issue.examples && issue.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      {issue.examples.slice(0, issue.frequency).map((example, exIndex) => (
+                      {issue.examples.map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"
@@ -460,7 +460,7 @@ export default function AnalysisResultPage() {
                         className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                       >
                         <MessageSquare className="w-3 h-3" />
-                        {request.frequency}
+                        {request.examples.length}
                       </button>
                     )}
                   </div>
@@ -468,7 +468,7 @@ export default function AnalysisResultPage() {
                   {/* Comments - Expandable */}
                   {expandedFeatureRequests.has(index) && request.examples && request.examples.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      {request.examples.slice(0, request.frequency).map((example, exIndex) => (
+                      {request.examples.map((example, exIndex) => (
                         <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm text-gray-700 leading-relaxed italic">
                             "{example}"

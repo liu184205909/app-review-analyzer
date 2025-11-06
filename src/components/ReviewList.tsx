@@ -75,12 +75,19 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
     const diffMs = now.getTime() - d.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-    return d.toLocaleDateString();
+    // Return both specific date and relative time like competitors
+    const specificDate = d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    if (diffDays === 0) return `Today (${specificDate})`;
+    if (diffDays === 1) return `Yesterday (${specificDate})`;
+    if (diffDays < 7) return `${diffDays} days ago (${specificDate})`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago (${specificDate})`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago (${specificDate})`;
+    return specificDate;
   };
 
   return (
@@ -151,7 +158,7 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
                     <span className="text-sm text-gray-500">{formatDate(review.date)}</span>
                   </div>
                   {review.title && (
-                    <p className="font-semibold text-gray-900 mb-1">{review.title}</p>
+                    <p className="font-bold text-black mb-1 text-base">{review.title}</p>
                   )}
                   <p className="text-sm text-gray-600">by {review.author || 'Anonymous'}</p>
                 </div>
