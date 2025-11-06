@@ -73,11 +73,6 @@ model AnalysisTask {
   status      TaskStatus @default(pending)
   progress    Int       @default(0)
   
-  // 方案A：分离式抓取支持
-  isIncremental     Boolean   @default(false)  // 是否增量抓取
-  reviewCount       Int       @default(0)      // 已抓取评论数
-  targetReviewCount Int?                       // 目标评论数
-  
   // App identification (for single app analysis)
   platform    Platform? // App platform
   appStoreId  String?   // App Store ID or Package Name
