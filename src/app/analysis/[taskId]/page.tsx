@@ -383,7 +383,7 @@ export default function AnalysisResultPage() {
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Critical Issues</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Critical Issues</h2>
                   <p className="text-sm text-red-600 font-medium">
                     {analysis.criticalIssues.length} critical problems • {analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
                   </p>
@@ -437,10 +437,10 @@ export default function AnalysisResultPage() {
                          style={{ width: `${frequencyRatio * 100}%` }} />
 
                     {/* Card Content */}
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-3">
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-1">
                             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                               issue.severity === 'high' ? 'bg-red-500 text-white' :
                               issue.severity === 'medium' ? 'bg-orange-500 text-white' :
@@ -452,14 +452,21 @@ export default function AnalysisResultPage() {
                               Frequency: {issue.frequency}
                             </div>
                           </div>
-                          <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-red-600 transition-colors">
+                          <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-red-600 transition-colors">
                             {issue.title}
                           </h3>
                         </div>
 
-                        {/* Expand/Collapse Icon */}
-                        <div className="text-gray-400 group-hover:text-red-500 transition-colors">
-                          <MessageSquare className="w-5 h-5" />
+                        {/* Expand/Collapse Icon with Count */}
+                        <div className="flex items-center gap-2">
+                          {issue.examples && issue.examples.length > 0 && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                              {issue.examples.length}
+                            </span>
+                          )}
+                          <div className="text-gray-400 group-hover:text-red-500 transition-colors">
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
                         </div>
                       </div>
 
@@ -470,28 +477,17 @@ export default function AnalysisResultPage() {
                             <MessageSquare className="w-4 h-4" />
                             <span>User Examples ({issue.examples.length})</span>
                           </div>
-                          {issue.examples.slice(0, 5).map((example, exIndex) => (
+                          {issue.examples.map((example, exIndex) => (
                             <div key={exIndex} className="bg-red-50/50 border border-red-200 rounded-lg p-3">
                               <p className="text-sm text-gray-700 leading-relaxed">
                                 💬 "{example}"
                               </p>
                             </div>
                           ))}
-                          {issue.examples.length > 5 && (
-                            <div className="text-center text-xs text-gray-500 pt-2">
-                              +{issue.examples.length - 5} more examples
-                            </div>
-                          )}
                         </div>
                       )}
 
-                      {/* Hover Hint */}
-                      {!expandedIssues.has(index) && (
-                        <div className="text-xs text-gray-500 group-hover:text-red-600 transition-colors">
-                          Click to see {issue.examples.length} examples
-                        </div>
-                      )}
-                    </div>
+                      </div>
                   </div>
                 );
               })}
@@ -514,7 +510,7 @@ export default function AnalysisResultPage() {
                       <TrendingDown className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-bold text-gray-900">Experience Issues</h2>
+                      <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
                       <p className="text-sm text-orange-600 font-medium">
                         {analysis.experienceIssues.length} experience problems • {analysis.experienceIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
                       </p>
@@ -554,10 +550,10 @@ export default function AnalysisResultPage() {
                              style={{ width: `${frequencyRatio * 100}%` }} />
 
                         {/* Card Content */}
-                        <div className="p-5">
-                          <div className="flex items-start justify-between mb-3">
+                        <div className="p-4">
+                          <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-2 mb-1">
                                 <div className="px-2 py-1 bg-orange-500 text-white rounded-full text-xs font-medium">
                                   UX
                                 </div>
@@ -565,14 +561,21 @@ export default function AnalysisResultPage() {
                                   Frequency: {issue.frequency}
                                 </div>
                               </div>
-                              <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
+                              <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
                                 {issue.title}
                               </h3>
                             </div>
 
-                            {/* Expand/Collapse Icon */}
-                            <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
-                              <MessageSquare className="w-5 h-5" />
+                            {/* Expand/Collapse Icon with Count */}
+                            <div className="flex items-center gap-2">
+                              {issue.examples && issue.examples.length > 0 && (
+                                <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                  {issue.examples.length}
+                                </span>
+                              )}
+                              <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
+                                <MessageSquare className="w-5 h-5" />
+                              </div>
                             </div>
                           </div>
 
@@ -583,28 +586,17 @@ export default function AnalysisResultPage() {
                                 <MessageSquare className="w-4 h-4" />
                                 <span>User Examples ({issue.examples.length})</span>
                               </div>
-                              {issue.examples.slice(0, 4).map((example, exIndex) => (
+                              {issue.examples.map((example, exIndex) => (
                                 <div key={exIndex} className="bg-orange-50/50 border border-orange-200 rounded-lg p-3">
                                   <p className="text-sm text-gray-700 leading-relaxed">
                                     💬 "{example}"
                                   </p>
                                 </div>
                               ))}
-                              {issue.examples.length > 4 && (
-                                <div className="text-center text-xs text-gray-500 pt-2">
-                                  +{issue.examples.length - 4} more examples
-                                </div>
-                              )}
                             </div>
                           )}
 
-                          {/* Hover Hint */}
-                          {!expandedExperienceIssues.has(index) && (
-                            <div className="text-xs text-gray-500 group-hover:text-orange-600 transition-colors">
-                              Click to see {issue.examples.length} examples
-                            </div>
-                          )}
-                        </div>
+                          </div>
                       </div>
                     );
                   })}
@@ -612,48 +604,115 @@ export default function AnalysisResultPage() {
               </div>
             )}
 
+            {/* Feature Requests with Enhanced Card Design */}
             {analysis.featureRequests && analysis.featureRequests.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Lightbulb className="w-6 h-6 text-yellow-500" />
-                  <h2 className="text-2xl font-bold text-gray-900">Feature Requests</h2>
-                </div>
-            <p className="text-gray-600 mb-6">
-              Most requested new features that users want to see, helping your product stay competitive.
-            </p>
-            <div className="space-y-3">
-              {analysis.featureRequests.map((request, index) => (
-                <div key={index} className="bg-yellow-50/80 rounded-lg p-3 border border-yellow-200/60">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="font-semibold text-gray-900">{request.title}</span>
-
-                    {/* Comments Count Button */}
-                    {request.examples && request.examples.length > 0 && (
-                      <button
-                        onClick={() => toggleFeatureRequestExpand(index)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        {request.examples.length}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Comments - Expandable */}
-                  {expandedFeatureRequests.has(index) && request.examples && request.examples.length > 0 && (
-                    <div className="space-y-2 mt-3">
-                      {request.examples.map((example, exIndex) => (
-                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
-                          <p className="text-sm text-gray-700 leading-relaxed italic">
-                            "{example}"
-                          </p>
-                        </div>
-                      ))}
+              <div className="bg-gradient-to-br from-white via-blue-50/30 to-white rounded-xl shadow-lg p-6 mb-6 border border-blue-100">
+                {/* Enhanced Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500 rounded-lg shadow-sm">
+                      <Lightbulb className="w-6 h-6 text-white" />
                     </div>
-                  )}
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Feature Requests</h2>
+                      <p className="text-sm text-blue-600 font-medium">
+                        {analysis.featureRequests.length} feature requests • {analysis.featureRequests.reduce((sum, request) => sum + (request.frequency || 0), 0)} mentions
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const allExpanded = expandedFeatureRequests.size === analysis.featureRequests.length;
+                        if (allExpanded) {
+                          setExpandedFeatureRequests(new Set());
+                        } else {
+                          setExpandedFeatureRequests(new Set(analysis.featureRequests.map((_, index) => index)));
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                    >
+                      {expandedFeatureRequests.size === analysis.featureRequests.length ? 'Collapse All' : 'Expand All'}
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Enhanced Cards */}
+                <div className="grid gap-4">
+                  {analysis.featureRequests.map((request, index) => {
+                    const maxFrequency = Math.max(...analysis.featureRequests.map(r => r.frequency || 0));
+                    const frequencyRatio = (request.frequency || 0) / maxFrequency;
+
+                    return (
+                      <div
+                        key={index}
+                        className="group relative overflow-hidden rounded-xl border-2 border-blue-100 bg-white hover:border-blue-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        onClick={() => toggleFeatureRequestExpand(index)}
+                      >
+                        {/* Frequency Bar */}
+                        <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
+                             style={{ width: `${frequencyRatio * 100}%` }} />
+
+                        {/* Card Content */}
+                        <div className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="px-2 py-1 bg-blue-500 text-white rounded-full text-xs font-medium">
+                                  REQUEST
+                                </div>
+                                <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                  Frequency: {request.frequency}
+                                </div>
+                                {/* Status Badge */}
+                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  request.frequency > 10 ? 'bg-green-100 text-green-700' :
+                                  request.frequency > 5 ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {request.frequency > 10 ? 'IMPLEMENTED' :
+                                   request.frequency > 5 ? 'PLANNED' : 'CONSIDERING'}
+                                </div>
+                              </div>
+                              <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                {request.title}
+                              </h3>
+                            </div>
+
+                            {/* Expand/Collapse Icon with Count */}
+                            <div className="flex items-center gap-2">
+                              {request.examples && request.examples.length > 0 && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                  {request.examples.length}
+                                </span>
+                              )}
+                              <div className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                                <MessageSquare className="w-5 h-5" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expandable Comments */}
+                          {expandedFeatureRequests.has(index) && request.examples && request.examples.length > 0 && (
+                            <div className="space-y-3 pt-3 border-t border-gray-100">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                <MessageSquare className="w-4 h-4" />
+                                <span>User Examples ({request.examples.length})</span>
+                              </div>
+                              {request.examples.map((example, exIndex) => (
+                                <div key={exIndex} className="bg-blue-50/50 border border-blue-200 rounded-lg p-3">
+                                  <p className="text-sm text-gray-700 leading-relaxed">
+                                    💡 "{example}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
