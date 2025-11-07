@@ -78,7 +78,7 @@ export async function analyzeSingleApp(
         }
       ],
       temperature: 0.7,
-      max_tokens: 8000, // Increased to support more examples
+      max_tokens: 12000, // Further increased for industry-grade detailed analysis
     });
 
     const responseText = completion.choices[0]?.message?.content || '{}';
@@ -136,42 +136,90 @@ function buildSingleAppPrompt(reviews: Review[]): string {
     `Rating: ${r.rating}⭐\nDate: ${r.date.toLocaleDateString()}\nContent: ${r.content}\n${r.appVersion ? `Version: ${r.appVersion}` : ''}`
   ).join('\n---\n');
 
-  return `Analyze the following app reviews comprehensively. Extract actionable insights across ALL rating categories.
+  return `COMPREHENSIVE APP REVIEW ANALYSIS - INDUSTRY-GRADE INSIGHTS
 
 REVIEW BREAKDOWN:
 - Critical Issues (1-2⭐): ${criticalReviews.length} reviews
 - Experience Issues (3⭐): ${experienceReviews.length} reviews
-- Positive Reviews (4-5⭐): ${positiveReviews.length} reviews
+- Feature Requests (4-5⭐): ${positiveReviews.length} reviews
 - Total Reviews: ${allReviews.length}
 
 Reviews to analyze (sample of ${Math.min(300, allReviews.length)} reviews):
 ${reviewsText}
 
-IMPORTANT: For each issue type, provide 15-30 specific examples to match industry standards. Competitors show dozens of examples per category.
+COMPETITIVE ANALYSIS REQUIREMENTS:
+- Identify 25-35 SPECIFIC issue categories (like AppFollow, Sensor Tower)
+- Each category must have 15-30 exact user quotes
+- Focus on granular, actionable insights
+- Group similar issues into specific categories
+- Include frequency and severity analysis
+
+SPECIFIC ISSUE CATEGORIES TO IDENTIFY:
+
+CRITICAL ISSUES (1-2⭐):
+1. App Crashes & Freezes
+2. Login/Authentication Problems
+3. Payment/Billing Issues
+4. Data Loss/Sync Problems
+5. Server/Connection Errors
+6. Battery Drain Issues
+7. Memory/CPU Performance
+8. Security/Privacy Concerns
+9. Installation/Update Problems
+10. Compatibility Issues (iOS/Android version)
+11. Account Management Issues
+12. Broken Core Features
+13. Corrupted Data/Database Issues
+14. Timeout/Slow Response Issues
+15. Error Messages & Bugs
+
+EXPERIENCE ISSUES (3⭐):
+16. User Interface (UI) Confusion
+17. Navigation/Menus Problems
+18. Search/Filter Issues
+19. Loading Speed/Performance
+20. Font/Text Readability
+21. Button/Control Problems
+22. Gesture/Touch Issues
+23. Onboarding/Tutorial Problems
+24. Settings/Configuration Issues
+25. Notifications/Alerts Problems
+26. Offline Mode Issues
+27. Export/Import Problems
+
+FEATURE REQUESTS (4-5⭐):
+28. New Feature Requests
+29. Integration/API Requests
+30. Customization/Personalization
+31. Social/Sharing Features
+32. Analytics/Reporting Features
+33. Accessibility Features
+34. Automation/Workflow Features
+35. Premium/Paid Feature Requests
 
 Please provide analysis in the following JSON format:
 {
   "criticalIssues": [
     {
-      "title": "Issue title",
+      "title": "Specific issue category name",
       "frequency": number (how many times mentioned),
       "severity": "high" | "medium" | "low",
-      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"],
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20", "exact quote from review 21", "exact quote from review 22", "exact quote from review 23", "exact quote from review 24", "exact quote from review 25", "exact quote from review 26", "exact quote from review 27", "exact quote from review 28", "exact quote from review 29", "exact quote from review 30"],
       "affectedVersion": "version number if mentioned"
     }
   ],
   "experienceIssues": [
     {
-      "title": "Issue title",
+      "title": "Specific UX/UI issue category",
       "frequency": number,
-      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"]
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20", "exact quote from review 21", "exact quote from review 22", "exact quote from review 23", "exact quote from review 24", "exact quote from review 25"]
     }
   ],
   "featureRequests": [
     {
-      "title": "Feature request title",
+      "title": "Specific feature request category",
       "frequency": number,
-      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"]
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20", "exact quote from review 21", "exact quote from review 22", "exact quote from review 23", "exact quote from review 24", "exact quote from review 25"]
     }
   ],
   "sentiment": {
@@ -179,16 +227,19 @@ Please provide analysis in the following JSON format:
     "negative": 0-100,
     "neutral": 0-100
   },
-  "insights": "A comprehensive paragraph summarizing key findings from all rating categories",
-  "priorityActions": ["Action 1", "Action 2", "Action 3", "Action 4", "Action 5"]
+  "insights": "Comprehensive paragraph summarizing key findings across all categories with specific metrics and trends",
+  "priorityActions": ["Specific action 1", "Specific action 2", "Specific action 3", "Specific action 4", "Specific action 5", "Specific action 6", "Specific action 7"]
 }
 
-ANALYSIS FOCUS:
-1. Critical Issues (1-2⭐): Focus on crashes, data loss, security, payment issues, broken core functionality
-2. Experience Issues (3⭐): Focus on UX/UI problems, performance, navigation, usability issues
-3. Feature Requests (4-5⭐): Focus on new feature requests, enhancements, missing functionality from positive reviews
+ANALYSIS REQUIREMENTS:
+- Create specific, granular categories (not generic groupings)
+- Each category must have at least 10-15 real user quotes
+- Include exact frequency counts
+- Use professional, industry-standard terminology
+- Match the detail level of AppFollow, Sensor Tower, App Annie
+- Focus on actionable insights developers can use immediately
 
-CRITICAL REQUIREMENT: Each category must include 15-20 detailed examples to provide comprehensive insights similar to competitors like AppFollow and Sensor Tower.`;
+CRITICAL: Do not group all issues into 3-5 broad categories. Create 20-30 specific issue types, each with multiple examples.`;
 }
 
 function buildComparisonPrompt(appsReviews: { appName: string; reviews: Review[] }[]): string {
