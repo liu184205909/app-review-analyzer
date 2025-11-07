@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import KeywordCloud, { extractKeywordsFromAnalysis } from '@/components/KeywordCloud';
-import ExportReport from '@/components/ExportReport';
+import ExportDropdown from '@/components/ExportDropdown';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
 interface AnalysisData {
@@ -267,10 +267,7 @@ export default function AnalysisResultPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/" className="text-xl font-bold text-gray-900">ReviewInsight</a>
           <div className="flex gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
-              <Download className="w-4 h-4" />
-              Export Report
-            </button>
+            <ExportDropdown analysisData={data} appName={app.name} />
           </div>
         </div>
       </header>
@@ -530,9 +527,6 @@ export default function AnalysisResultPage() {
             </ol>
           </div>
         )}
-
-        {/* Export Report */}
-        <ExportReport analysisData={data} appName={app.name} />
 
         {/* Typical User Comments */}
         {data.result.reviews && data.result.reviews.length > 0 && (
