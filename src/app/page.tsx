@@ -12,7 +12,7 @@ export default function HomePage() {
   const [focusNegative, setFocusNegative] = useState(true);
   // const [deepMode, setDeepMode] = useState(true); // Now standard - no need for state
   const [multiCountry, setMultiCountry] = useState(false);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br']);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(['us']); // Default: US only
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
