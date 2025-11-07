@@ -136,7 +136,7 @@ function buildSingleAppPrompt(reviews: Review[]): string {
     `Rating: ${r.rating}⭐\nContent: ${r.content}`
   ).join('\n---\n');
 
-  return `COMPREHENSIVE APP REVIEW ANALYSIS
+  return `COMPREHENSIVE APP REVIEW ANALYSIS - INDUSTRY STANDARD
 
 REVIEWS TO ANALYZE:
 - Critical Issues (1-2⭐): ${criticalReviews.length} reviews
@@ -146,51 +146,60 @@ REVIEWS TO ANALYZE:
 
 ${reviewsText}
 
-ANALYZE AND CATEGORIZE ISSUES:
+ANALYZE AND CATEGORIZE ISSUES - EXPANDED CATEGORIES:
 
-You MUST identify issues in ALL THREE categories below. Even if a category has fewer examples, include it:
+You MUST identify issues in ALL THREE categories below. Each category should have 12-15 specific examples with 8-12 user quotes each:
 
-CRITICAL ISSUES (1-2⭐ reviews) - Find 8-12 critical issues:
-- App crashes/freezes/force closes
-- Login/authentication failures/sign-in problems
-- Payment/billing errors/subscription issues
-- Data loss/sync failures/backup problems
-- Server/connection timeouts/network errors
-- Battery drain/excessive power consumption
-- Installation/update failures/play store issues
-- Device compatibility/version incompatibility
-- Account management/profile issues
-- Security/privacy concerns/data breaches
-- Error messages/unexpected behaviors
-- Performance bugs/slow response times
+CRITICAL ISSUES (1-2⭐ reviews) - Find 12-15 critical issues from these expanded categories:
+1. **CRASH & STABILITY**: App crashes/freezes/force closes/ANR errors
+2. **AUTHENTICATION**: Login failures/sign-in problems/account access issues
+3. **PAYMENT & BILLING**: Payment processing errors/subscription problems/billing failures
+4. **DATA MANAGEMENT**: Data loss/sync failures/backup issues/missing data
+5. **CONNECTIVITY**: Server timeouts/network errors/offline failures
+6. **PERFORMANCE**: Battery drain/excessive memory usage/overheating
+7. **INSTALLATION**: App installation/update failures/play store errors
+8. **COMPATIBILITY**: Device compatibility/OS version issues/hardware problems
+9. **ACCOUNT MANAGEMENT**: Profile creation/deletion/account verification problems
+10. **SECURITY & PRIVACY**: Data breaches/privacy concerns/permission issues
+11. **ERROR HANDLING**: Uncaught exceptions/error messages/glitches
+12. **API & INTEGRATION**: Third-party service failures/API errors/webhook issues
+13. **DATABASE**: Storage issues/corruption/migration failures
+14. **CONTENT**: Missing content/corrupted files/media playback problems
+15. **PLATFORM SPECIFIC**: Push notifications/background services/location services
 
-EXPERIENCE ISSUES (3⭐ reviews) - Find 8-12 UX problems:
-- Confusing UI/UX design/layout issues
-- Navigation/menu structure problems
-- Search/filter functionality issues
-- Loading speed/performance delays
-- Button/control placement/interaction problems
-- Font size/readibility/visual clarity
-- Notification/alert system problems
-- Settings/configuration complexity
-- Offline mode/airplane mode issues
-- Onboarding/tutorial/help system problems
-- Content discovery/user journey issues
-- Accessibility/usability challenges
+EXPERIENCE ISSUES (3⭐ reviews) - Find 12-15 UX problems from these expanded categories:
+1. **USER INTERFACE**: Layout problems/visual design inconsistency/cluttered screens
+2. **NAVIGATION**: Menu confusion/poor information architecture/getting lost
+3. **SEARCH & DISCOVERY**: Filter problems/search results not relevant/poor sorting
+4. **RESPONSIVENESS**: Slow loading times/laggy interactions/performance issues
+5. **INTERACTION DESIGN**: Button placement/gesture control/touch targets
+6. **READABILITY**: Font sizes/contrast issues/color blindness/accessibility
+7. **NOTIFICATIONS**: Too many/few notifications/poor timing/interruptions
+8. **SETTINGS & CONFIGURATION**: Complex setup/confusing options/too many toggles
+9. **OFFLINE EXPERIENCE**: Limited offline functionality/sync issues/airplane mode
+10. **ONBOARDING**: Poor first experience/confusing tutorials/steep learning curve
+11. **CONTENT ORGANIZATION**: Poor categorization/hard to find features/information hierarchy
+12. **USER FEEDBACK**: No clear feedback on actions/loading states/confirmations
+13. **MOBILE SPECIFIC**: Small screen issues/poor mobile optimization/device rotation
+14. **LOCALIZATION**: Translation problems/cultural adaptation/time zone handling
+15. **ACCESSIBILITY**: Screen reader issues/keyboard navigation/cognitive overload
 
-FEATURE REQUESTS (4-5⭐ reviews) - Find 8-12 desired features:
-- New feature suggestions/enhancement requests
-- Third-party integrations/API requests
-- Customization/personalization options
-- Social sharing/community features
-- Analytics/reporting/dashboard features
-- Accessibility improvements/options
-- Workflow automation/efficiency features
-- Content creation/management tools
-- Export/import functionality requests
-- Language/regional expansion requests
-- Platform-specific feature requests
-- User preference/customization settings
+FEATURE REQUESTS (4-5⭐ reviews) - Find 12-15 desired features from these expanded categories:
+1. **CORE FUNCTIONALITY**: New primary features/enhanced existing capabilities
+2. **INTEGRATIONS**: Third-party app connections/API support/webhooks
+3. **CUSTOMIZATION**: Themes/personalization/layouts/custom workflows
+4. **SOCIAL FEATURES**: Sharing/collaboration/community/social networking
+5. **ANALYTICS & REPORTING**: Dashboards/data visualization/metrics tracking
+6. **PRODUCTIVITY**: Automation/batch operations/time-saving features
+7. **CONTENT CREATION**: Editing tools/creation capabilities/media management
+8. **DATA MANAGEMENT**: Import/export/backup/sync/organization features
+9. **ACCESSIBILITY**: Voice control/screen reader/high contrast/simplified UI
+10. **MOBILE ENHANCEMENTS**: Mobile-specific features/tablet optimization
+11. **COLLABORATION**: Real-time editing/team features/sharing capabilities
+12. **SECURITY & PRIVACY**: Two-factor authentication/encryption/privacy controls
+13. **PERFORMANCE**: Speed improvements/efficiency features/battery optimization
+14. **PLATFORM INTEGRATION**: OS features integration/system services/native components
+15. **AI & MACHINE LEARNING**: Smart suggestions/predictive features/automation
 
 REQUIRED JSON FORMAT:
 {

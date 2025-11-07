@@ -25,8 +25,16 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 10;
 
-  // Filter reviews based on sentiment
+  // Filter reviews based on sentiment and quality
   const filteredReviews = reviews.filter(review => {
+    // Quality filter: remove very short/low-quality comments
+    const isHighQuality = review.content.trim().length > 15 &&
+                         review.content.split(' ').length > 3 &&
+                         !/^(good|bad|nice|ok|okay|fine|great|excellent|terrible|awful|love|hate|yes|no)$/.test(review.content.trim().toLowerCase());
+
+    if (!isHighQuality) return false;
+
+    // Sentiment filter
     if (filter === 'all') return true;
     if (filter === 'positive') return review.rating >= 4;
     if (filter === 'neutral') return review.rating === 3;
@@ -159,9 +167,7 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
                       {formatDate(review.date)}
                     </span>
                   </div>
-                  {review.title && (
-                    <h3 className="font-bold text-gray-900 mb-1 text-lg leading-tight">{review.title}</h3>
-                  )}
+                  {/* Title removed from here - moved to content section for better separation */}
                   <p className="text-sm text-gray-600 font-medium">
                     <span className="inline-block px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 rounded-full">
                       {review.author || 'Anonymous'}
@@ -175,10 +181,17 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
                 </div>
               </div>
 
-              {/* Content with enhanced readability */}
+              {/* Content with enhanced readability - title bold, content normal */}
+              {review.title && (
+                <div className="mb-3">
+                  <h3 className="font-bold text-gray-900 text-lg leading-tight">
+                    {review.title}
+                  </h3>
+                </div>
+              )}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-gray-50/20 to-transparent pointer-events-none rounded-lg"></div>
-                <p className="relative text-gray-800 leading-relaxed mb-4 font-medium text-base bg-white/80 backdrop-blur-sm p-4 rounded-lg">
+                <p className="relative text-gray-700 leading-relaxed mb-4 text-base bg-white/80 backdrop-blur-sm p-4 rounded-lg">
                   {review.content}
                 </p>
               </div>

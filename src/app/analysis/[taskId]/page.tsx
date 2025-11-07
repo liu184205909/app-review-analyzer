@@ -331,18 +331,44 @@ export default function AnalysisResultPage() {
         {/* Sentiment Overview */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Sentiment Distribution</h2>
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-4">
             <div className="flex-1 bg-green-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{analysis.sentiment.positive}%</div>
+              <div className="text-2xl font-bold text-green-600">
+                {Math.round((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100)}%
+              </div>
               <div className="text-sm text-gray-600">Positive</div>
+              <div className="text-xs text-gray-500 mt-1">{analysis.sentiment.positive} reviews</div>
             </div>
             <div className="flex-1 bg-gray-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-gray-600">{analysis.sentiment.neutral}%</div>
+              <div className="text-2xl font-bold text-gray-600">
+                {Math.round((analysis.sentiment.neutral / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100)}%
+              </div>
               <div className="text-sm text-gray-600">Neutral</div>
+              <div className="text-xs text-gray-500 mt-1">{analysis.sentiment.neutral} reviews</div>
             </div>
             <div className="flex-1 bg-red-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{analysis.sentiment.negative}%</div>
+              <div className="text-2xl font-bold text-red-600">
+                {Math.round((analysis.sentiment.negative / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100)}%
+              </div>
               <div className="text-sm text-gray-600">Negative</div>
+              <div className="text-xs text-gray-500 mt-1">{analysis.sentiment.negative} reviews</div>
+            </div>
+          </div>
+          {/* Progress bar visualization */}
+          <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full flex">
+              <div
+                className="bg-green-500 transition-all duration-500"
+                style={{ width: `${(analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100}%` }}
+              />
+              <div
+                className="bg-gray-400 transition-all duration-500"
+                style={{ width: `${(analysis.sentiment.neutral / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100}%` }}
+              />
+              <div
+                className="bg-red-500 transition-all duration-500"
+                style={{ width: `${(analysis.sentiment.negative / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100}%` }}
+              />
             </div>
           </div>
         </div>
