@@ -462,6 +462,7 @@ export default function HomePage() {
               📊 50% critical issues, 30% experience, 20% positive reviews
             </p>
           </div>
+          </div>
 
           {/* Analyze Button */}
           <button
