@@ -132,7 +132,7 @@ function buildSingleAppPrompt(reviews: Review[]): string {
   const experienceReviews = allReviews.filter(r => r.rating === 3); // Experience issues (3 stars)
   const positiveReviews = allReviews.filter(r => r.rating >= 4); // Feature requests (4-5 stars)
 
-  const reviewsText = allReviews.slice(0, 250).map(r =>
+  const reviewsText = allReviews.slice(0, 500).map(r =>
     `Rating: ${r.rating}⭐\nContent: ${r.content}`
   ).join('\n---\n');
 

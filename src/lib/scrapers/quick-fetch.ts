@@ -93,13 +93,13 @@ export async function fetchQuickReviewsLegacy(
 export async function fetchIncrementalReviews(
   appId: string,
   platform: 'ios' | 'android',
-  targetCount: number = 800,
+  targetCount: number = 1000,
   options: {
     forceRefresh?: boolean;
     maxNewReviews?: number;
   } = {}
 ) {
-  const { forceRefresh = false, maxNewReviews = 200 } = options;
+  const { forceRefresh = false, maxNewReviews = 500 } = options;
 
   console.log(`[Smart Incremental Fetch] Target: ${targetCount}, Max new: ${maxNewReviews}, Force: ${forceRefresh}`);
 

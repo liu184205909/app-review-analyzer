@@ -23,7 +23,7 @@ type FilterType = 'all' | 'positive' | 'neutral' | 'negative';
 export default function ReviewList({ reviews, appName }: ReviewListProps) {
   const [filter, setFilter] = useState<FilterType>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const reviewsPerPage = 10;
+  const reviewsPerPage = 20; // 增加每页显示数量
 
   // Filter reviews based on sentiment and quality
   const filteredReviews = reviews.filter(review => {
@@ -156,60 +156,46 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
           paginatedReviews.map((review) => (
             <div
               key={review.id}
-              className={`border-l-4 p-5 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${getReviewColor(review.rating)} bg-gradient-to-br from-white to-gray-50/30`}
+              className={`border-l-4 p-4 rounded-lg transition-all duration-200 hover:shadow-md ${getReviewColor(review.rating)} bg-white`}
             >
-              {/* Header with enhanced background */}
-              <div className="flex items-start justify-between mb-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg -mx-5 -mt-5 border border-gray-200/50">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {renderStars(review.rating)}
-                    <span className="text-sm font-medium text-gray-600 bg-white px-2 py-1 rounded-md">
-                      {formatDate(review.date)}
-                    </span>
-                  </div>
-                  {/* Title removed from here - moved to content section for better separation */}
-                  <p className="text-sm text-gray-600 font-medium">
-                    <span className="inline-block px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 rounded-full">
-                      {review.author || 'Anonymous'}
-                    </span>
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg shadow-sm">
-                    {appName}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content with enhanced readability - title bold, content normal */}
-              {review.title && (
-                <div className="mb-3">
-                  <h3 className="font-bold text-gray-900 text-lg leading-tight">
-                    {review.title}
-                  </h3>
-                </div>
-              )}
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-gray-50/20 to-transparent pointer-events-none rounded-lg"></div>
-                <p className="relative text-gray-700 leading-relaxed mb-4 text-base bg-white/80 backdrop-blur-sm p-4 rounded-lg">
-                  {review.content}
-                </p>
-              </div>
-
-              {/* Footer with enhanced styling */}
-              <div className="flex items-center justify-between text-xs">
+              {/* Compact Header */}
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
+                  {renderStars(review.rating)}
+                  <span className="text-xs text-gray-500">
+                    {formatDate(review.date)}
+                  </span>
                   {review.appVersion && (
-                    <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-sm">
-                      📱 v{review.appVersion}
+                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                      v{review.appVersion}
                     </span>
                   )}
-                  <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium shadow-sm">
-                    🌍 United States
-                  </span>
                 </div>
-                <span className="text-gray-500">
+                <span className="text-xs text-gray-400">
                   #{filteredReviews.indexOf(review) + 1}
+                </span>
+              </div>
+
+              {/* Content - title bold, content normal */}
+              {review.title && (
+                <h3 className="font-bold text-gray-900 text-sm mb-2 leading-tight">
+                  {review.title}
+                </h3>
+              )}
+              <p className="text-gray-700 leading-relaxed text-sm mb-2">
+                {review.content}
+              </p>
+
+              {/* Footer - simplified */}
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                  {review.author || 'Anonymous'}
+                </span>
+                <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded">
+                  {appName}
+                </span>
+                <span className="px-2 py-1 bg-green-50 text-green-700 rounded">
+                  🌍 US
                 </span>
               </div>
             </div>
