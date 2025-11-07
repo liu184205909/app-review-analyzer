@@ -15,6 +15,9 @@ export default function HomePage() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br']);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisStatus, setAnalysisStatus] = useState('');
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [platformFilter, setPlatformFilter] = useState<'all' | 'ios' | 'android'>('all');
@@ -60,10 +63,13 @@ export default function HomePage() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
+    setShowProgressModal(true);
+    setAnalysisProgress(0);
+    setAnalysisStatus('Initializing analysis...');
 
     try {
       const endpoint = mode === 'single' ? '/api/analyze' : '/api/compare';
-      
+
       const body = mode === 'single'
         ? {
             appUrl,
@@ -95,12 +101,11 @@ export default function HomePage() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setTaskId(data.taskId);
-        // Redirect to results page using slug (SEO-friendly URL)
-        const urlPath = data.slug || data.appSlug || data.taskId;
-        window.location.href = `/analysis/${urlPath}`;
+        // Start real-time progress tracking
+        trackProgress(data.taskId);
       } else {
         // Enhanced error handling with suggestions
         const errorMessage = data.error || 'Unknown error occurred';
@@ -112,13 +117,58 @@ export default function HomePage() {
         } else {
           alert(`❌ ${errorMessage}`);
         }
+        setShowProgressModal(false);
+        setAnalyzing(false);
       }
     } catch (error) {
       console.error('Analysis error:', error);
       alert('Failed to start analysis');
-    } finally {
+      setShowProgressModal(false);
       setAnalyzing(false);
     }
+  };
+
+  const trackProgress = async (taskId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/analyze?taskId=${taskId}`);
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          clearInterval(pollInterval);
+          setAnalysisProgress(100);
+          setAnalysisStatus('Analysis complete! Redirecting...');
+          setTimeout(() => {
+            const urlPath = data.slug || data.appSlug || data.taskId;
+            window.location.href = `/analysis/${urlPath}`;
+          }, 1500);
+        } else if (data.status === 'failed') {
+          clearInterval(pollInterval);
+          alert('Analysis failed. Please try again.');
+          setShowProgressModal(false);
+          setAnalyzing(false);
+        } else if (data.progress !== undefined) {
+          setAnalysisProgress(data.progress);
+          setAnalysisStatus(getStatusMessage(data.progress));
+        }
+      } catch (error) {
+        console.error('Progress tracking error:', error);
+        clearInterval(pollInterval);
+        setShowProgressModal(false);
+        setAnalyzing(false);
+      }
+    }, 1500); // Poll every 1.5 seconds for smooth updates
+  };
+
+  const getStatusMessage = (progress: number): string => {
+    if (progress < 5) return 'Initializing analysis...';
+    if (progress < 15) return 'Setting up database...';
+    if (progress < 45) return 'Fetching reviews from stores...';
+    if (progress < 60) return 'Processing and saving reviews...';
+    if (progress < 70) return 'Selecting best reviews for analysis...';
+    if (progress < 85) return 'Analyzing with AI...';
+    if (progress < 95) return 'Generating insights and recommendations...';
+    return 'Finalizing report...';
   };
 
   const addCompetitor = () => {
@@ -894,6 +944,94 @@ export default function HomePage() {
           </button>
         </div>
       </main>
+
+      {/* Progress Modal */}
+      {showProgressModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+            {/* Spinner with percentage */}
+            <div className="mb-6 flex justify-center">
+              <div className="relative">
+                <svg className="animate-spin h-16 w-16 text-blue-600" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold text-blue-600">{analysisProgress}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Title and status */}
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+              Analyzing Reviews
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              {analysisStatus}
+            </p>
+
+            {/* Progress bar */}
+            <div className="mb-6">
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${analysisProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stage indicators */}
+            <div className="grid grid-cols-4 gap-2 mb-6">
+              <div className={`text-center p-2 rounded-lg text-xs ${
+                analysisProgress >= 45 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+              }`}>
+                <div className="font-medium">📥 Fetch</div>
+                <div className="text-xs opacity-75">Reviews</div>
+              </div>
+              <div className={`text-center p-2 rounded-lg text-xs ${
+                analysisProgress >= 70 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+              }`}>
+                <div className="font-medium">⚙️ Process</div>
+                <div className="text-xs opacity-75">Data</div>
+              </div>
+              <div className={`text-center p-2 rounded-lg text-xs ${
+                analysisProgress >= 85 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+              }`}>
+                <div className="font-medium">🤖 AI</div>
+                <div className="text-xs opacity-75">Analysis</div>
+              </div>
+              <div className={`text-center p-2 rounded-lg text-xs ${
+                analysisProgress >= 95 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+              }`}>
+                <div className="font-medium">📊 Report</div>
+                <div className="text-xs opacity-75">Ready</div>
+              </div>
+            </div>
+
+            {/* Estimated time */}
+            <p className="text-sm text-center text-gray-500">
+              {analysisProgress < 15 ? 'Estimated time: 2-3 minutes' :
+               analysisProgress < 45 ? 'Estimated time: 1-2 minutes' :
+               analysisProgress < 70 ? 'Estimated time: 45-60 seconds' :
+               analysisProgress < 85 ? 'Estimated time: 20-30 seconds' :
+               analysisProgress < 100 ? 'Almost done...' : 'Analysis complete!'}
+            </p>
+
+            {/* Cancel button */}
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setShowProgressModal(false);
+                  setAnalyzing(false);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-sm underline"
+              >
+                Cancel and return to homepage
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
