@@ -10,7 +10,7 @@ export default function HomePage() {
   const [appUrl, setAppUrl] = useState('');
   const [competitorUrls, setCompetitorUrls] = useState<string[]>(['']);
   const [focusNegative, setFocusNegative] = useState(true);
-  const [deepMode, setDeepMode] = useState(false);
+  const [deepMode, setDeepMode] = useState(true); // Always enabled by default
   const [multiCountry, setMultiCountry] = useState(false);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br']);
   const [analyzing, setAnalyzing] = useState(false);
@@ -321,10 +321,10 @@ export default function HomePage() {
                   />
                   <div className="flex-1">
                     <span className="text-sm text-gray-700">
-                      🚀 Deep Analysis Mode
+                      🚀 Deep Analysis Mode (Standard)
                     </span>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Analyze 1000+ reviews from multiple countries for comprehensive insights (slower)
+                      Analyze 800-1000 reviews for comprehensive insights with AI-powered analysis
                     </p>
                   </div>
                 </label>
@@ -393,21 +393,22 @@ export default function HomePage() {
             </div>
 
             {/* Review Count Preview */}
-            {(deepMode || multiCountry) && (
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">
-                    Expected Review Analysis:
-                  </span>
-                  <span className="text-sm font-bold text-purple-700">
-                    {multiCountry ? '800-1000+' : deepMode ? '400-600' : '200-300'} reviews
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  ⏱️ Estimated time: {multiCountry ? '2-4 minutes' : deepMode ? '1-2 minutes' : '30-60 seconds'}
-                </p>
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  Expected Review Analysis:
+                </span>
+                <span className="text-sm font-bold text-purple-700">
+                  {multiCountry ? '1000-1200+' : '800-1000'} reviews
+                </span>
               </div>
-            )}
+              <p className="text-xs text-gray-600 mt-1">
+                ⏱️ Estimated time: {multiCountry ? '2-4 minutes' : '1-3 minutes'}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                📊 50% critical issues, 30% experience, 20% positive reviews
+              </p>
+            </div>
           </div>
 
           {/* Analyze Button */}
