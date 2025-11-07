@@ -375,16 +375,16 @@ export default function AnalysisResultPage() {
     
         {/* Critical Issues with Enhanced Card Design */}
         {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (
-          <div className="bg-gradient-to-br from-white via-red-50/30 to-white rounded-xl shadow-lg p-6 mb-6 border border-red-100">
+          <div className="bg-gradient-to-br from-white via-red-50/20 to-white rounded-xl shadow-lg p-6 mb-6 border border-red-100">
             {/* Enhanced Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500 rounded-lg shadow-sm">
+                <div className="p-2 bg-red-400 rounded-lg shadow-sm">
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Critical Issues</h2>
-                  <p className="text-sm text-red-600 font-medium">
+                  <p className="text-sm text-red-500 font-medium">
                     {analysis.criticalIssues.length} critical problems • {analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
                   </p>
                 </div>
@@ -433,7 +433,7 @@ export default function AnalysisResultPage() {
                     onClick={() => toggleIssueExpand(index)}
                   >
                     {/* Frequency Bar */}
-                    <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-red-400 to-red-600 transition-all duration-500"
+                    <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-red-300 to-red-400 transition-all duration-500"
                          style={{ width: `${frequencyRatio * 100}%` }} />
 
                     {/* Card Content */}
@@ -442,17 +442,17 @@ export default function AnalysisResultPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              issue.severity === 'high' ? 'bg-red-500 text-white' :
-                              issue.severity === 'medium' ? 'bg-orange-500 text-white' :
-                              'bg-yellow-500 text-white'
+                              issue.severity === 'high' ? 'bg-red-400 text-white' :
+                              issue.severity === 'medium' ? 'bg-orange-300 text-white' :
+                              'bg-yellow-300 text-white'
                             }`}>
                               {issue.severity?.toUpperCase() || 'HIGH'}
                             </div>
-                            <div className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                            <div className="px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-medium">
                               Frequency: {issue.frequency}
                             </div>
                           </div>
-                          <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-red-600 transition-colors">
+                          <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-red-500 transition-colors">
                             {issue.title}
                           </h3>
                         </div>
@@ -460,13 +460,11 @@ export default function AnalysisResultPage() {
                         {/* Expand/Collapse Icon with Count */}
                         <div className="relative group">
                           {issue.examples && issue.examples.length > 0 && (
-                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
-                              {issue.examples.length}
+                            <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-medium shadow-sm group-hover:bg-red-200 transition-all cursor-pointer">
+                              <MessageSquare className="w-3 h-3" />
+                              <span>{issue.examples.length}</span>
                             </div>
                           )}
-                          <div className="text-gray-400 group-hover:text-red-500 transition-colors p-1">
-                            <MessageSquare className="w-5 h-5" />
-                          </div>
                         </div>
                       </div>
 
@@ -502,16 +500,16 @@ export default function AnalysisResultPage() {
 
             {/* Experience Issues with Enhanced Card Design */}
             {analysis.experienceIssues && analysis.experienceIssues.length > 0 && (
-              <div className="bg-gradient-to-br from-white via-orange-50/30 to-white rounded-xl shadow-lg p-6 mb-6 border border-orange-100">
+              <div className="bg-gradient-to-br from-white via-orange-50/20 to-white rounded-xl shadow-lg p-6 mb-6 border border-orange-100">
                 {/* Enhanced Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-500 rounded-lg shadow-sm">
+                    <div className="p-2 bg-orange-400 rounded-lg shadow-sm">
                       <TrendingDown className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
-                      <p className="text-sm text-orange-600 font-medium">
+                      <p className="text-sm text-orange-500 font-medium">
                         {analysis.experienceIssues.length} experience problems • {analysis.experienceIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
                       </p>
                     </div>
@@ -546,7 +544,7 @@ export default function AnalysisResultPage() {
                         onClick={() => toggleExperienceIssueExpand(index)}
                       >
                         {/* Frequency Bar */}
-                        <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
+                        <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-orange-300 to-orange-400 transition-all duration-500"
                              style={{ width: `${frequencyRatio * 100}%` }} />
 
                         {/* Card Content */}
@@ -554,14 +552,14 @@ export default function AnalysisResultPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <div className="px-2 py-1 bg-orange-500 text-white rounded-full text-xs font-medium">
+                                <div className="px-2 py-1 bg-orange-300 text-white rounded-full text-xs font-medium">
                                   UX
                                 </div>
-                                <div className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                <div className="px-2 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-medium">
                                   Frequency: {issue.frequency}
                                 </div>
                               </div>
-                              <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
+                              <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-orange-500 transition-colors">
                                 {issue.title}
                               </h3>
                             </div>
@@ -569,13 +567,11 @@ export default function AnalysisResultPage() {
                             {/* Expand/Collapse Icon with Count */}
                             <div className="relative group">
                               {issue.examples && issue.examples.length > 0 && (
-                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
-                                  {issue.examples.length}
+                                <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium shadow-sm group-hover:bg-orange-200 transition-all cursor-pointer">
+                                  <MessageSquare className="w-3 h-3" />
+                                  <span>{issue.examples.length}</span>
                                 </div>
                               )}
-                              <div className="text-gray-400 group-hover:text-orange-500 transition-colors p-1">
-                                <MessageSquare className="w-5 h-5" />
-                              </div>
                             </div>
                           </div>
 
@@ -682,13 +678,11 @@ export default function AnalysisResultPage() {
                             {/* Expand/Collapse Icon with Count */}
                             <div className="relative group">
                               {request.examples && request.examples.length > 0 && (
-                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
-                                  {request.examples.length}
+                                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium shadow-sm group-hover:bg-blue-200 transition-all cursor-pointer">
+                                  <MessageSquare className="w-3 h-3" />
+                                  <span>{request.examples.length}</span>
                                 </div>
                               )}
-                              <div className="text-gray-400 group-hover:text-blue-500 transition-colors p-1">
-                                <MessageSquare className="w-5 h-5" />
-                              </div>
                             </div>
                           </div>
 
