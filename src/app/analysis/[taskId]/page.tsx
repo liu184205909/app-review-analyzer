@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
-import KeywordCloud, { extractKeywordsFromAnalysis } from '@/components/KeywordCloud';
+import IssueHeatmap from '@/components/IssueHeatmap';
 import ExportDropdown from '@/components/ExportDropdown';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
@@ -373,10 +373,10 @@ export default function AnalysisResultPage() {
           </div>
         </div>
 
-        {/* Keywords Cloud */}
-        <KeywordCloud
-          keywords={extractKeywordsFromAnalysis(analysis)}
-          title="🔍 Keywords Analysis"
+        {/* Issues Heatmap */}
+        <IssueHeatmap
+          analysis={analysis}
+          title="🔍 问题主题热力图"
           className="mb-6"
         />
 
