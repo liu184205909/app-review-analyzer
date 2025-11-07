@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
-import IssueHeatmap from '@/components/IssueHeatmap';
 import ExportDropdown from '@/components/ExportDropdown';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
@@ -373,13 +372,7 @@ export default function AnalysisResultPage() {
           </div>
         </div>
 
-        {/* Issues Heatmap */}
-        <IssueHeatmap
-          analysis={analysis}
-          title="🔍 问题主题热力图"
-          className="mb-6"
-        />
-
+    
         {/* Critical Issues with expandable reviews */}
         {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
