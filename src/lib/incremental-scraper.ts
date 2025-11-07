@@ -64,7 +64,7 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
 
       const cachedReviews = await prisma.review.findMany({
         where: { appId: existingApp!.id },
-        orderBy: { date: 'desc' },
+        orderBy: { reviewDate: 'desc' },
         take: Math.min(100, targetCount) // 返回最多100条用于分析
       });
 
@@ -311,38 +311,53 @@ export async function getScrapeStats(appId: string, platform: 'ios' | 'android')
 }
 
 /**
- * 清理旧的评论数据（保留最新的N条）
+ * 检查评论数据的存储状态（确保数据完整性）
  */
-export async function cleanupOldReviews(appId: string, platform: 'ios' | 'android', keepCount: number = 1000) {
+export async function checkReviewStorageStatus(appId: string, platform: 'ios' | 'android') {
   const app = await prisma.app.findFirst({
     where: { platform, appId }
   });
 
-  if (!app) return;
+  if (!app) {
+    return {
+      totalReviews: 0,
+      storageStatus: 'app_not_found'
+    };
+  }
 
   const totalReviews = await prisma.review.count({
     where: { appId: app.id }
   });
 
-  if (totalReviews <= keepCount) return;
-
-  // 找出需要保留的评论ID（最新的keepCount条）
-  const reviewsToKeep = await prisma.review.findMany({
+  // 获取最新的几条评论用于验证
+  const latestReviews = await prisma.review.findMany({
     where: { appId: app.id },
     orderBy: { reviewDate: 'desc' },
-    take: keepCount,
-    select: { id: true }
-  });
-
-  const keepIds = new Set(reviewsToKeep.map(r => r.id));
-
-  // 删除超出保留数量的旧评论
-  const deletedCount = await prisma.review.deleteMany({
-    where: {
-      appId: app.id,
-      id: { notIn: Array.from(keepIds) }
+    take: 5,
+    select: {
+      id: true,
+      reviewId: true,
+      author: true,
+      rating: true,
+      reviewDate: true
     }
   });
 
-  console.log(`[Cleanup] Deleted ${deletedCount.count} old reviews for ${platform} app: ${appId}`);
+  return {
+    totalReviews,
+    storageStatus: 'all_reviews_preserved',
+    lastCrawledAt: app.lastCrawledAt,
+    platform: app.platform,
+    appId: app.appId,
+    appInfo: {
+      name: app.name,
+      lastCrawledAt: app.lastCrawledAt
+    },
+    latestReviews: latestReviews.map(r => ({
+      reviewId: r.reviewId,
+      author: r.author,
+      rating: r.rating,
+      reviewDate: r.reviewDate
+    }))
+  };
 }

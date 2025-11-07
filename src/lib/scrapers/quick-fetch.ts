@@ -60,7 +60,7 @@ export async function fetchQuickReviews(
       // Android: 抓取指定数量
       const reviews = await fetchGooglePlayReviews(appId, {
         num: Math.min(count, 100), // 最多100条
-        sort: 'newest'
+        sort: 'NEWEST'
       });
       return reviews;
     }
@@ -157,16 +157,9 @@ export async function triggerHotAppsUpdate(limit: number = 10) {
     const hotApps = await prisma.analysisTask.findMany({
       where: {
         status: 'completed',
-        isLatest: true
-      },
-      include: {
-        app: {
-          include: {
-            _count: {
-              select: { reviews: true }
-            }
-          }
-        }
+        isLatest: true,
+        appStoreId: { not: null },
+        platform: { not: null }
       },
       orderBy: { createdAt: 'desc' },
       take: limit
@@ -176,6 +169,11 @@ export async function triggerHotAppsUpdate(limit: number = 10) {
 
     const updatePromises = hotApps.map(async (task) => {
       try {
+        if (!task.appStoreId || !task.platform) {
+          console.log(`[Hot Apps Update] Skipping task with missing data`);
+          return null;
+        }
+
         const stats = await checkAppNeedsUpdate(task.appStoreId, task.platform);
 
         if (stats.needsUpdate) {
@@ -204,8 +202,8 @@ export async function triggerHotAppsUpdate(limit: number = 10) {
 
     const results = await Promise.allSettled(updatePromises);
 
-    const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-    const skipped = results.filter(r => r.status === 'fulfilled' && !r.value.success).length;
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+    const skipped = results.filter(r => r.status === 'fulfilled' && !r.value?.success).length;
     const failed = results.filter(r => r.status === 'rejected').length;
 
     console.log(`[Hot Apps Update] Complete: ${successful} updated, ${skipped} skipped, ${failed} failed`);
@@ -265,7 +263,7 @@ export async function fetchIncrementalReviewsLegacy(
       console.log(`[Legacy Incremental Fetch] Android: Fetching ${remainingCount} reviews`);
       const reviews = await fetchGooglePlayReviews(appId, {
         num: Math.min(remainingCount, 500),
-        sort: 'newest'
+        sort: 'NEWEST'
       });
       return reviews;
     }

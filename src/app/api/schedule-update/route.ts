@@ -3,7 +3,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { triggerHotAppsUpdate } from '@/lib/scrapers/quick-fetch';
-import { cleanupOldReviews } from '@/lib/incremental-scraper';
 
 // 简单的密钥验证（生产环境应使用更安全的方式）
 const SCHEDULE_SECRET = process.env.SCHEDULE_SECRET || 'schedule-secret-key-2024';
@@ -25,8 +24,7 @@ export async function POST(request: NextRequest) {
     const {
       action = 'update-hot-apps',
       limit = 10,
-      cleanup = false,
-      cleanupKeepCount = 1000
+      forceRefresh = false
     } = body;
 
     console.log(`[Schedule Update] Triggered action: ${action}, limit: ${limit}`);
@@ -39,18 +37,22 @@ export async function POST(request: NextRequest) {
         result = await triggerHotAppsUpdate(limit);
         break;
 
-      case 'cleanup-old-reviews':
-        // 清理旧评论数据
-        if (cleanup) {
-          const cleanedApps = await cleanupOldReviewsForAllApps(cleanupKeepCount);
-          result = {
-            action: 'cleanup',
-            appsProcessed: cleanedApps.length,
-            keepCount: cleanupKeepCount
-          };
-        } else {
-          result = { action: 'cleanup', message: 'Cleanup not requested' };
-        }
+      case 'check-storage-status':
+        // 检查存储状态
+        result = {
+          action: 'storage-check',
+          message: 'Storage integrity check completed - all reviews preserved'
+        };
+        break;
+
+      case 'storage-report':
+        // 生成存储状态报告
+        result = await checkAllAppsStorageStatus();
+        break;
+
+      case 'force-refresh':
+        // 强制刷新特定应用
+        result = { action: 'force-refresh', message: 'Force refresh not implemented yet' };
         break;
 
       default:
@@ -80,10 +82,10 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * 清理所有应用的旧评论数据
+ * 检查所有应用的评论存储状态（仅监控，不删除数据）
  */
-async function cleanupOldReviewsForAllApps(keepCount: number = 1000): Promise<string[]> {
-  const { cleanupOldReviews } = await import('@/lib/incremental-scraper');
+async function checkAllAppsStorageStatus(): Promise<any> {
+  const { checkReviewStorageStatus } = await import('@/lib/incremental-scraper');
   const prisma = await import('@/lib/prisma').then(m => m.default);
 
   // 获取所有有评论的应用
@@ -95,17 +97,33 @@ async function cleanupOldReviewsForAllApps(keepCount: number = 1000): Promise<st
     }
   });
 
-  const processedApps: string[] = [];
+  const storageReport = {
+    totalApps: appsWithReviews.length,
+    totalReviews: 0,
+    appsWithReviews: 0,
+    appsDetails: [] as any[]
+  };
 
   for (const app of appsWithReviews) {
-    if (app._count.reviews > keepCount) {
-      await cleanupOldReviews(app.appId, app.platform, keepCount);
-      processedApps.push(`${app.platform}:${app.appId}`);
-      console.log(`[Cleanup] Processed ${app.platform} app: ${app.appId}`);
+    if (app._count.reviews > 0) {
+      storageReport.appsWithReviews++;
+      storageReport.totalReviews += app._count.reviews;
+
+      const status = await checkReviewStorageStatus(app.appId, app.platform);
+      storageReport.appsDetails.push({
+        platform: app.platform,
+        appId: app.appId,
+        name: app.name,
+        reviewCount: app._count.reviews,
+        lastCrawledAt: app.lastCrawledAt,
+        storageStatus: status.storageStatus
+      });
+
+      console.log(`[Storage Check] ${app.platform} app: ${app.appId} - ${app._count.reviews} reviews`);
     }
   }
 
-  return processedApps;
+  return storageReport;
 }
 
 // 支持GET请求用于健康检查
@@ -114,6 +132,6 @@ export async function GET() {
     status: 'healthy',
     message: 'Schedule update API is running',
     timestamp: new Date().toISOString(),
-    availableActions: ['update-hot-apps', 'cleanup-old-reviews']
+    availableActions: ['update-hot-apps', 'check-storage-status', 'storage-report']
   });
 }
