@@ -361,7 +361,7 @@ async function processAnalysis(
 
     // Enhanced sampling: Ensure comprehensive coverage for all issue types
     // 🚀 Enhanced: Always use deep analysis with balanced review selection
-    const maxReviewsForAI = Math.min(400, reviewsToAnalyze.length); // Analyze up to 400 reviews for comprehensive insights
+    const maxReviewsForAI = Math.min(300, reviewsToAnalyze.length); // Analyze up to 300 reviews for AI (optimized for prompt limits)
 
     if (reviewsToAnalyze.length > maxReviewsForAI) {
       // Comprehensive sampling strategy for better issue coverage

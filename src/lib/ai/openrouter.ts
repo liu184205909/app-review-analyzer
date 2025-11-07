@@ -78,7 +78,7 @@ export async function analyzeSingleApp(
         }
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 8000, // Increased to support more examples
     });
 
     const responseText = completion.choices[0]?.message?.content || '{}';
@@ -126,19 +126,28 @@ export async function compareApps(
 }
 
 function buildSingleAppPrompt(reviews: Review[]): string {
-  // Filter 1-3 star reviews for deep dive
-  const negativeReviews = reviews.filter(r => r.rating <= 3);
-  
-  const reviewsText = negativeReviews.slice(0, 100).map(r => 
+  // Analyze ALL reviews for comprehensive insights
+  const allReviews = reviews;
+  const criticalReviews = allReviews.filter(r => r.rating <= 2); // Critical issues (1-2 stars)
+  const experienceReviews = allReviews.filter(r => r.rating === 3); // Experience issues (3 stars)
+  const positiveReviews = allReviews.filter(r => r.rating >= 4); // Feature requests (4-5 stars)
+
+  const reviewsText = allReviews.slice(0, 300).map(r =>
     `Rating: ${r.rating}⭐\nDate: ${r.date.toLocaleDateString()}\nContent: ${r.content}\n${r.appVersion ? `Version: ${r.appVersion}` : ''}`
   ).join('\n---\n');
 
-  return `Analyze the following negative reviews (1-3⭐) from an app. Extract actionable insights.
+  return `Analyze the following app reviews comprehensively. Extract actionable insights across ALL rating categories.
 
-Total reviews analyzed: ${negativeReviews.length}
+REVIEW BREAKDOWN:
+- Critical Issues (1-2⭐): ${criticalReviews.length} reviews
+- Experience Issues (3⭐): ${experienceReviews.length} reviews
+- Positive Reviews (4-5⭐): ${positiveReviews.length} reviews
+- Total Reviews: ${allReviews.length}
 
-Reviews:
+Reviews to analyze (sample of ${Math.min(300, allReviews.length)} reviews):
 ${reviewsText}
+
+IMPORTANT: For each issue type, provide 15-30 specific examples to match industry standards. Competitors show dozens of examples per category.
 
 Please provide analysis in the following JSON format:
 {
@@ -147,26 +156,39 @@ Please provide analysis in the following JSON format:
       "title": "Issue title",
       "frequency": number (how many times mentioned),
       "severity": "high" | "medium" | "low",
-      "examples": ["quote from review 1", "quote from review 2"],
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"],
       "affectedVersion": "version number if mentioned"
     }
   ],
-  "experienceIssues": [similar structure],
-  "featureRequests": [similar structure],
+  "experienceIssues": [
+    {
+      "title": "Issue title",
+      "frequency": number,
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"]
+    }
+  ],
+  "featureRequests": [
+    {
+      "title": "Feature request title",
+      "frequency": number,
+      "examples": ["exact quote from review 1", "exact quote from review 2", "exact quote from review 3", "exact quote from review 4", "exact quote from review 5", "exact quote from review 6", "exact quote from review 7", "exact quote from review 8", "exact quote from review 9", "exact quote from review 10", "exact quote from review 11", "exact quote from review 12", "exact quote from review 13", "exact quote from review 14", "exact quote from review 15", "exact quote from review 16", "exact quote from review 17", "exact quote from review 18", "exact quote from review 19", "exact quote from review 20"]
+    }
+  ],
   "sentiment": {
     "positive": 0-100,
     "negative": 0-100,
     "neutral": 0-100
   },
-  "insights": "A paragraph summarizing key findings",
-  "priorityActions": ["Action 1", "Action 2", "Action 3"]
+  "insights": "A comprehensive paragraph summarizing key findings from all rating categories",
+  "priorityActions": ["Action 1", "Action 2", "Action 3", "Action 4", "Action 5"]
 }
 
-Focus on:
-1. Critical bugs (crashes, data loss)
-2. UX problems
-3. Most requested features
-4. Version-specific issues`;
+ANALYSIS FOCUS:
+1. Critical Issues (1-2⭐): Focus on crashes, data loss, security, payment issues, broken core functionality
+2. Experience Issues (3⭐): Focus on UX/UI problems, performance, navigation, usability issues
+3. Feature Requests (4-5⭐): Focus on new feature requests, enhancements, missing functionality from positive reviews
+
+CRITICAL REQUIREMENT: Each category must include 15-20 detailed examples to provide comprehensive insights similar to competitors like AppFollow and Sensor Tower.`;
 }
 
 function buildComparisonPrompt(appsReviews: { appName: string; reviews: Review[] }[]): string {
