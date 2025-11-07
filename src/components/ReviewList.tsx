@@ -55,9 +55,9 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
 
   // Get color classes based on rating
   const getReviewColor = (rating: number) => {
-    if (rating >= 4) return 'border-l-green-500 bg-green-50';
-    if (rating === 3) return 'border-l-yellow-500 bg-yellow-50';
-    return 'border-l-red-500 bg-red-50';
+    if (rating >= 4) return 'border-l-green-500 border-green-200 bg-green-50/80 hover:bg-green-50';
+    if (rating === 3) return 'border-l-yellow-500 border-yellow-200 bg-yellow-50/80 hover:bg-yellow-50';
+    return 'border-l-red-500 border-red-200 bg-red-50/80 hover:bg-red-50';
   };
 
   // Render stars
@@ -156,7 +156,7 @@ export default function ReviewList({ reviews, appName }: ReviewListProps) {
           paginatedReviews.map((review) => (
             <div
               key={review.id}
-              className={`border-l-4 p-4 rounded-lg transition-all duration-200 hover:shadow-md ${getReviewColor(review.rating)} bg-white`}
+              className={`border-l-4 border-t border-r border-b p-4 rounded-lg transition-all duration-200 hover:shadow-md ${getReviewColor(review.rating)} bg-white shadow-sm`}
             >
               {/* Compact Header */}
               <div className="flex items-center justify-between mb-2">

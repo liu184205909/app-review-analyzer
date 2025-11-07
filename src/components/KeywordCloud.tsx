@@ -435,26 +435,25 @@ export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
     'thought', 'thinking', 'work', 'works', 'worked', 'working', 'try', 'tries',
     'tried', 'trying', 'feel', 'feels', 'felt', 'feeling', 'seem', 'seems', 'seemed',
     'time', 'way', 'day', 'thing', 'people', 'man', 'woman', 'child', 'world', 'life',
-    'hand', 'part', 'eye', 'place', 'case', 'point', 'problem', 'question', 'issue',
-    'app', 'application', 'software', 'program', 'system', 'interface', 'option', 'setting',
-    'button', 'screen', 'page', 'menu', 'loading', 'error', 'data', 'file', 'image', 'video'
+    'hand', 'part', 'eye', 'place', 'case', 'point', 'problem', 'question', 'issue'
   ]);
 
-  // 应用特定关键词排除
+  // 应用特定关键词排除，但保留重要的分析词汇
   const appSpecificWords = new Set([
     'instagram', 'tiktok', 'facebook', 'twitter', 'youtube', 'snapchat', 'whatsapp',
     'chrome', 'safari', 'firefox', 'edge', 'gmail', 'outlook', 'telegram', 'signal',
     'spotify', 'netflix', 'amazon', 'google', 'apple', 'microsoft', 'zoom', 'teams'
   ]);
 
-  // 重要关键词权重
+  // 重要关键词权重 - 增加issues相关词汇权重
   const importantKeywords = new Set([
     'crash', 'slow', 'freeze', 'bug', 'lag', 'error', 'fail', 'broken', 'slowly',
     'fast', 'quick', 'smooth', 'responsive', 'stable', 'reliable', 'working', 'fixed',
     'design', 'layout', 'ui', 'ux', 'interface', 'navigation', 'menu', 'search', 'filter',
     'video', 'audio', 'photo', 'image', 'camera', 'quality', 'hd', 'resolution', 'sound',
     'notification', 'alert', 'message', 'chat', 'post', 'share', 'upload', 'download',
-    'account', 'login', 'password', 'security', 'privacy', 'storage', 'memory', 'cache'
+    'account', 'login', 'password', 'security', 'privacy', 'storage', 'memory', 'cache',
+    'issue', 'problem', 'crash', 'fix', 'update', 'feature', 'improvement', 'suggestion'
   ]);
 
   // 常见短语模式匹配

@@ -273,8 +273,8 @@ async function processAnalysis(
 
     // Fetch reviews with enhanced sampling and multi-country support
     // 🚀 Enhanced: Always use deep analysis for better insights
-    // Base target: 800-1000 reviews for comprehensive analysis
-    const reviewTarget = options?.multiCountry ? 1000 : 800;
+    // Base target: 1000-1200 reviews for comprehensive analysis
+    const reviewTarget = options?.multiCountry ? 1200 : 1000;
     const useMultiCountry = options?.multiCountry || false;
 
     let reviews: any[] = [];
