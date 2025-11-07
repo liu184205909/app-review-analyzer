@@ -373,48 +373,128 @@ export default function AnalysisResultPage() {
         </div>
 
     
-        {/* Critical Issues with expandable reviews */}
+        {/* Critical Issues with Enhanced Card Design */}
         {analysis.criticalIssues && analysis.criticalIssues.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertCircle className="w-6 h-6 text-red-500" />
-              <h2 className="text-2xl font-bold text-gray-900">Critical Issues</h2>
-            </div>
-            <p className="text-gray-600 mb-6">
-              The most serious problems identified in user feedback that need to be prioritized to improve user experience and app ratings.
-            </p>
-            <div className="space-y-3">
-              {analysis.criticalIssues.map((issue, index) => (
-                <div key={index} className="bg-red-50/80 rounded-lg p-3 border border-red-200/60">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="font-semibold text-gray-900">{issue.title}</span>
-
-                    {/* Comments Count Button */}
-                    {issue.examples && issue.examples.length > 0 && (
-                      <button
-                        onClick={() => toggleIssueExpand(index)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        {issue.examples.length}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Comments - Expandable */}
-                  {expandedIssues.has(index) && issue.examples && issue.examples.length > 0 && (
-                    <div className="space-y-2 mt-3">
-                      {issue.examples.map((example, exIndex) => (
-                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
-                          <p className="text-sm text-gray-700 leading-relaxed italic">
-                            "{example}"
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          <div className="bg-gradient-to-br from-white via-red-50/30 to-white rounded-xl shadow-lg p-6 mb-6 border border-red-100">
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500 rounded-lg shadow-sm">
+                  <AlertCircle className="w-6 h-6 text-white" />
                 </div>
-              ))}
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Critical Issues</h2>
+                  <p className="text-sm text-red-600 font-medium">
+                    {analysis.criticalIssues.length} critical problems • {analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const allExpanded = expandedIssues.size === analysis.criticalIssues.length;
+                    if (allExpanded) {
+                      setExpandedIssues(new Set());
+                    } else {
+                      setExpandedIssues(new Set(analysis.criticalIssues.map((_, index) => index)));
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                >
+                  {expandedIssues.size === analysis.criticalIssues.length ? 'Collapse All' : 'Expand All'}
+                </button>
+                <select
+                  className="px-4 py-2 border border-red-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  onChange={(e) => {
+                    const sorted = [...analysis.criticalIssues].sort((a, b) => {
+                      if (e.target.value === 'frequency') return (b.frequency || 0) - (a.frequency || 0);
+                      if (e.target.value === 'alphabetical') return a.title.localeCompare(b.title);
+                      return 0;
+                    });
+                    // Update order logic here
+                  }}
+                >
+                  <option value="frequency">Sort by Frequency</option>
+                  <option value="alphabetical">Sort by Name</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Enhanced Cards */}
+            <div className="grid gap-4">
+              {analysis.criticalIssues.map((issue, index) => {
+                const maxFrequency = Math.max(...analysis.criticalIssues.map(i => i.frequency || 0));
+                const frequencyRatio = (issue.frequency || 0) / maxFrequency;
+
+                return (
+                  <div
+                    key={index}
+                    className="group relative overflow-hidden rounded-xl border-2 border-red-100 bg-white hover:border-red-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    onClick={() => toggleIssueExpand(index)}
+                  >
+                    {/* Frequency Bar */}
+                    <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-red-400 to-red-600 transition-all duration-500"
+                         style={{ width: `${frequencyRatio * 100}%` }} />
+
+                    {/* Card Content */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              issue.severity === 'high' ? 'bg-red-500 text-white' :
+                              issue.severity === 'medium' ? 'bg-orange-500 text-white' :
+                              'bg-yellow-500 text-white'
+                            }`}>
+                              {issue.severity?.toUpperCase() || 'HIGH'}
+                            </div>
+                            <div className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                              Frequency: {issue.frequency}
+                            </div>
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-red-600 transition-colors">
+                            {issue.title}
+                          </h3>
+                        </div>
+
+                        {/* Expand/Collapse Icon */}
+                        <div className="text-gray-400 group-hover:text-red-500 transition-colors">
+                          <MessageSquare className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      {/* Expandable Comments */}
+                      {expandedIssues.has(index) && issue.examples && issue.examples.length > 0 && (
+                        <div className="space-y-3 pt-3 border-t border-gray-100">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <MessageSquare className="w-4 h-4" />
+                            <span>User Examples ({issue.examples.length})</span>
+                          </div>
+                          {issue.examples.slice(0, 5).map((example, exIndex) => (
+                            <div key={exIndex} className="bg-red-50/50 border border-red-200 rounded-lg p-3">
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                💬 "{example}"
+                              </p>
+                            </div>
+                          ))}
+                          {issue.examples.length > 5 && (
+                            <div className="text-center text-xs text-gray-500 pt-2">
+                              +{issue.examples.length - 5} more examples
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Hover Hint */}
+                      {!expandedIssues.has(index) && (
+                        <div className="text-xs text-gray-500 group-hover:text-red-600 transition-colors">
+                          Click to see {issue.examples.length} examples
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -424,49 +504,111 @@ export default function AnalysisResultPage() {
          (analysis.featureRequests && analysis.featureRequests.length > 0) ? (
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
 
-            {/* Experience Issues */}
+            {/* Experience Issues with Enhanced Card Design */}
             {analysis.experienceIssues && analysis.experienceIssues.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <TrendingDown className="w-6 h-6 text-orange-500" />
-                  <h2 className="text-2xl font-bold text-gray-900">Experience Issues</h2>
-                </div>
-            <p className="text-gray-600 mb-6">
-              UX problems and friction points that users encounter during usage, affecting the overall app experience.
-            </p>
-            <div className="space-y-3">
-              {analysis.experienceIssues.map((issue, index) => (
-                <div key={index} className="bg-orange-50/80 rounded-lg p-3 border border-orange-200/60">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="font-semibold text-gray-900">{issue.title}</span>
-
-                    {/* Comments Count Button */}
-                    {issue.examples && issue.examples.length > 0 && (
-                      <button
-                        onClick={() => toggleExperienceIssueExpand(index)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        {issue.examples.length}
-                      </button>
-                    )}
-                  </div>
-                  
-                  {/* Comments - Expandable */}
-                  {expandedExperienceIssues.has(index) && issue.examples && issue.examples.length > 0 && (
-                    <div className="space-y-2 mt-3">
-                      {issue.examples.map((example, exIndex) => (
-                        <div key={exIndex} className="bg-white p-3 rounded border border-gray-200">
-                          <p className="text-sm text-gray-700 leading-relaxed italic">
-                            "{example}"
-                          </p>
-                        </div>
-                      ))}
+              <div className="bg-gradient-to-br from-white via-orange-50/30 to-white rounded-xl shadow-lg p-6 mb-6 border border-orange-100">
+                {/* Enhanced Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-500 rounded-lg shadow-sm">
+                      <TrendingDown className="w-6 h-6 text-white" />
                     </div>
-                  )}
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900">Experience Issues</h2>
+                      <p className="text-sm text-orange-600 font-medium">
+                        {analysis.experienceIssues.length} experience problems • {analysis.experienceIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0)} mentions
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const allExpanded = expandedExperienceIssues.size === analysis.experienceIssues.length;
+                        if (allExpanded) {
+                          setExpandedExperienceIssues(new Set());
+                        } else {
+                          setExpandedExperienceIssues(new Set(analysis.experienceIssues.map((_, index) => index)));
+                        }
+                      }}
+                      className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium"
+                    >
+                      {expandedExperienceIssues.size === analysis.experienceIssues.length ? 'Collapse All' : 'Expand All'}
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Enhanced Cards */}
+                <div className="grid gap-4">
+                  {analysis.experienceIssues.map((issue, index) => {
+                    const maxFrequency = Math.max(...analysis.experienceIssues.map(i => i.frequency || 0));
+                    const frequencyRatio = (issue.frequency || 0) / maxFrequency;
+
+                    return (
+                      <div
+                        key={index}
+                        className="group relative overflow-hidden rounded-xl border-2 border-orange-100 bg-white hover:border-orange-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        onClick={() => toggleExperienceIssueExpand(index)}
+                      >
+                        {/* Frequency Bar */}
+                        <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500"
+                             style={{ width: `${frequencyRatio * 100}%` }} />
+
+                        {/* Card Content */}
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="px-2 py-1 bg-orange-500 text-white rounded-full text-xs font-medium">
+                                  UX
+                                </div>
+                                <div className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                  Frequency: {issue.frequency}
+                                </div>
+                              </div>
+                              <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
+                                {issue.title}
+                              </h3>
+                            </div>
+
+                            {/* Expand/Collapse Icon */}
+                            <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
+                              <MessageSquare className="w-5 h-5" />
+                            </div>
+                          </div>
+
+                          {/* Expandable Comments */}
+                          {expandedExperienceIssues.has(index) && issue.examples && issue.examples.length > 0 && (
+                            <div className="space-y-3 pt-3 border-t border-gray-100">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                <MessageSquare className="w-4 h-4" />
+                                <span>User Examples ({issue.examples.length})</span>
+                              </div>
+                              {issue.examples.slice(0, 4).map((example, exIndex) => (
+                                <div key={exIndex} className="bg-orange-50/50 border border-orange-200 rounded-lg p-3">
+                                  <p className="text-sm text-gray-700 leading-relaxed">
+                                    💬 "{example}"
+                                  </p>
+                                </div>
+                              ))}
+                              {issue.examples.length > 4 && (
+                                <div className="text-center text-xs text-gray-500 pt-2">
+                                  +{issue.examples.length - 4} more examples
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Hover Hint */}
+                          {!expandedExperienceIssues.has(index) && (
+                            <div className="text-xs text-gray-500 group-hover:text-orange-600 transition-colors">
+                              Click to see {issue.examples.length} examples
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
