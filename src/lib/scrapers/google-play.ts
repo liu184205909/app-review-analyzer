@@ -249,9 +249,10 @@ export async function fetchGooglePlayReviewsMultiPage(
  */
 export async function fetchGooglePlayReviewsMultiCountry(
   appId: string,
-  targetCount: number = 1000
+  targetCount: number = 1000,
+  customCountries?: string[]
 ): Promise<GooglePlayReview[]> {
-  const countries = ['us', 'gb', 'ca', 'au', 'de', 'fr', 'in', 'br'];
+  const countries = customCountries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'in', 'br'];
   const allReviews: GooglePlayReview[] = [];
   const seenIds = new Set<string>();
 
@@ -281,7 +282,7 @@ export async function fetchGooglePlayReviewsMultiCountry(
 
       // Add delay between countries to avoid rate limiting
       if (country !== countries[countries.length - 1]) {
-        await delay(1000);
+        await delay(500); // Reduced from 1000ms for faster processing
       }
     } catch (error) {
       console.error(`Error fetching from ${country}:`, error);

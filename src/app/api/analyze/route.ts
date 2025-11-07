@@ -234,7 +234,7 @@ async function processAnalysis(
     // Update task status
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { status: 'processing', progress: 10 },
+      data: { status: 'processing', progress: 5 },
     });
 
     // Save app to database
@@ -268,24 +268,26 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { progress: 30 },
+      data: { progress: 15 },
     });
 
     // Fetch reviews with enhanced sampling and multi-country support
-    // 🚀 Enhanced: Support 1000+ reviews with intelligent sampling
-    const reviewTarget = options?.deepMode ? 1000 : (options?.multiCountry ? 800 : 300);
-    const useMultiCountry = options?.multiCountry || options?.deepMode;
+    // 🚀 Enhanced: Always use deep analysis for better insights
+    // Base target: 800-1000 reviews for comprehensive analysis
+    const reviewTarget = options?.multiCountry ? 1000 : 800;
+    const useMultiCountry = options?.multiCountry || false;
 
     let reviews: any[] = [];
 
     if (platform === 'ios') {
       if (useMultiCountry) {
         // Multi-country fetching for iOS (500-1000+ reviews)
-        console.log(`[iOS] Multi-country fetching: ${reviewTarget} target reviews`);
-        reviews = await fetchAppStoreReviewsMultiCountry(appId, reviewTarget);
+        const countries = options?.countries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp'];
+        console.log(`[iOS] Multi-country fetching: ${reviewTarget} target reviews from ${countries.length} countries`);
+        reviews = await fetchAppStoreReviewsMultiCountry(appId, reviewTarget, countries);
       } else {
         // Single country with more pages
-        const pages = options?.deepMode ? 10 : 5; // Max 10 pages (500 reviews)
+        const pages = 10; // Always use max pages for deep analysis
         console.log(`[iOS] Single country fetching: ${pages} pages from US store`);
         reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages, reviewTarget);
       }
@@ -293,16 +295,23 @@ async function processAnalysis(
       // Android with enhanced options
       if (useMultiCountry) {
         // Multi-country fetching for Android (800-1000+ reviews)
-        console.log(`[Android] Multi-country fetching: ${reviewTarget} target reviews`);
-        reviews = await fetchGooglePlayReviewsMultiCountry(appId, reviewTarget);
+        const countries = options?.countries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'in', 'br'];
+        console.log(`[Android] Multi-country fetching: ${reviewTarget} target reviews from ${countries.length} countries`);
+        reviews = await fetchGooglePlayReviewsMultiCountry(appId, reviewTarget, countries);
       } else {
         // Single country with deep mode
         reviews = await fetchGooglePlayReviewsMultiPage(appId, {
           maxReviews: reviewTarget,
-          deepMode: options?.deepMode,
+          deepMode: true, // Always use deep mode
         });
       }
     }
+
+    // Update progress after review fetching
+    await prisma.analysisTask.update({
+      where: { id: taskId },
+      data: { progress: 45 },
+    });
 
     // ⚡ Batch save reviews to database (much faster)
     // Skip duplicates by checking existing reviews first
@@ -336,6 +345,12 @@ async function processAnalysis(
       });
     }
 
+    // Update progress after saving reviews
+    await prisma.analysisTask.update({
+      where: { id: taskId },
+      data: { progress: 60 },
+    });
+
     // Filter reviews for analysis (1-3 stars if option set)
     let reviewsToAnalyze = reviews;
     if (options?.ratingFilter) {
@@ -344,55 +359,35 @@ async function processAnalysis(
       );
     }
 
-    // Smart sampling: prioritize negative reviews and limit total for speed
-    // 🚀 Enhanced: Adaptive sampling based on review count and options
-    const baseMaxReviews = 100;
-    const maxReviewsForAI = options?.deepMode ? 200 : baseMaxReviews;
+    // Enhanced sampling: Ensure comprehensive coverage for all issue types
+    // 🚀 Enhanced: Always use deep analysis with balanced review selection
+    const maxReviewsForAI = Math.min(400, reviewsToAnalyze.length); // Analyze up to 400 reviews for comprehensive insights
 
     if (reviewsToAnalyze.length > maxReviewsForAI) {
-      // Enhanced sampling strategy for deep mode
-      if (options?.deepMode) {
-        // For deep mode: 70% negative reviews, 20% positive, 10% neutral
-        const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
-        const highRating = reviewsToAnalyze.filter(r => r.rating === 4 || r.rating === 5);
-        const neutralRating = reviewsToAnalyze.filter(r => r.rating === 3);
+      // Comprehensive sampling strategy for better issue coverage
+      // 50% negative (1-2 stars) for critical issues, 30% mixed (3 stars) for experience issues, 20% positive (4-5 stars) for feature requests
+      const criticalIssues = reviewsToAnalyze.filter(r => r.rating <= 2); // Critical issues (1-2 stars)
+      const experienceIssues = reviewsToAnalyze.filter(r => r.rating === 3); // Experience issues (3 stars)
+      const positiveReviews = reviewsToAnalyze.filter(r => r.rating >= 4); // Positive reviews (4-5 stars)
 
-        const lowRatingCount = Math.floor(maxReviewsForAI * 0.7);
-        const highRatingCount = Math.floor(maxReviewsForAI * 0.2);
-        const neutralCount = maxReviewsForAI - lowRatingCount - highRatingCount;
+      const criticalCount = Math.floor(maxReviewsForAI * 0.5); // 50% for critical issues
+      const experienceCount = Math.floor(maxReviewsForAI * 0.3); // 30% for experience issues
+      const positiveCount = maxReviewsForAI - criticalCount - experienceCount; // 20% for positive
 
-        reviewsToAnalyze = [
-          ...lowRating.slice(0, lowRatingCount),
-          ...highRating.slice(0, highRatingCount),
-          ...neutralRating.slice(0, neutralCount)
-        ];
+      reviewsToAnalyze = [
+        ...criticalIssues.slice(0, criticalCount),
+        ...experienceIssues.slice(0, experienceCount),
+        ...positiveReviews.slice(0, positiveCount)
+      ];
 
-        console.log(`[AI] Deep mode sampling: ${lowRatingCount} negative, ${highRatingCount} positive, ${neutralCount} neutral reviews`);
-      } else {
-        // Standard mode: prioritize negative reviews
-        const lowRating = reviewsToAnalyze.filter(r => r.rating <= 3);
-        const highRating = reviewsToAnalyze.filter(r => r.rating > 3);
-
-        if (lowRating.length >= maxReviewsForAI) {
-          // Use only low-rating reviews
-          reviewsToAnalyze = lowRating.slice(0, maxReviewsForAI);
-          console.log(`[AI] Standard mode sampling: ${reviewsToAnalyze.length} reviews (${lowRating.length} negative, 0 positive)`);
-        } else {
-          // Mix: all low-rating + some high-rating for balance
-          const remainingSlots = maxReviewsForAI - lowRating.length;
-          reviewsToAnalyze = [
-            ...lowRating,
-            ...highRating.slice(0, remainingSlots)
-          ];
-          console.log(`[AI] Standard mode sampling: ${reviewsToAnalyze.length} reviews (${lowRating.length} negative, ${Math.min(remainingSlots, highRating.length)} positive)`);
-        }
-      }
+      console.log(`[AI] Enhanced sampling: ${criticalCount} critical, ${experienceCount} experience, ${positiveCount} positive reviews`);
+      console.log(`[AI] Total available: ${criticalIssues.length} critical, ${experienceIssues.length} experience, ${positiveReviews.length} positive reviews`);
     }
 
     // Update progress before AI analysis
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { progress: 60 },
+      data: { progress: 70 },
     });
 
     // Perform AI analysis
@@ -409,7 +404,7 @@ async function processAnalysis(
 
     await prisma.analysisTask.update({
       where: { id: taskId },
-      data: { progress: 90 },
+      data: { progress: 85 },
     });
 
     // Get category from database (in case appInfo doesn't have it)

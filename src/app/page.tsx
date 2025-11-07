@@ -12,6 +12,7 @@ export default function HomePage() {
   const [focusNegative, setFocusNegative] = useState(true);
   const [deepMode, setDeepMode] = useState(false);
   const [multiCountry, setMultiCountry] = useState(false);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br']);
   const [analyzing, setAnalyzing] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
@@ -71,6 +72,7 @@ export default function HomePage() {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
               deepMode,
               multiCountry,
+              countries: multiCountry ? selectedCountries : undefined,
             },
           }
         : {
@@ -82,6 +84,7 @@ export default function HomePage() {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
               deepMode,
               multiCountry,
+              countries: multiCountry ? selectedCountries : undefined,
             },
           };
 
@@ -341,10 +344,51 @@ export default function HomePage() {
                       🌍 Multi-Country Reviews
                     </span>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Include reviews from US, UK, Canada, Australia, and more regions
+                      Include reviews from selected countries for comprehensive insights
                     </p>
                   </div>
                 </label>
+
+                {/* Country Selection - Only show when multi-country is enabled */}
+                {multiCountry && (
+                  <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      🌐 Select Countries
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { code: 'us', name: '🇺🇸 USA' },
+                        { code: 'gb', name: '🇬🇧 UK' },
+                        { code: 'ca', name: '🇨🇦 Canada' },
+                        { code: 'au', name: '🇦🇺 Australia' },
+                        { code: 'de', name: '🇩🇪 Germany' },
+                        { code: 'fr', name: '🇫🇷 France' },
+                        { code: 'jp', name: '🇯🇵 Japan' },
+                        { code: 'in', name: '🇮🇳 India' },
+                        { code: 'br', name: '🇧🇷 Brazil' },
+                      ].map((country) => (
+                        <label key={country.code} className="flex items-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedCountries.includes(country.code)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCountries([...selectedCountries, country.code]);
+                              } else {
+                                setSelectedCountries(selectedCountries.filter(c => c !== country.code));
+                              }
+                            }}
+                            className="w-3 h-3 text-green-600 rounded"
+                          />
+                          <span className="text-xs text-gray-700">{country.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Selected: {selectedCountries.length} countries
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

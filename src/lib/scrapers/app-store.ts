@@ -193,7 +193,7 @@ export async function fetchAppStoreReviewsMultiPage(
 
       // Add small delay to be respectful to Apple's servers
       if (page < safeMaxPages) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 200)); // Reduced from 500ms for faster processing
       }
     } catch (error) {
       console.error(`Error fetching page ${page}:`, error);
@@ -211,9 +211,10 @@ export async function fetchAppStoreReviewsMultiPage(
  */
 export async function fetchAppStoreReviewsMultiCountry(
   appId: string,
-  targetCount: number = 1000
+  targetCount: number = 1000,
+  customCountries?: string[]
 ): Promise<AppStoreReview[]> {
-  const countries = ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp'];
+  const countries = customCountries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp'];
   const allReviews: AppStoreReview[] = [];
   const seenIds = new Set<string>();
 

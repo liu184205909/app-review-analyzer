@@ -79,9 +79,9 @@ export default function AnalysisResultPage() {
         const result = await response.json();
         setData(result);
         
-        // Poll if still processing
+        // Poll if still processing - faster polling for better UX
         if (result.status === 'processing' || result.status === 'pending') {
-          setTimeout(fetchData, 3000);
+          setTimeout(fetchData, 1500); // Reduced from 3000ms for faster updates
         } else {
           setLoading(false);
         }
@@ -101,7 +101,7 @@ export default function AnalysisResultPage() {
       const sentimentText = data.result.analysis ? 
         (data.result.analysis.sentiment.negative > 50 ? 'User Feedback Analysis' : 'Review Analysis') : 'Review Analysis';
       
-      document.title = `${app.name} ${sentimentText} - AI-Powered Insights Report | ReviewInsight`;
+      document.title = `${app.name} ${sentimentText} | ReviewInsight`;
       
       // 设置 meta description
       const metaDesc = document.querySelector('meta[name="description"]');
@@ -202,9 +202,13 @@ export default function AnalysisResultPage() {
             Analyzing Reviews
           </h2>
           <p className="text-gray-600 text-center mb-6">
-            {progress < 30 ? 'Fetching reviews...' : 
-             progress < 60 ? 'Processing with AI...' : 
-             progress < 90 ? 'Generating insights...' : 'Almost done...'}
+            {progress < 5 ? 'Initializing analysis...' :
+             progress < 15 ? 'Setting up database...' :
+             progress < 45 ? 'Fetching reviews from stores...' :
+             progress < 60 ? 'Processing and saving reviews...' :
+             progress < 70 ? 'Selecting best reviews for analysis...' :
+             progress < 85 ? 'Analyzing with AI...' :
+             progress < 95 ? 'Generating insights and recommendations...' : 'Finalizing report...'}
           </p>
 
           {/* Progress bar */}
@@ -219,7 +223,10 @@ export default function AnalysisResultPage() {
 
           {/* Estimated time */}
           <p className="text-sm text-center text-gray-500">
-            Estimated time: {progress < 50 ? '30-60' : '10-30'} seconds
+            {progress < 15 ? 'Estimated time: 2-3 minutes' :
+             progress < 45 ? 'Estimated time: 1-2 minutes' :
+             progress < 70 ? 'Estimated time: 45-60 seconds' :
+             progress < 85 ? 'Estimated time: 20-30 seconds' : 'Almost done...'}
           </p>
         </div>
       </div>
