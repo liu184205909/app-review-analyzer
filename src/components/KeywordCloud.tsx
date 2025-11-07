@@ -457,10 +457,73 @@ export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
     'account', 'login', 'password', 'security', 'privacy', 'storage', 'memory', 'cache'
   ]);
 
+  // 常见短语模式匹配
+  const phrasePatterns = [
+    // 问题相关短语
+    { pattern: /\b(app|application|software|program)\s+(crash|crashes|crashing|freez|freezes|freezing|hang|hangs|hanging)\b/i, weight: 2.0, category: 'issue' },
+    { pattern: /\b(cannot|can't|unable to|fail|fails|failed|error|errors?)\s+(to\s+)?(login|log in|sign in|signin|access|connect|connect|open|load|loading|start|work|working)\b/i, weight: 2.0, category: 'issue' },
+    { pattern: /\b(video|audio|music|song|track|photo|picture|image|camera)\s+(not\s+)?(working|loading|play|plays|playing|load|loads|show|shows|display)\b/i, weight: 1.8, category: 'issue' },
+    { pattern: /\b(battery|power|charge|charging)\s+(drain|drains|draining|low|die|dies|dying|fast|quickly|quick)\b/i, weight: 1.8, category: 'issue' },
+    { pattern: /\b(slow|slower|slowly|lag|lags|lagging|delay|delays|delayed|stuck|freezing|freeze|hang|hangs)\s+(loading|load|response|respond|start|startup|performance|speed|operating|working)\b/i, weight: 1.8, category: 'issue' },
+    { pattern: /\b(notification|notifications|alert|alerts|message|messages)\s+(not\s+)?(working|showing|display|receive|receiving|send|sending|deliver|delivering)\b/i, weight: 1.7, category: 'issue' },
+    { pattern: /\b(search|filter|find|look|browse|browse)\s+(not\s+)?(working|function|functioning|load|loading|show|showing|display|result|results)\b/i, weight: 1.7, category: 'issue' },
+    { pattern: /\b(update|updates|updating|upgrade|upgrades|upgrading)\s+(not\s+)?(working|fail|fails|failed|install|installing|available|download|downloading)\b/i, weight: 1.7, category: 'issue' },
+    { pattern: /\b(login|log in|sign in|signin|password|account|profile)\s+(not\s+)?(working|working|function|access|connect|connecting|load|loading|save|saving)\b/i, weight: 1.7, category: 'issue' },
+    { pattern: /\b(server|connection|network|internet|wifi|wi-fi|data)\s+(not\s+)?(working|connected|connecting|available|stable|reliable|fast|slow|error|errors)\b/i, weight: 1.6, category: 'issue' },
+
+    // 正面体验短语
+    { pattern: /\b(very|really|extremely|incredibly|amazing|excellent|outstanding|perfect|awesome|fantastic|great|wonderful|brilliant|superb)\s+(good|great|excellent|amazing|fantastic|wonderful|perfect|awesome|outstanding|brilliant)\b/i, weight: 1.5, category: 'positive' },
+    { pattern: /\b(fast|quick|rapid|swift|speedy|instant|immediate|responsive|smooth|fluid|seamless|efficient)\s+(loading|load|performance|speed|response|respond|working|operating)\b/i, weight: 1.5, category: 'positive' },
+    { pattern: /\b(easy|simple|intuitive|user-friendly|straightforward|convenient|helpful|useful)\s+(to\s+)?(use|navigate|operate|handle|manage|understand|learn|setup|configure)\b/i, weight: 1.4, category: 'positive' },
+    { pattern: /\b(high|excellent|great|good|amazing|fantastic|wonderful|perfect|outstanding|superior|quality|premium|top-notch)\s+(quality|design|performance|features|experience|interface|layout|graphics|visuals|audio|sound)\b/i, weight: 1.4, category: 'positive' },
+
+    // 功能请求短语
+    { pattern: /\b(need|want|wish|hope|please|add|implement|introduce|include|provide|offer|create|develop|build)\s+(new|additional|extra|more|better|improved)\s+(feature|function|option|setting|tool|capability|ability|functionality)\b/i, weight: 1.5, category: 'feature' },
+    { pattern: /\b(should|could|would|might|may|can|will)\s+(have|add|include|offer|provide|support|allow|enable|implement|integrate)\s+(dark|light|custom|multiple|different|various)\s+(mode|theme|style|option|setting|choice)\b/i, weight: 1.4, category: 'feature' },
+    { pattern: /\b(add|implement|support|enable|allow|provide|offer|include)\s+(language|languages|translation|translate|multilingual|localization|region|country)\s+(support|option|setting|choice)\b/i, weight: 1.3, category: 'feature' },
+    { pattern: /\b(need|want|wish|hope|please|add|implement|create|build)\s+(offline|airplane|no-internet|disconnected)\s+(mode|functionality|capability|access|usage|availability)\b/i, weight: 1.3, category: 'feature' },
+    { pattern: /\b(improve|enhance|optimize|upgrade|update|better|faster|quicker|more efficient)\s+(search|filter|sorting|organization|categorization|navigation|menu|interface)\b/i, weight: 1.3, category: 'feature' },
+    { pattern: /\b(add|support|enable|allow|integrate|connect|sync|share|export|import)\s+(cloud|backup|sync|social|sharing|collaboration|teamwork|cooperation)\s+(feature|function|capability|service)\b/i, weight: 1.3, category: 'feature' },
+  ];
+
   const extractWords = (text: string, baseWeight: number, category: string) => {
     const cleanText = text.toLowerCase().replace(/[^\w\s]/g, ' ');
+
+    // 1. 首先提取短语 (2-3个单词)
+    phrasePatterns.forEach(({ pattern, weight: patternWeight, category: patternCategory }) => {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          const normalizedPhrase = match.toLowerCase().trim();
+          if (normalizedPhrase.length >= 6 && normalizedPhrase.length <= 50) { // 短语长度限制
+            const finalCategory = patternCategory === 'issue' ? 'issue' :
+                                patternCategory === 'positive' ? 'positive' :
+                                patternCategory === 'feature' ? 'feature' : category;
+
+            const weightedValue = Math.max(Math.ceil(baseWeight * patternWeight), 8);
+
+            if (keywordMap.has(normalizedPhrase)) {
+              const existing = keywordMap.get(normalizedPhrase)!;
+              existing.value += weightedValue;
+              // 如果短语权重更高，覆盖单字权重
+              if (patternWeight > 1.3) {
+                existing.value += Math.ceil(weightedValue * 0.5);
+              }
+            } else {
+              keywordMap.set(normalizedPhrase, {
+                text: normalizedPhrase,
+                value: weightedValue,
+                category: finalCategory as any
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // 2. 提取单个关键词（保留原有逻辑，但降低权重）
     const words = cleanText.split(/\s+/).filter((word: string) =>
-      word.length >= 3 && word.length <= 15 &&
+      word.length >= 4 && word.length <= 15 && // 提高最小长度，减少短词
       !stopWords.has(word) &&
       !appSpecificWords.has(word) &&
       !/^\d+$/.test(word) &&
@@ -469,8 +532,8 @@ export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
 
     words.forEach((word: string) => {
       const keywordKey = word;
-      const weightMultiplier = importantKeywords.has(word) ? 1.5 : 1;
-      const weightedValue = Math.max(Math.ceil(baseWeight * weightMultiplier), 5);
+      const weightMultiplier = importantKeywords.has(word) ? 1.2 : 0.8; // 降低单字权重
+      const weightedValue = Math.max(Math.ceil(baseWeight * weightMultiplier), 3);
 
       if (keywordMap.has(keywordKey)) {
         const existing = keywordMap.get(keywordKey)!;
@@ -545,12 +608,21 @@ export function extractKeywordsFromAnalysis(analysis: any): KeywordData[] {
 
   const resultKeywords = Array.from(keywordMap.values())
     .sort((a, b) => {
+      // 1. 优先显示短语（包含空格的关键词）
+      const aIsPhrase = a.text.includes(' ');
+      const bIsPhrase = b.text.includes(' ');
+      if (aIsPhrase && !bIsPhrase) return -1;
+      if (!aIsPhrase && bIsPhrase) return 1;
+
+      // 2. 按类别优先级排序
       const categoryPriority: Record<string, number> = { 'issue': 4, 'feature': 3, 'negative': 2, 'positive': 1, 'neutral': 0 };
       const categoryDiff = categoryPriority[b.category as string] - categoryPriority[a.category as string];
       if (categoryDiff !== 0) return categoryDiff;
+
+      // 3. 按权重排序
       return b.value - a.value;
     })
-    .slice(0, 60)
+    .slice(0, 50) // 减少数量，让短语更突出
     .map(keyword => ({
       ...keyword,
       value: Math.max(keyword.value, 8)
