@@ -10,7 +10,7 @@ export default function HomePage() {
   const [appUrl, setAppUrl] = useState('');
   const [competitorUrls, setCompetitorUrls] = useState<string[]>(['']);
   const [focusNegative, setFocusNegative] = useState(true);
-  const [deepMode, setDeepMode] = useState(true); // Always enabled by default
+  // const [deepMode, setDeepMode] = useState(true); // Now standard - no need for state
   const [multiCountry, setMultiCountry] = useState(false);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br']);
   const [analyzing, setAnalyzing] = useState(false);
@@ -70,7 +70,7 @@ export default function HomePage() {
             platform,
             options: {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
-              deepMode,
+              deepMode: true, // Standard feature - always enabled
               multiCountry,
               countries: multiCountry ? selectedCountries : undefined,
             },
@@ -82,7 +82,7 @@ export default function HomePage() {
               .map(url => ({ appUrl: url, platform })),
             options: {
               ratingFilter: focusNegative ? [1, 2, 3] : undefined,
-              deepMode,
+              deepMode: true, // Standard feature - always enabled
               multiCountry,
               countries: multiCountry ? selectedCountries : undefined,
             },
@@ -315,27 +315,9 @@ export default function HomePage() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={deepMode}
-                    onChange={(e) => setDeepMode(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 rounded"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm text-gray-700">
-                      🚀 Deep Analysis Mode (Standard)
-                    </span>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Analyze 800-1000 reviews for comprehensive insights with AI-powered analysis
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
                     checked={multiCountry}
                     onChange={(e) => {
                       setMultiCountry(e.target.checked);
-                      if (e.target.checked) setDeepMode(true); // Enable deep mode automatically
                     }}
                     className="w-4 h-4 text-green-600 rounded"
                   />
@@ -396,7 +378,7 @@ export default function HomePage() {
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
-                  Expected Review Analysis:
+                  Standard Review Analysis:
                 </span>
                 <span className="text-sm font-bold text-purple-700">
                   {multiCountry ? '1000-1200+' : '800-1000'} reviews
