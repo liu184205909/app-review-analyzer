@@ -354,143 +354,113 @@ export default function HomePage() {
               </span>
             </label>
 
-            <div className="border-t pt-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  ⚙️ Advanced Options
-                </span>
-              </div>
-
-              <div className="space-y-2 pl-0">
-                <label className="flex items-center gap-2 cursor-pointer">
+            {/* Country Selection - Always visible with better UX */}
+            <div className="mt-3 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={multiCountry}
                     onChange={(e) => {
                       setMultiCountry(e.target.checked);
                     }}
-                    className="w-4 h-4 text-green-600 rounded"
+                    className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                   />
-                  <div className="flex-1">
-                    <span className="text-sm text-gray-700">
-                      🌍 Multi-Country Reviews
-                    </span>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Include reviews from selected countries for comprehensive insights
-                    </p>
-                  </div>
-                </label>
-
-                {/* Country Selection - Always visible with better UX */}
-                <div className="mt-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={multiCountry}
-                        onChange={(e) => {
-                          setMultiCountry(e.target.checked);
-                        }}
-                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                      />
-                      <span className="text-base font-semibold text-gray-800">
-                        🌍 Multi-Country Reviews
-                      </span>
-                    </div>
-                    <span className="text-sm font-medium text-green-700 bg-white px-3 py-1 rounded-full border border-green-300">
-                      {selectedCountries.length} countries selected
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-gray-600 mb-4">
-                    Include reviews from multiple countries for comprehensive global insights
-                    {multiCountry && " • Enhanced coverage"}
-                  </p>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                      { code: 'us', name: '🇺🇸 USA', priority: true },
-                      { code: 'gb', name: '🇬🇧 UK', priority: true },
-                      { code: 'ca', name: '🇨🇦 Canada', priority: true },
-                      { code: 'au', name: '🇦🇺 Australia', priority: true },
-                      { code: 'de', name: '🇩🇪 Germany', priority: false },
-                      { code: 'fr', name: '🇫🇷 France', priority: false },
-                      { code: 'jp', name: '🇯🇵 Japan', priority: false },
-                      { code: 'in', name: '🇮🇳 India', priority: false },
-                      { code: 'br', name: '🇧🇷 Brazil', priority: false },
-                    ].map((country) => (
-                      <label
-                        key={country.code}
-                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                          selectedCountries.includes(country.code)
-                            ? 'bg-green-600 text-white shadow-md'
-                            : 'bg-white text-gray-700 border border-gray-300 hover:border-green-400 hover:bg-green-50'
-                        } ${country.priority ? 'ring-2 ring-orange-200' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedCountries.includes(country.code)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedCountries([...selectedCountries, country.code]);
-                            } else {
-                              setSelectedCountries(selectedCountries.filter(c => c !== country.code));
-                            }
-                          }}
-                          className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                        />
-                        <span className="text-sm font-medium">{country.name}</span>
-                        {country.priority && (
-                          <span className="ml-auto text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
-                            Popular
-                          </span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-green-200">
-                    <button
-                      onClick={() => setSelectedCountries(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br'])}
-                      className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      Select All
-                    </button>
-                    <button
-                      onClick={() => setSelectedCountries(['us', 'gb', 'ca', 'au'])}
-                      className="text-sm px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                      Popular Only
-                    </button>
-                    <button
-                      onClick={() => setSelectedCountries([])}
-                      className="text-sm px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                      Clear All
-                    </button>
-                  </div>
+                  <span className="text-base font-semibold text-gray-800">
+                    🌍 Multi-Country Reviews
+                  </span>
                 </div>
+                <span className="text-sm font-medium text-green-700 bg-white px-3 py-1 rounded-full border border-green-300">
+                  {selectedCountries.length} countries selected
+                </span>
               </div>
-            </div>
 
-            {/* Review Count Preview */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  Standard Review Analysis:
-                </span>
-                <span className="text-sm font-bold text-purple-700">
-                  {multiCountry ? '1000-1200+' : '800-1000'} reviews
-                </span>
+              <p className="text-sm text-gray-600 mb-4">
+                Include reviews from multiple countries for comprehensive global insights
+                {multiCountry && " • Enhanced coverage"}
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { code: 'us', name: '🇺🇸 USA', priority: true },
+                  { code: 'gb', name: '🇬🇧 UK', priority: true },
+                  { code: 'ca', name: '🇨🇦 Canada', priority: true },
+                  { code: 'au', name: '🇦🇺 Australia', priority: true },
+                  { code: 'de', name: '🇩🇪 Germany', priority: false },
+                  { code: 'fr', name: '🇫🇷 France', priority: false },
+                  { code: 'jp', name: '🇯🇵 Japan', priority: false },
+                  { code: 'in', name: '🇮🇳 India', priority: false },
+                  { code: 'br', name: '🇧🇷 Brazil', priority: false },
+                ].map((country) => (
+                  <label
+                    key={country.code}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                      selectedCountries.includes(country.code)
+                        ? 'bg-green-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:border-green-400 hover:bg-green-50'
+                    } ${country.priority ? 'ring-2 ring-orange-200' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCountries.includes(country.code)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCountries([...selectedCountries, country.code]);
+                        } else {
+                          setSelectedCountries(selectedCountries.filter(c => c !== country.code));
+                        }
+                      }}
+                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                    />
+                    <span className="text-sm font-medium">{country.name}</span>
+                    {country.priority && (
+                      <span className="ml-auto text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                        Popular
+                      </span>
+                    )}
+                  </label>
+                ))}
               </div>
-              <p className="text-xs text-gray-600 mt-1">
-                ⏱️ Estimated time: {multiCountry ? '2-4 minutes' : '1-3 minutes'}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                📊 50% critical issues, 30% experience, 20% positive reviews
-              </p>
+
+              {/* Quick Actions */}
+              <div className="flex gap-2 mt-4 pt-4 border-t border-green-200">
+                <button
+                  onClick={() => setSelectedCountries(['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'in', 'br'])}
+                  className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedCountries(['us', 'gb', 'ca', 'au'])}
+                  className="text-sm px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Popular Only
+                </button>
+                <button
+                  onClick={() => setSelectedCountries([])}
+                  className="text-sm px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+          </div>
+
+          {/* Review Count Preview */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+              <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                Standard Review Analysis:
+              </span>
+              <span className="text-sm font-bold text-purple-700">
+                {multiCountry ? '1000-1200+' : '800-1000'} reviews
+              </span>
             </div>
+            <p className="text-xs text-gray-600 mt-1">
+              ⏱️ Estimated time: {multiCountry ? '2-4 minutes' : '1-3 minutes'}
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              📊 50% critical issues, 30% experience, 20% positive reviews
+            </p>
           </div>
 
           {/* Analyze Button */}
