@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { BarChart3, Table, TrendingUp, Filter } from 'lucide-react';
 
 const ReactWordcloud = dynamic(
   () => import('react-wordcloud').then((mod) => mod.default),
@@ -29,6 +30,9 @@ export default function KeywordCloud({
   height = 400,
   className = ""
 }: KeywordCloudProps) {
+  const [viewMode, setViewMode] = useState<'cloud' | 'chart' | 'table'>('cloud');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
   // 处理关键词数据
   const processedWords = useMemo(() => {
     let processedKeywords = keywords || [];
@@ -55,6 +59,41 @@ export default function KeywordCloud({
         category: word.category || 'neutral'
       }));
   }, [keywords]);
+
+  // 过滤后的关键词数据
+  const filteredWords = useMemo(() => {
+    if (categoryFilter === 'all') return processedWords;
+    return processedWords.filter(word => word.category === categoryFilter);
+  }, [processedWords, categoryFilter]);
+
+  // 为表格和图表排序的数据
+  const sortedWords = useMemo(() => {
+    return [...filteredWords].sort((a, b) => b.value - a.value);
+  }, [filteredWords]);
+
+  // 按类别统计的数据
+  const categoryStats = useMemo(() => {
+    const stats = new Map<string, { count: number; totalValue: number; keywords: KeywordData[] }>();
+
+    processedWords.forEach(word => {
+      const category = word.category;
+      if (!stats.has(category)) {
+        stats.set(category, { count: 0, totalValue: 0, keywords: [] });
+      }
+      const stat = stats.get(category)!;
+      stat.count++;
+      stat.totalValue += word.value;
+      stat.keywords.push(word);
+    });
+
+    return Array.from(stats.entries()).map(([category, data]) => ({
+      category,
+      count: data.count,
+      totalValue: data.totalValue,
+      avgValue: Math.round(data.totalValue / data.count),
+      keywords: data.keywords.sort((a, b) => b.value - a.value)
+    }));
+  }, [processedWords]);
 
   // 词云配置
   const options = useMemo(() => ({
@@ -83,6 +122,107 @@ export default function KeywordCloud({
   }), []);
 
   
+  // 柱状图组件
+  const BarChart = ({ data, maxValue }: { data: KeywordData[]; maxValue: number }) => {
+    const displayData = data.slice(0, 20); // 显示前20个关键词
+
+    return (
+      <div className="w-full">
+        <div className="space-y-2">
+          {displayData.map((word, index) => {
+            const percentage = (word.value / maxValue) * 100;
+            const categoryColors: Record<string, string> = {
+              issue: 'bg-red-500',
+              feature: 'bg-yellow-500',
+              positive: 'bg-green-500',
+              negative: 'bg-orange-500',
+              neutral: 'bg-gray-500'
+            };
+
+            return (
+              <div key={word.text} className="flex items-center gap-3">
+                <div className="w-8 text-right text-sm font-medium text-gray-600">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-gray-900 capitalize">
+                      {word.text}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({word.value})
+                    </span>
+                    <div className={`w-2 h-2 rounded-full ${categoryColors[word.category || 'neutral']}`}></div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all duration-500 ${categoryColors[word.category || 'neutral']}`}
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // 表格组件
+  const DataTable = ({ data }: { data: KeywordData[] }) => {
+    const categoryColors: Record<string, { bg: string; text: string }> = {
+      issue: { bg: 'bg-red-100', text: 'text-red-800' },
+      feature: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      positive: { bg: 'bg-green-100', text: 'text-green-800' },
+      negative: { bg: 'bg-orange-100', text: 'text-orange-800' },
+      neutral: { bg: 'bg-gray-100', text: 'text-gray-800' }
+    };
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-4 font-semibold text-gray-900">Rank</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-900">Keyword</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-900">Frequency</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-900">Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.slice(0, 30).map((word, index) => (
+              <tr key={word.text} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="py-3 px-4 text-gray-600">{index + 1}</td>
+                <td className="py-3 px-4">
+                  <span className="font-medium text-gray-900 capitalize">{word.text}</span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${categoryColors[word.category || 'neutral']?.bg || 'bg-gray-100'} ${categoryColors[word.category || 'neutral']?.text || 'text-gray-800'}`}>
+                    {word.category || 'neutral'}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-right text-gray-600">{word.value}</td>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                      <div
+                        className="bg-blue-500 h-1.5 rounded-full"
+                        style={{ width: `${(word.value / Math.max(...data.map(w => w.value))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-gray-600">{Math.round((word.value / Math.max(...data.map(w => w.value))) * 100)}%</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   if (processedWords.length === 0) {
     return (
       <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
@@ -99,15 +239,91 @@ export default function KeywordCloud({
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Click on keywords to see related insights
-        </p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {viewMode === 'cloud' ? 'Click on keywords to see related insights' :
+               viewMode === 'chart' ? 'Bar chart showing keyword frequency distribution' :
+               'Detailed table with keyword statistics and rankings'}
+            </p>
+          </div>
+
+          {/* 视图切换按钮 */}
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+            <button
+              onClick={() => setViewMode('cloud')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'cloud'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Word Cloud View"
+            >
+              <TrendingUp className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('chart')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'chart'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Bar Chart View"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Table View"
+            >
+              <Table className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 类别筛选 */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Filter:</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setCategoryFilter('all')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                categoryFilter === 'all'
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All ({processedWords.length})
+            </button>
+            {categoryStats.map(stat => (
+              <button
+                key={stat.category}
+                onClick={() => setCategoryFilter(stat.category)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  categoryFilter === stat.category
+                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {stat.category} ({stat.count})
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* 图例 */}
-      <div className="flex flex-wrap gap-4 mb-4 text-xs">
+      <div className="flex flex-wrap gap-4 mb-6 text-xs">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-red-500 rounded"></div>
           <span>Issues</span>
@@ -130,22 +346,68 @@ export default function KeywordCloud({
         </div>
       </div>
 
-      {/* 词云容器 */}
-      <div className="flex justify-center items-center bg-gray-50 rounded-lg p-4" style={{ minHeight: height }}>
-        <div style={{ width: '100%', maxWidth: width, height: height }}>
-          <ReactWordcloud
-            words={processedWords}
-            options={options}
-            callbacks={callbacks}
-          />
-        </div>
+      {/* 主要内容区域 */}
+      <div className="min-h-[400px]">
+        {viewMode === 'cloud' && (
+          <div className="flex justify-center items-center bg-gray-50 rounded-lg p-4" style={{ minHeight: height }}>
+            <div style={{ width: '100%', maxWidth: width, height: height }}>
+              <ReactWordcloud
+                words={filteredWords}
+                options={options}
+                callbacks={callbacks}
+              />
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'chart' && (
+          <div className="bg-gray-50 rounded-lg p-6" style={{ minHeight: height }}>
+            <div className="mb-4">
+              <h4 className="text-md font-semibold text-gray-900 mb-2">
+                Top Keywords by Frequency
+              </h4>
+              <p className="text-sm text-gray-600">
+                Horizontal bar chart showing the {sortedWords.length} most frequent keywords
+              </p>
+            </div>
+            <BarChart data={sortedWords} maxValue={Math.max(...sortedWords.map(w => w.value))} />
+          </div>
+        )}
+
+        {viewMode === 'table' && (
+          <div className="bg-gray-50 rounded-lg p-6" style={{ minHeight: height }}>
+            <div className="mb-4">
+              <h4 className="text-md font-semibold text-gray-900 mb-2">
+                Detailed Keyword Analysis
+              </h4>
+              <p className="text-sm text-gray-600">
+                Complete table with rankings, categories, and frequency data
+              </p>
+            </div>
+            <DataTable data={sortedWords} />
+          </div>
+        )}
       </div>
 
-      {/* 关键词统计 */}
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <div className="flex justify-between text-sm text-gray-600">
-          <span>Total keywords: {processedWords.length}</span>
-          <span>Size indicates frequency</span>
+      {/* 统计信息 */}
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="font-semibold text-blue-900">{processedWords.length}</div>
+            <div className="text-blue-700">Total Keywords</div>
+          </div>
+          <div className="text-center p-3 bg-green-50 rounded-lg">
+            <div className="font-semibold text-green-900">{categoryStats.find(s => s.category === 'issue')?.count || 0}</div>
+            <div className="text-green-700">Issue Keywords</div>
+          </div>
+          <div className="text-center p-3 bg-yellow-50 rounded-lg">
+            <div className="font-semibold text-yellow-900">{categoryStats.find(s => s.category === 'feature')?.count || 0}</div>
+            <div className="text-yellow-700">Feature Keywords</div>
+          </div>
+          <div className="text-center p-3 bg-purple-50 rounded-lg">
+            <div className="font-semibold text-purple-900">{Math.round(processedWords.reduce((sum, w) => sum + w.value, 0) / processedWords.length)}</div>
+            <div className="text-purple-700">Avg Frequency</div>
+          </div>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import KeywordCloud, { extractKeywordsFromAnalysis } from '@/components/KeywordCloud';
+import ExportReport from '@/components/ExportReport';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
 interface AnalysisData {
@@ -529,6 +530,9 @@ export default function AnalysisResultPage() {
             </ol>
           </div>
         )}
+
+        {/* Export Report */}
+        <ExportReport analysisData={data} appName={app.name} />
 
         {/* Typical User Comments */}
         {data.result.reviews && data.result.reviews.length > 0 && (

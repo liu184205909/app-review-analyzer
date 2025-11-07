@@ -132,11 +132,11 @@ function buildSingleAppPrompt(reviews: Review[]): string {
   const experienceReviews = allReviews.filter(r => r.rating === 3); // Experience issues (3 stars)
   const positiveReviews = allReviews.filter(r => r.rating >= 4); // Feature requests (4-5 stars)
 
-  const reviewsText = allReviews.slice(0, 200).map(r =>
+  const reviewsText = allReviews.slice(0, 250).map(r =>
     `Rating: ${r.rating}⭐\nContent: ${r.content}`
   ).join('\n---\n');
 
-  return `APP REVIEW ANALYSIS - FOCUS ON SPECIFIC CATEGORIES
+  return `COMPREHENSIVE APP REVIEW ANALYSIS
 
 REVIEWS TO ANALYZE:
 - Critical Issues (1-2⭐): ${criticalReviews.length} reviews
@@ -146,47 +146,79 @@ REVIEWS TO ANALYZE:
 
 ${reviewsText}
 
-IMPORTANT: Return ONLY valid JSON. Focus on quality over quantity.
+ANALYZE AND CATEGORIZE ISSUES:
 
-TARGET CATEGORIES:
-Critical Issues: crashes, login problems, payment issues, data loss, connection errors
-Experience Issues: UI confusion, navigation problems, search issues, loading speed, readability
-Feature Requests: new features, integrations, customization, social features, analytics
+You MUST identify issues in ALL THREE categories below. Even if a category has fewer examples, include it:
+
+CRITICAL ISSUES (1-2⭐ reviews) - Find 8-12 critical issues:
+- App crashes/freezes/force closes
+- Login/authentication failures/sign-in problems
+- Payment/billing errors/subscription issues
+- Data loss/sync failures/backup problems
+- Server/connection timeouts/network errors
+- Battery drain/excessive power consumption
+- Installation/update failures/play store issues
+- Device compatibility/version incompatibility
+- Account management/profile issues
+- Security/privacy concerns/data breaches
+- Error messages/unexpected behaviors
+- Performance bugs/slow response times
+
+EXPERIENCE ISSUES (3⭐ reviews) - Find 8-12 UX problems:
+- Confusing UI/UX design/layout issues
+- Navigation/menu structure problems
+- Search/filter functionality issues
+- Loading speed/performance delays
+- Button/control placement/interaction problems
+- Font size/readibility/visual clarity
+- Notification/alert system problems
+- Settings/configuration complexity
+- Offline mode/airplane mode issues
+- Onboarding/tutorial/help system problems
+- Content discovery/user journey issues
+- Accessibility/usability challenges
+
+FEATURE REQUESTS (4-5⭐ reviews) - Find 8-12 desired features:
+- New feature suggestions/enhancement requests
+- Third-party integrations/API requests
+- Customization/personalization options
+- Social sharing/community features
+- Analytics/reporting/dashboard features
+- Accessibility improvements/options
+- Workflow automation/efficiency features
+- Content creation/management tools
+- Export/import functionality requests
+- Language/regional expansion requests
+- Platform-specific feature requests
+- User preference/customization settings
 
 REQUIRED JSON FORMAT:
 {
   "criticalIssues": [
-    {
-      "title": "issue title",
-      "frequency": number,
-      "severity": "high|medium|low",
-      "examples": ["exact quote 1", "exact quote 2", "exact quote 3", "exact quote 4", "exact quote 5"]
-    }
+    {"title": "specific issue", "frequency": number, "severity": "high|medium|low", "examples": ["quote 1", "quote 2", "quote 3", "quote 4", "quote 5", "quote 6", "quote 7", "quote 8", "quote 9", "quote 10", "quote 11", "quote 12"]}
   ],
   "experienceIssues": [
-    {
-      "title": "issue title",
-      "frequency": number,
-      "examples": ["exact quote 1", "exact quote 2", "exact quote 3", "exact quote 4", "exact quote 5"]
-    }
+    {"title": "specific issue", "frequency": number, "examples": ["quote 1", "quote 2", "quote 3", "quote 4", "quote 5", "quote 6", "quote 7", "quote 8", "quote 9", "quote 10", "quote 11", "quote 12"]}
   ],
   "featureRequests": [
-    {
-      "title": "feature title",
-      "frequency": number,
-      "examples": ["exact quote 1", "exact quote 2", "exact quote 3", "exact quote 4", "exact quote 5"]
-    }
+    {"title": "specific feature", "frequency": number, "examples": ["quote 1", "quote 2", "quote 3", "quote 4", "quote 5", "quote 6", "quote 7", "quote 8", "quote 9", "quote 10", "quote 11", "quote 12"]}
   ],
   "sentiment": {"positive": number, "negative": number, "neutral": number},
-  "insights": "summary paragraph",
-  "priorityActions": ["action 1", "action 2", "action 3"]
+  "insights": "comprehensive summary",
+  "priorityActions": ["action 1", "action 2", "action 3", "action 4"]
 }
 
-RULES:
-- Each category: 3-8 examples max (not 20-30)
-- Focus on most frequent issues
-- Return ONLY the JSON object
-- No explanations outside JSON`;
+ANALYSIS GUIDELINES:
+- Find 8-12 specific examples for each category (randomly vary the count between 8-12)
+- For each example, include 8-12 actual user quotes (randomly vary count)
+- Frequency should represent how many times this issue appears in reviews
+- For severity in critical issues: use "high" for >10 mentions, "medium" for 5-10, "low" for 3-5
+- Include ALL THREE categories even if some have fewer examples
+- Focus on issues mentioned at least 3 times or more
+- Use exact quotes from reviews when possible
+- Vary the example count randomly (don't use exactly the same number every time)
+
+IMPORTANT: Return ONLY the JSON object. No explanations or text outside JSON.`;
 }
 
 function buildComparisonPrompt(appsReviews: { appName: string; reviews: Review[] }[]): string {
