@@ -883,7 +883,7 @@ export default function AnalysisResultPage() {
                 {Math.round(((analysis.sentiment.positive * 0.4) +
                   ((10 - analysis.criticalIssues.length) * 4) +
                   (analysis.featureRequests.length * 3) +
-                  (analyzedCount > 200 ? 10 : analyzedCount / 20))} / 100 * 100)}
+                  (analyzedCount > 200 ? 10 : analyzedCount / 20)) / 100 * 100)}
               </span>
             </div>
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
