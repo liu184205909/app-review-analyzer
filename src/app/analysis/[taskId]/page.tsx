@@ -458,13 +458,13 @@ export default function AnalysisResultPage() {
                         </div>
 
                         {/* Expand/Collapse Icon with Count */}
-                        <div className="flex items-center gap-2">
+                        <div className="relative group">
                           {issue.examples && issue.examples.length > 0 && (
-                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
                               {issue.examples.length}
-                            </span>
+                            </div>
                           )}
-                          <div className="text-gray-400 group-hover:text-red-500 transition-colors">
+                          <div className="text-gray-400 group-hover:text-red-500 transition-colors p-1">
                             <MessageSquare className="w-5 h-5" />
                           </div>
                         </div>
@@ -567,13 +567,13 @@ export default function AnalysisResultPage() {
                             </div>
 
                             {/* Expand/Collapse Icon with Count */}
-                            <div className="flex items-center gap-2">
+                            <div className="relative group">
                               {issue.examples && issue.examples.length > 0 && (
-                                <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
                                   {issue.examples.length}
-                                </span>
+                                </div>
                               )}
-                              <div className="text-gray-400 group-hover:text-orange-500 transition-colors">
+                              <div className="text-gray-400 group-hover:text-orange-500 transition-colors p-1">
                                 <MessageSquare className="w-5 h-5" />
                               </div>
                             </div>
@@ -680,13 +680,13 @@ export default function AnalysisResultPage() {
                             </div>
 
                             {/* Expand/Collapse Icon with Count */}
-                            <div className="flex items-center gap-2">
+                            <div className="relative group">
                               {request.examples && request.examples.length > 0 && (
-                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-110 transition-transform cursor-pointer z-10">
                                   {request.examples.length}
-                                </span>
+                                </div>
                               )}
-                              <div className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                              <div className="text-gray-400 group-hover:text-blue-500 transition-colors p-1">
                                 <MessageSquare className="w-5 h-5" />
                               </div>
                             </div>
@@ -719,10 +719,184 @@ export default function AnalysisResultPage() {
           </div>
         ) : null}
 
+        {/* Customer Value Metrics */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-6 border border-purple-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">💰 Customer Value Analysis</h2>
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+              <div className="text-2xl font-bold text-purple-600 mb-2">
+                {((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Customer Satisfaction</div>
+              <div className="text-xs text-gray-500 mt-1">Likely to recommend app</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+              <div className="text-2xl font-bold text-orange-600 mb-2">
+                {analysis.criticalIssues.length}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Risk Factors</div>
+              <div className="text-xs text-gray-500 mt-1">Issues causing churn risk</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+              <div className="text-2xl font-bold text-blue-600 mb-2">
+                {analysis.featureRequests.length}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Growth Opportunities</div>
+              <div className="text-xs text-gray-500 mt-1">Features users want most</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-purple-100">
+            <h3 className="font-semibold text-gray-900 mb-2">Business Impact Assessment</h3>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Based on {analyzedCount} reviews analyzed, addressing the critical issues could improve user retention by up to {Math.min(40, analysis.criticalIssues.length * 8)}%.
+              The feature requests represent potential revenue growth opportunities from {Math.round((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100)}% of satisfied users who want enhanced functionality.
+            </p>
+          </div>
+        </div>
+
+        {/* User Journey Insights */}
+        <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg p-6 mb-6 border border-teal-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">🗺️ User Journey Analysis</h2>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 font-bold text-sm">✓</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm">Onboarding</h4>
+              </div>
+              <p className="text-xs text-gray-600">
+                {analysis.sentiment.positive > analysis.sentiment.negative ? 'Strong first impressions' : 'Needs improvement'}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <span className="text-yellow-600 font-bold text-sm">⚡</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm">Daily Use</h4>
+              </div>
+              <p className="text-xs text-gray-600">
+                {analysis.experienceIssues.length > 5 ? 'Friction detected' : 'Smooth experience'}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 font-bold text-sm">🎯</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm">Core Value</h4>
+              </div>
+              <p className="text-xs text-gray-600">
+                {analysis.featureRequests.length > 8 ? 'High engagement potential' : 'Clear value proposition'}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-red-600 font-bold text-sm">!</span>
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm">Retention Risk</h4>
+              </div>
+              <p className="text-xs text-gray-600">
+                {analysis.criticalIssues.length > 3 ? 'Multiple churn risks' : 'Low risk indicators'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Insights */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 Key Insights</h2>
           <p className="text-gray-700 leading-relaxed text-lg">{analysis.insights}</p>
+        </div>
+
+        {/* Competitive Positioning */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-6 mb-6 border border-amber-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">🏆 Competitive Positioning</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg p-4 border border-amber-100">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>
+                Competitive Advantages
+              </h3>
+              <ul className="space-y-2">
+                {analysis.sentiment.positive > 60 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span>High user satisfaction ({Math.round(analysis.sentiment.positive)}% positive)</span>
+                  </li>
+                )}
+                {analysis.criticalIssues.length < 5 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span>Stable performance with minimal critical issues</span>
+                  </li>
+                )}
+                {analysis.featureRequests.length > 8 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span>Strong user engagement and feature demand</span>
+                  </li>
+                )}
+                <li className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-green-500 mt-1">•</span>
+                  <span>Comprehensive review data ({analyzedCount} reviews analyzed)</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-amber-100">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs">!</span>
+                Market Opportunities
+              </h3>
+              <ul className="space-y-2">
+                {analysis.experienceIssues.length > 8 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-orange-500 mt-1">•</span>
+                    <span>UX improvements could significantly boost retention</span>
+                  </li>
+                )}
+                {analysis.featureRequests.length > 6 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-orange-500 mt-1">•</span>
+                    <span>High-demand features present revenue opportunities</span>
+                  </li>
+                )}
+                {analysis.sentiment.negative > 20 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-orange-500 mt-1">•</span>
+                    <span>Addressing complaints could improve market position</span>
+                  </li>
+                )}
+                <li className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-orange-500 mt-1">•</span>
+                  <span>Data-driven insights guide product strategy</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-4 bg-white rounded-lg p-4 border border-amber-100">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-gray-900">Market Score</h4>
+              <span className="text-2xl font-bold text-amber-600">
+                {Math.round(((analysis.sentiment.positive * 0.4) +
+                  ((10 - analysis.criticalIssues.length) * 4) +
+                  (analysis.featureRequests.length * 3) +
+                  (analyzedCount > 200 ? 10 : analyzedCount / 20))} / 100 * 100)}
+              </span>
+            </div>
+            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-1000"
+                style={{ width: `${Math.min(100, Math.round(((analysis.sentiment.positive * 0.4) +
+                  ((10 - analysis.criticalIssues.length) * 4) +
+                  (analysis.featureRequests.length * 3) +
+                  (analyzedCount > 200 ? 10 : analyzedCount / 20)) / 100 * 100))}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-600 mt-2">Based on user satisfaction, stability, feature demand, and data quality</p>
+          </div>
         </div>
 
         {/* Priority Actions */}
