@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
           content: review.content,
           author: review.author,
           date: review.reviewDate, // Map reviewDate -> date
-          appVersion: review.version
+          appVersion: review.appVersion
         }));
 
         // Perform AI analysis with updated configuration
