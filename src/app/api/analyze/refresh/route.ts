@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
 import { incrementalScrapeReviews } from '@/lib/incremental-scraper';
-import { analyzeAppReviews } from '@/lib/ai/openrouter';
+import { analyzeSingleApp } from '@/lib/ai/openrouter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
         // Perform AI analysis with updated configuration
         console.log('Starting AI analysis with enhanced configuration (40-60 issues per category)');
-        const analysis = await analyzeAppReviews(reviews, app.name);
+        const analysis = await analyzeSingleApp(reviews, app.name);
 
         // Save analysis results
         await prisma.analysisTask.update({
