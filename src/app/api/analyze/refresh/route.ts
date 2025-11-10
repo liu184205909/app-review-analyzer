@@ -78,11 +78,11 @@ export async function POST(request: NextRequest) {
         // Transform database Review objects to match AI function expectations
         const transformedReviews = reviews.map(review => ({
           rating: review.rating,
-          title: review.title,
+          title: review.title || undefined, // Convert null -> undefined
           content: review.content,
-          author: review.author,
+          author: review.author || undefined, // Convert null -> undefined
           date: review.reviewDate, // Map reviewDate -> date
-          appVersion: review.appVersion
+          appVersion: review.appVersion || undefined // Convert null -> undefined
         }));
 
         // Perform AI analysis with updated configuration
