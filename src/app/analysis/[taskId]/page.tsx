@@ -719,7 +719,7 @@ export default function AnalysisResultPage() {
         {/* Customer Value Metrics with Role Switcher */}
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-6 border border-purple-100">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">💰 Customer Value Analysis - Deployed</h2>
+            <h2 className="text-2xl font-bold text-gray-900">💰 Customer Value Analysis</h2>
 
             {/* Role Switcher */}
             <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
@@ -881,114 +881,8 @@ export default function AnalysisResultPage() {
               </div>
             </div>
           )}
-          <div className="bg-white rounded-lg p-4 border border-purple-100">
-            <h3 className="font-semibold text-gray-900 mb-2">Revenue Impact Analysis</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                <span className="text-sm text-gray-700 font-medium">Monthly Revenue Risk</span>
-                <span className="text-lg font-bold text-red-600">
-                  ${Math.round(analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0) * 12.5)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <span className="text-sm text-gray-700 font-medium">Growth Opportunity</span>
-                <span className="text-lg font-bold text-green-600">
-                  +${Math.round(analysis.featureRequests.reduce((sum, req) => sum + (req.frequency || 0), 0) * 8.3)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                <span className="text-sm text-gray-700 font-medium">ROI Potential</span>
-                <span className="text-lg font-bold text-blue-600">
-                  {Math.round((analysis.featureRequests.reduce((sum, req) => sum + (req.frequency || 0), 0) * 8.3) / (analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0) * 12.5) * 100)}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* User Journey Analysis - Enhanced */}
-        <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg p-6 mb-6 border border-teal-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">🗺️ User Journey & Behavior Analysis</h2>
-
-          {/* Key Journey Metrics */}
-          <div className="grid md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
-              <div className="text-2xl font-bold text-green-600 mb-1">
-                {Math.round((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100)}%
-              </div>
-              <div className="text-sm font-semibold text-gray-900">Adoption Success</div>
-              <div className="text-xs text-gray-600 mt-1">Users complete onboarding</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
-              <div className="text-2xl font-bold text-yellow-600 mb-1">
-                {Math.max(1, Math.round((analysis.experienceIssues.length / Math.max(1, analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100))}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">Friction Points</div>
-              <div className="text-xs text-gray-600 mt-1">Daily use obstacles</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
-              <div className="text-2xl font-bold text-purple-600 mb-1">
-                {Math.round((analysis.featureRequests.reduce((sum, req) => sum + (req.frequency || 0), 0) / Math.max(1, analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 10)}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">Engagement Depth</div>
-              <div className="text-xs text-gray-600 mt-1">Feature adoption rate</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-teal-100">
-              <div className="text-2xl font-bold text-red-600 mb-1">
-                {Math.round((analysis.criticalIssues.length / Math.max(1, analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 15)}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">Churn Risk %</div>
-              <div className="text-xs text-gray-600 mt-1">Likely to abandon</div>
-            </div>
-          </div>
-
-          {/* Journey Insights */}
-          <div className="bg-white rounded-lg p-4 border border-teal-100">
-            <h3 className="font-semibold text-gray-900 mb-3">🎯 Key Behavioral Insights</h3>
-            <div className="space-y-3">
-              {analysis.sentiment.positive > analysis.sentiment.negative * 1.5 && (
-                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                  <span className="text-green-600 mt-1">✓</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Strong User Satisfaction</div>
-                    <div className="text-xs text-gray-600">Users consistently rate the app positively, indicating successful value delivery and low friction in core workflows.</div>
-                  </div>
-                </div>
-              )}
-
-              {analysis.criticalIssues.length > 5 && (
-                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
-                  <span className="text-red-600 mt-1">⚠️</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">High Abandonment Risk</div>
-                    <div className="text-xs text-gray-600">Multiple critical issues suggest users may abandon the app during key journey stages. Priority fix needed.</div>
-                  </div>
-                </div>
-              )}
-
-              {analysis.featureRequests.length > 10 && (
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                  <span className="text-blue-600 mt-1">💡</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">High Engagement Opportunity</div>
-                    <div className="text-xs text-gray-600">Users are actively requesting features, showing deep engagement and desire for enhanced functionality.</div>
-                  </div>
-                </div>
-              )}
-
-              {analysis.experienceIssues.length > 8 && (
-                <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
-                  <span className="text-yellow-600 mt-1">🔄</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">UX Optimization Needed</div>
-                    <div className="text-xs text-gray-600">Multiple experience issues indicate friction in daily use patterns that could impact long-term retention.</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
+        </div>}
+  
         {/* Insights */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6 border border-blue-100">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 Key Insights</h2>
