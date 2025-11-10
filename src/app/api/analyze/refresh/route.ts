@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         taskType: 'single',
         status: 'processing',
         platform: app.platform || 'ios',
-        appStoreId: app.platformAppId || app.name,
+        appStoreId: app.appId || app.name,
         appSlug: slug,
         isLatest: true,
         options: { forceRefresh: true }
