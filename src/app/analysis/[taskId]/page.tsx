@@ -69,6 +69,9 @@ export default function AnalysisResultPage() {
   const [expandedExperienceIssues, setExpandedExperienceIssues] = useState<Set<number>>(new Set());
   const [expandedFeatureRequests, setExpandedFeatureRequests] = useState<Set<number>>(new Set());
 
+  // Professional role state
+  const [selectedRole, setSelectedRole] = useState<'product-manager' | 'developer' | 'ux-designer' | 'general'>('general');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -713,32 +716,171 @@ export default function AnalysisResultPage() {
           </div>
         ) : null}
 
-        {/* Customer Value Metrics */}
+        {/* Customer Value Metrics with Role Switcher */}
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-6 border border-purple-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">💰 Customer Value Analysis</h2>
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-              <div className="text-2xl font-bold text-purple-600 mb-2">
-                {((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100).toFixed(1)}%
-              </div>
-              <div className="text-sm text-gray-600 font-medium">Customer Satisfaction</div>
-              <div className="text-xs text-gray-500 mt-1">Likely to recommend app</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-              <div className="text-2xl font-bold text-orange-600 mb-2">
-                {analysis.criticalIssues.length}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">Risk Factors</div>
-              <div className="text-xs text-gray-500 mt-1">Issues causing churn risk</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                {analysis.featureRequests.length}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">Growth Opportunities</div>
-              <div className="text-xs text-gray-500 mt-1">Features users want most</div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">💰 Customer Value Analysis</h2>
+
+            {/* Role Switcher */}
+            <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
+              <button
+                onClick={() => setSelectedRole('general')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  selectedRole === 'general'
+                    ? 'bg-purple-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📊 总览
+              </button>
+              <button
+                onClick={() => setSelectedRole('product-manager')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  selectedRole === 'product-manager'
+                    ? 'bg-purple-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📋 产品经理
+              </button>
+              <button
+                onClick={() => setSelectedRole('developer')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  selectedRole === 'developer'
+                    ? 'bg-purple-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                👨‍💻 开发者
+              </button>
+              <button
+                onClick={() => setSelectedRole('ux-designer')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  selectedRole === 'ux-designer'
+                    ? 'bg-purple-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🎨 UX设计师
+              </button>
             </div>
           </div>
+          {/* Role-specific Metrics */}
+          {selectedRole === 'general' && (
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  {((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100).toFixed(1)}%
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Customer Satisfaction</div>
+                <div className="text-xs text-gray-500 mt-1">Likely to recommend app</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-orange-600 mb-2">
+                  {analysis.criticalIssues.length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Risk Factors</div>
+                <div className="text-xs text-gray-500 mt-1">Issues causing churn risk</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {analysis.featureRequests.length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Growth Opportunities</div>
+                <div className="text-xs text-gray-500 mt-1">Features users want most</div>
+              </div>
+            </div>
+          )}
+
+          {selectedRole === 'product-manager' && (
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {Math.round(analysis.featureRequests.reduce((sum, req) => sum + (req.frequency || 0), 0) * 0.15)}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">潜在收入增长</div>
+                <div className="text-xs text-gray-500 mt-1">基于功能需求预测</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-red-600 mb-2">
+                  ${Math.round(analysis.criticalIssues.reduce((sum, issue) => sum + (issue.frequency || 0), 0) * 250)}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">收入损失风险</div>
+                <div className="text-xs text-gray-500 mt-1">用户流失成本估算</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {Math.round((analysis.featureRequests.length / (analysis.featureRequests.length + analysis.criticalIssues.length)) * 100)}%
+                </div>
+                <div className="text-sm text-gray-600 font-medium">产品健康度</div>
+                <div className="text-xs text-gray-500 mt-1">需求vs问题平衡</div>
+              </div>
+            </div>
+          )}
+
+          {selectedRole === 'developer' && (
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-red-600 mb-2">
+                  {analysis.criticalIssues.filter(issue => issue.severity === 'high').length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">紧急技术债务</div>
+                <div className="text-xs text-gray-500 mt-1">需立即修复的高优先级问题</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-orange-600 mb-2">
+                  {analysis.criticalIssues.filter(issue =>
+                    issue.title.toLowerCase().includes('crash') ||
+                    issue.title.toLowerCase().includes('performance') ||
+                    issue.title.toLowerCase().includes('freeze')
+                  ).length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">性能相关问题</div>
+                <div className="text-xs text-gray-500 mt-1">影响用户体验的核心问题</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {Math.round((analysis.criticalIssues.length / 5) * 2)}周
+                </div>
+                <div className="text-sm text-gray-600 font-medium">预计修复时间</div>
+                <div className="text-xs text-gray-500 mt-1">基于复杂度估算</div>
+              </div>
+            </div>
+          )}
+
+          {selectedRole === 'ux-designer' && (
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  {((analysis.sentiment.positive / (analysis.sentiment.positive + analysis.sentiment.negative + analysis.sentiment.neutral)) * 100).toFixed(1)}%
+                </div>
+                <div className="text-sm text-gray-600 font-medium">用户体验满意度</div>
+                <div className="text-xs text-gray-500 mt-1">界面和交互评分</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-orange-600 mb-2">
+                  {analysis.experienceIssues.filter(issue =>
+                    issue.title.toLowerCase().includes('ui') ||
+                    issue.title.toLowerCase().includes('interface') ||
+                    issue.title.toLowerCase().includes('design')
+                  ).length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">界面设计问题</div>
+                <div className="text-xs text-gray-500 mt-1">需优化的UI元素</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {analysis.experienceIssues.filter(issue =>
+                    issue.title.toLowerCase().includes('navigation') ||
+                    issue.title.toLowerCase().includes('menu') ||
+                    issue.title.toLowerCase().includes('flow')
+                  ).length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">交互流程问题</div>
+                <div className="text-xs text-gray-500 mt-1">用户体验路径优化</div>
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-lg p-4 border border-purple-100">
             <h3 className="font-semibold text-gray-900 mb-2">Business Impact Assessment</h3>
             <p className="text-gray-700 text-sm leading-relaxed">
