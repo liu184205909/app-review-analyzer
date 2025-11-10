@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
-import { incrementalScraper } from '@/lib/incremental-scraper';
+import { incrementalScrapeReviews } from '@/lib/incremental-scraper';
 import { analyzeAppReviews } from '@/lib/ai/openrouter';
 
 export async function POST(request: NextRequest) {
@@ -42,7 +42,13 @@ export async function POST(request: NextRequest) {
         console.log(`Starting forced reanalysis for ${appName} with 2000+ reviews target`);
 
         // Force re-scraping with higher target
-        await incrementalScraper(app.id, 5000, true); // Force refresh, target 5000
+        await incrementalScrapeReviews({
+          appId: app.platformAppId || app.id,
+          platform: app.platform || 'ios',
+          targetCount: 5000,
+          maxNewReviews: 2000,
+          forceRefresh: true
+        });
 
         // Get all reviews for analysis
         const reviews = await prisma.review.findMany({
