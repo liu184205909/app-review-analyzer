@@ -75,9 +75,19 @@ export async function POST(request: NextRequest) {
           throw new Error('No reviews found for analysis');
         }
 
+        // Transform database Review objects to match AI function expectations
+        const transformedReviews = reviews.map(review => ({
+          rating: review.rating,
+          title: review.title,
+          content: review.content,
+          author: review.author,
+          date: review.reviewDate, // Map reviewDate -> date
+          appVersion: review.version
+        }));
+
         // Perform AI analysis with updated configuration
         console.log('Starting AI analysis with enhanced configuration (40-60 issues per category)');
-        const analysis = await analyzeSingleApp(reviews);
+        const analysis = await analyzeSingleApp(transformedReviews);
 
         // Save analysis results
         await prisma.analysisTask.update({
