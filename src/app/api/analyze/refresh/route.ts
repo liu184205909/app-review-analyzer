@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
         // Perform AI analysis with updated configuration
         console.log('Starting AI analysis with enhanced configuration (40-60 issues per category)');
-        const analysis = await analyzeSingleApp(reviews, app.name);
+        const analysis = await analyzeSingleApp(reviews);
 
         // Save analysis results
         await prisma.analysisTask.update({
