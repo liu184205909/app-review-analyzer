@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           data: {
             status: 'processing',
             progress: 40,
-            reviewCount: reviews.length
+            startedAt: new Date()
           }
         });
 
