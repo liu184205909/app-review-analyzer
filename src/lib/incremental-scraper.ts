@@ -29,7 +29,7 @@ export interface ScrapeResult {
  * 3. 自动去重和增量存储
  */
 export async function incrementalScrapeReviews(options: IncrementalScrapeOptions): Promise<ScrapeResult> {
-  const { appId, platform, targetCount = 800, maxNewReviews = 200, forceRefresh = false } = options;
+  const { appId, platform, targetCount = 5000, maxNewReviews = 1000, forceRefresh = false } = options;
 
   console.log(`[Incremental Scraper] Starting for ${platform} app: ${appId}`);
   console.log(`[Incremental Scraper] Target: ${targetCount}, Max new: ${maxNewReviews}, Force refresh: ${forceRefresh}`);
@@ -65,7 +65,7 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
       const cachedReviews = await prisma.review.findMany({
         where: { appId: existingApp!.id },
         orderBy: { reviewDate: 'desc' },
-        take: Math.min(100, targetCount) // 返回最多100条用于分析
+        take: Math.min(2000, targetCount) // 返回最多2000条用于分析
       });
 
       return {
@@ -108,7 +108,7 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
     const finalReviews = await prisma.review.findMany({
       where: { appId: existingApp!.id },
       orderBy: { reviewDate: 'desc' },
-      take: Math.min(100, targetCount) // 返回用于分析的评论
+      take: Math.min(2000, targetCount) // 返回用于分析的评论
     });
 
     const finalCount = await prisma.review.count({
@@ -143,7 +143,7 @@ async function performScraping(
       // iOS: 抓取多页评论
       const allReviews: any[] = [];
       const pagesNeeded = Math.ceil(maxCount / 50); // iOS每页约50条
-      const maxPages = Math.min(pagesNeeded, 4); // 最多抓4页，避免被限制
+      const maxPages = Math.min(pagesNeeded, 20); // 最多抓20页，大幅增加采集量
 
       console.log(`[iOS Scraper] Fetching ${maxPages} pages for ${maxCount} reviews`);
 
@@ -155,8 +155,8 @@ async function performScraping(
           allReviews.push(...reviews);
           console.log(`[iOS Scraper] Page ${page}: ${reviews.length} reviews`);
 
-          // 添加小延迟避免被限制
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // 添加延迟避免被限制
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
         } catch (error) {
           console.error(`[iOS Scraper] Page ${page} failed:`, error);

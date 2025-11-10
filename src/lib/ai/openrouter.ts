@@ -78,7 +78,7 @@ export async function analyzeSingleApp(
         }
       ],
       temperature: 0.7,
-      max_tokens: 12000, // Further increased for industry-grade detailed analysis
+      max_tokens: 16000, // Increased to handle 2000 reviews and 50+ categories
     });
 
     const responseText = completion.choices[0]?.message?.content || '{}';
@@ -132,7 +132,7 @@ function buildSingleAppPrompt(reviews: Review[]): string {
   const experienceReviews = allReviews.filter(r => r.rating === 3); // Experience issues (3 stars)
   const positiveReviews = allReviews.filter(r => r.rating >= 4); // Feature requests (4-5 stars)
 
-  const reviewsText = allReviews.slice(0, 500).map(r =>
+  const reviewsText = allReviews.slice(0, 2000).map(r =>
     `Rating: ${r.rating}⭐\nContent: ${r.content}`
   ).join('\n---\n');
 
@@ -148,9 +148,9 @@ ${reviewsText}
 
 ANALYZE AND CATEGORIZE ISSUES - EXPANDED CATEGORIES:
 
-You MUST identify issues in ALL THREE categories below. Each category should have 12-15 specific examples with 8-12 user quotes each:
+You MUST identify issues in ALL THREE categories below. Each category should have 40-60 specific examples with 8-15 user quotes each:
 
-CRITICAL ISSUES (1-2⭐ reviews) - Find 12-15 critical issues from these expanded categories:
+CRITICAL ISSUES (1-2⭐ reviews) - Find 40-60 critical issues from these expanded categories:
 1. **CRASH & STABILITY**: App crashes/freezes/force closes/ANR errors
 2. **AUTHENTICATION**: Login failures/sign-in problems/account access issues
 3. **PAYMENT & BILLING**: Payment processing errors/subscription problems/billing failures
@@ -167,7 +167,7 @@ CRITICAL ISSUES (1-2⭐ reviews) - Find 12-15 critical issues from these expande
 14. **CONTENT**: Missing content/corrupted files/media playback problems
 15. **PLATFORM SPECIFIC**: Push notifications/background services/location services
 
-EXPERIENCE ISSUES (3⭐ reviews) - Find 12-15 UX problems from these expanded categories:
+EXPERIENCE ISSUES (3⭐ reviews) - Find 40-60 UX problems from these expanded categories:
 1. **USER INTERFACE**: Layout problems/visual design inconsistency/cluttered screens
 2. **NAVIGATION**: Menu confusion/poor information architecture/getting lost
 3. **SEARCH & DISCOVERY**: Filter problems/search results not relevant/poor sorting
@@ -184,7 +184,7 @@ EXPERIENCE ISSUES (3⭐ reviews) - Find 12-15 UX problems from these expanded ca
 14. **LOCALIZATION**: Translation problems/cultural adaptation/time zone handling
 15. **ACCESSIBILITY**: Screen reader issues/keyboard navigation/cognitive overload
 
-FEATURE REQUESTS (4-5⭐ reviews) - Find 12-15 desired features from these expanded categories:
+FEATURE REQUESTS (4-5⭐ reviews) - Find 40-60 desired features from these expanded categories:
 1. **CORE FUNCTIONALITY**: New primary features/enhanced existing capabilities
 2. **INTEGRATIONS**: Third-party app connections/API support/webhooks
 3. **CUSTOMIZATION**: Themes/personalization/layouts/custom workflows
@@ -218,12 +218,12 @@ REQUIRED JSON FORMAT:
 }
 
 ANALYSIS GUIDELINES:
-- Find 8-12 specific examples for each category (randomly vary the count between 8-12)
-- For each example, include 8-12 actual user quotes (randomly vary count)
+- Find 40-60 specific examples for each category (randomly vary the count between 40-60)
+- For each example, include 8-15 actual user quotes (randomly vary count)
 - Frequency should represent how many times this issue appears in reviews
-- For severity in critical issues: use "high" for >10 mentions, "medium" for 5-10, "low" for 3-5
+- For severity in critical issues: use "high" for >20 mentions, "medium" for 10-20, "low" for 5-10
 - Include ALL THREE categories even if some have fewer examples
-- Focus on issues mentioned at least 3 times or more
+- Focus on issues mentioned at least 5 times or more (since we have much more data)
 - Use exact quotes from reviews when possible
 - Vary the example count randomly (don't use exactly the same number every time)
 
