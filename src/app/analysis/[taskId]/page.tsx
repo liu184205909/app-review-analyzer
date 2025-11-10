@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
+import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare, RefreshCw } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import ExportDropdown from '@/components/ExportDropdown';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
@@ -65,12 +65,41 @@ export default function AnalysisResultPage() {
   
   const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
   const [expandedExperienceIssues, setExpandedExperienceIssues] = useState<Set<number>>(new Set());
   const [expandedFeatureRequests, setExpandedFeatureRequests] = useState<Set<number>>(new Set());
 
   // Professional role state
   const [selectedRole, setSelectedRole] = useState<'product-manager' | 'developer' | 'ux-designer' | 'general'>('general');
+
+  // Force refresh analysis with updated configuration
+  const handleForceRefresh = async () => {
+    if (!data?.result?.app?.name) return;
+
+    setRefreshing(true);
+    try {
+      const response = await fetch('/api/analyze/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appName: data.result.app.name,
+          forceReanalysis: true
+        })
+      });
+
+      const result = await response.json();
+      if (result.taskId) {
+        // Redirect to new analysis
+        window.location.href = `/analysis/${result.taskId}`;
+      }
+    } catch (error) {
+      console.error('Failed to refresh analysis:', error);
+      alert('Failed to refresh analysis. Please try again.');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -269,6 +298,15 @@ export default function AnalysisResultPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/" className="text-xl font-bold text-gray-900">ReviewInsight</a>
           <div className="flex gap-4">
+            <button
+              onClick={handleForceRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              title="Force refresh analysis with latest configuration (2000+ reviews, 40-60 issues per category)"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh Analysis'}
+            </button>
             <ExportDropdown analysisData={data} appName={app.name} />
           </div>
         </div>
@@ -899,28 +937,45 @@ export default function AnalysisResultPage() {
                 Competitive Advantages
               </h3>
               <ul className="space-y-2">
-                {analysis.sentiment.positive > 60 && (
+                {analysis.sentiment.positive > 70 && (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
-                    <span>High user satisfaction ({Math.round(analysis.sentiment.positive)}% positive)</span>
+                    <span className="text-green-500 mt-1">🌟</span>
+                    <span>Exceptional user satisfaction ({Math.round(analysis.sentiment.positive)}% positive)</span>
                   </li>
                 )}
-                {analysis.criticalIssues.length < 5 && (
+                {analysis.criticalIssues.length < 3 ? (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
-                    <span>Stable performance with minimal critical issues</span>
+                    <span className="text-green-500 mt-1">🛡️</span>
+                    <span>Rock-solid stability with virtually no critical issues</span>
+                  </li>
+                ) : analysis.criticalIssues.length < 8 ? (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">✅</span>
+                    <span>Maintainable codebase with limited critical issues</span>
+                  </li>
+                ) : null}
+                {analysis.featureRequests.length > 15 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">💡</span>
+                    <span>Highly engaged user community with active feature suggestions</span>
                   </li>
                 )}
-                {analysis.featureRequests.length > 8 && (
+                {app.rating >= 4.5 && (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
-                    <span>Strong user engagement and feature demand</span>
+                    <span className="text-green-500 mt-1">⭐</span>
+                    <span>Premium app store rating ({app.rating.toFixed(1)} stars)</span>
                   </li>
                 )}
                 <li className="text-sm text-gray-700 flex items-start gap-2">
-                  <span className="text-green-500 mt-1">•</span>
-                  <span>Comprehensive review data ({analyzedCount} reviews analyzed)</span>
+                  <span className="text-green-500 mt-1">📊</span>
+                  <span>Deep market insights from {analyzedCount} analyzed reviews</span>
                 </li>
+                {analysis.experienceIssues.length < 5 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-1">🎨</span>
+                    <span>Polished user experience with minimal friction points</span>
+                  </li>
+                )}
               </ul>
             </div>
             <div className="bg-white rounded-lg p-4 border border-amber-100">
@@ -929,27 +984,39 @@ export default function AnalysisResultPage() {
                 Market Opportunities
               </h3>
               <ul className="space-y-2">
-                {analysis.experienceIssues.length > 8 && (
+                {analysis.experienceIssues.length > 10 && (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-orange-500 mt-1">•</span>
-                    <span>UX improvements could significantly boost retention</span>
+                    <span className="text-orange-500 mt-1">🎯</span>
+                    <span>Major UX improvements could unlock {Math.round(analysis.experienceIssues.length * 15)}% user retention</span>
                   </li>
                 )}
-                {analysis.featureRequests.length > 6 && (
+                {analysis.featureRequests.length > 20 && (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-orange-500 mt-1">•</span>
-                    <span>High-demand features present revenue opportunities</span>
+                    <span className="text-orange-500 mt-1">💰</span>
+                    <span>{analysis.featureRequests.length} requested features could drive premium subscriptions</span>
                   </li>
                 )}
-                {analysis.sentiment.negative > 20 && (
+                {analysis.criticalIssues.length > 10 && (
                   <li className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-orange-500 mt-1">•</span>
-                    <span>Addressing complaints could improve market position</span>
+                    <span className="text-orange-500 mt-1">🚀</span>
+                    <span>Fixing critical issues could improve app store ranking by {Math.min(50, analysis.criticalIssues.length * 3)}%</span>
+                  </li>
+                )}
+                {app.rating < 4.0 && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-orange-500 mt-1">⚡</span>
+                    <span>Rating improvement from {app.rating.toFixed(1)} to 4.5+ could triple downloads</span>
+                  </li>
+                )}
+                {analysis.sentiment.negative > analysis.sentiment.positive && (
+                  <li className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-orange-500 mt-1">🔄</span>
+                    <span>Turn negative sentiment around for competitive advantage</span>
                   </li>
                 )}
                 <li className="text-sm text-gray-700 flex items-start gap-2">
-                  <span className="text-orange-500 mt-1">•</span>
-                  <span>Data-driven insights guide product strategy</span>
+                  <span className="text-orange-500 mt-1">📈</span>
+                  <span>Actionable insights from {analyzedCount} real user reviews guide growth strategy</span>
                 </li>
               </ul>
             </div>
