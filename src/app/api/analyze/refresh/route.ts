@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
         // Force re-scraping with higher target
         await incrementalScrapeReviews({
-          appId: app.platformAppId || app.id,
+          appId: app.appId || app.id,
           platform: app.platform || 'ios',
           targetCount: 5000,
           maxNewReviews: 2000,
