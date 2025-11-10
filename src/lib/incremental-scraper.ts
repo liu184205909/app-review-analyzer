@@ -55,11 +55,14 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
     const isRecentlyUpdated = lastCrawledAt &&
       (Date.now() - lastCrawledAt.getTime()) < (24 * 60 * 60 * 1000); // 24小时内
 
-    console.log(`[Incremental Scraper] Current reviews: ${currentReviewCount}, Last crawl: ${lastCrawledAt}`);
-    console.log(`[Incremental Scraper] Has enough: ${hasEnoughReviews}, Recent: ${isRecentlyUpdated}`);
+    // 强制重新采集条件：如果当前数据量远低于新目标的一半，触发采集
+    const needsSignificantUpdate = currentReviewCount < targetCount * 0.4;
+
+    console.log(`[Incremental Scraper] Current reviews: ${currentReviewCount}, Target: ${targetCount}, Last crawl: ${lastCrawledAt}`);
+    console.log(`[Incremental Scraper] Has enough: ${hasEnoughReviews}, Recent: ${isRecentlyUpdated}, Needs significant update: ${needsSignificantUpdate}`);
 
     // 2. 智能缓存策略 - 如果不需要更新，返回现有数据
-    if (!forceRefresh && hasEnoughReviews && isRecentlyUpdated) {
+    if (!forceRefresh && hasEnoughReviews && isRecentlyUpdated && !needsSignificantUpdate) {
       console.log(`[Incremental Scraper] Using cached data - sufficient and recent`);
 
       const cachedReviews = await prisma.review.findMany({
