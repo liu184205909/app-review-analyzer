@@ -28,11 +28,13 @@ export async function POST(request: NextRequest) {
     // Create new analysis task
     const analysisTask = await prisma.analysisTask.create({
       data: {
-        id: taskId,
-        slug,
-        status: 'pending',
-        progress: 0,
-        appId: app.id
+        taskType: 'single',
+        status: 'processing',
+        platform: app.platform || 'ios',
+        appStoreId: app.platformAppId || app.name,
+        appSlug: slug,
+        isLatest: true,
+        options: { forceRefresh: true }
       }
     });
 
