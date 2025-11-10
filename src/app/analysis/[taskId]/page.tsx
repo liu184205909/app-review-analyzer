@@ -719,7 +719,7 @@ export default function AnalysisResultPage() {
         {/* Customer Value Metrics with Role Switcher */}
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-6 border border-purple-100">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">💰 Customer Value Analysis</h2>
+            <h2 className="text-2xl font-bold text-gray-900">💰 Customer Value Analysis - Deployed</h2>
 
             {/* Role Switcher */}
             <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
