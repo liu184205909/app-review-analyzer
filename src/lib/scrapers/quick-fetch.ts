@@ -36,8 +36,8 @@ export async function fetchQuickReviews(
       const incrementalResult = await incrementalScrapeReviews({
         appId,
         platform,
-        targetCount: Math.max(count, 100), // 确保有足够的数据
-        maxNewReviews: count, // 最多抓取count条新评论
+        targetCount: Math.max(count, 2000), // 大幅增加数据量确保代表性
+        maxNewReviews: Math.max(count, 500), // 大幅增加单次抓取量
         forceRefresh: false
       });
 
@@ -183,8 +183,8 @@ export async function triggerHotAppsUpdate(limit: number = 10) {
           incrementalScrapeReviews({
             appId: task.appStoreId,
             platform: task.platform,
-            targetCount: Math.max(stats.totalReviews + 50, 800), // 增加50条或达到800
-            maxNewReviews: 100,
+            targetCount: Math.max(stats.totalReviews + 200, 3000), // 增加200条或达到3000
+            maxNewReviews: 500, // 大幅增加单次更新量
             forceRefresh: false
           }).catch(error => {
             console.error(`[Hot Apps Update] Failed to update ${task.appStoreId}:`, error);
