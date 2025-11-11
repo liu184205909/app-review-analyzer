@@ -23,114 +23,26 @@ export interface EnhancedScrapeConfig {
   // 时间范围配置
   timeRange?: {
     enabled: boolean;
-    recentDays?: number;          // 最近N天
-    mediumDays?: number;         // 中等时间范围N天
-    historicalDays?: number;      // 历史评论N天
+    recentDays?: number;          // 最近多少天
+    historicalDays?: number;      // 历史多少天
   } | false;
 
-  // 竞品补充配置
+  // 竞品配置
   competitors?: {
     enabled: boolean;
-    threshold: number;             // 启用竞品数据的阈值
-    maxCompetitorReviews: number;  // 最大竞品评论数
-    similarityThreshold: number;  // 竞品相似度阈值
+    threshold: number;            // 低于此数量时启用竞品补充
+    competitorApps: string[];     // 竞品应用ID列表
   } | false;
 
   // 去重配置
   deduplication?: {
     enabled: boolean;
-    timeWindowHours: number;     // 时间窗口容错
-    similarityThreshold: number;  // 内容相似度阈值
-    duplicateAllowanceRatio: number; // 允许的重复比例
-    minLengthDiff: number;       // 最小长度差异
+    similarityThreshold: number;  // 相似度阈值 (0-1)
+    timeWindowDays?: number;      // 时间窗口（天数）
   } | false;
 }
 
-// 默认配置 - 轻量模式
-export const LIGHTWEIGHT_CONFIG: EnhancedScrapeConfig = {
-  appId: '',
-  platform: 'ios',
-  targetReviews: 1000,
-  minNewReviews: 200,
-  regions: false,
-  timeRange: false,
-  competitors: false,
-  deduplication: {
-    enabled: true,
-    timeWindowHours: 12,
-    similarityThreshold: 0.7,
-    duplicateAllowanceRatio: 0.15,
-    minLengthDiff: 10
-  }
-};
-
-// 默认配置 - 标准模式
-export const STANDARD_CONFIG: EnhancedScrapeConfig = {
-  appId: '',
-  platform: 'ios',
-  targetReviews: 2000,
-  minNewReviews: 500,
-  regions: {
-    enabled: true,
-    prioritized: ['us', 'gb', 'ca', 'au'],
-    fallbackAll: false,
-    maxRegions: 6
-  },
-  timeRange: {
-    enabled: true,
-    recentDays: 7,
-    mediumDays: 30,
-    historicalDays: 90
-  },
-  competitors: {
-    enabled: false,
-    threshold: 800,
-    maxCompetitorReviews: 300,
-    similarityThreshold: 0.6
-  },
-  deduplication: {
-    enabled: true,
-    timeWindowHours: 24,
-    similarityThreshold: 0.8,
-    duplicateAllowanceRatio: 0.2,
-    minLengthDiff: 15
-  }
-};
-
-// 默认配置 - 激进模式
-export const AGGRESSIVE_CONFIG: EnhancedScrapeConfig = {
-  appId: '',
-  platform: 'ios',
-  targetReviews: 5000,
-  minNewReviews: 1500,
-  regions: {
-    enabled: true,
-    prioritized: ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'kr'],
-    fallbackAll: true,
-    maxRegions: 12
-  },
-  timeRange: {
-    enabled: true,
-    recentDays: 14,
-    mediumDays: 60,
-    historicalDays: 180
-  },
-  competitors: {
-    enabled: true,
-    threshold: 1500,
-    maxCompetitorReviews: 1000,
-    similarityThreshold: 0.5
-  },
-  deduplication: {
-    enabled: true,
-    timeWindowHours: 48,
-    similarityThreshold: 0.6,
-    duplicateAllowanceRatio: 0.3,
-    minLengthDiff: 20
-  }
-};
-
-export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): Promise<{
+export interface EnhancedScrapeResult {
   totalReviews: number;
   newReviews: number;
   duplicateReviews: number;
@@ -140,103 +52,171 @@ export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): P
   lastCrawledAt: Date;
   success: boolean;
   error?: string;
-}> {
+}
+
+// 预配置
+export const LIGHTWEIGHT_CONFIG: Omit<EnhancedScrapeConfig, 'appId' | 'platform'> = {
+  targetReviews: 800,
+  minNewReviews: 200,
+  deduplication: {
+    enabled: true,
+    similarityThreshold: 0.8,
+    timeWindowDays: 7
+  }
+};
+
+export const STANDARD_CONFIG: Omit<EnhancedScrapeConfig, 'appId' | 'platform'> = {
+  targetReviews: 1500,
+  minNewReviews: 500,
+  regions: {
+    enabled: true,
+    prioritized: ['us', 'gb', 'ca', 'au'],
+    fallbackAll: true,
+    maxRegions: 4
+  },
+  timeRange: {
+    enabled: true,
+    recentDays: 30,
+    historicalDays: 90
+  },
+  competitors: {
+    enabled: true,
+    threshold: 300,
+    competitorApps: []
+  },
+  deduplication: {
+    enabled: true,
+    similarityThreshold: 0.7,
+    timeWindowDays: 14
+  }
+};
+
+export const AGGRESSIVE_CONFIG: Omit<EnhancedScrapeConfig, 'appId' | 'platform'> = {
+  targetReviews: 3000,
+  minNewReviews: 1000,
+  regions: {
+    enabled: true,
+    prioritized: ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp', 'kr'],
+    fallbackAll: true,
+    maxRegions: 8
+  },
+  timeRange: {
+    enabled: true,
+    recentDays: 7,
+    historicalDays: 180
+  },
+  competitors: {
+    enabled: true,
+    threshold: 500,
+    competitorApps: []
+  },
+  deduplication: {
+    enabled: true,
+    similarityThreshold: 0.6,
+    timeWindowDays: 30
+  }
+};
+
+/**
+ * 增强增量抓取 - 统一的多策略数据收集
+ */
+export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): Promise<EnhancedScrapeResult> {
   console.log(`[Enhanced Scraper] Starting unified scrape for ${config.platform} app: ${config.appId}`);
   console.log(`[Enhanced Scraper] Target: ${config.targetReviews}, Min new: ${config.minNewReviews}`);
 
+  const startTime = Date.now();
   const sources: string[] = [];
   let allReviews: any[] = [];
   let newReviewsCount = 0;
-  let competitorReviewsCount = 0;
   let duplicateCount = 0;
+  let competitorReviewsCount = 0;
 
   try {
-    // Phase 1: 基础增量抓取
-    console.log(`[Enhanced Scraper] Phase 1: Standard incremental scraping`);
-    const baseResult = await performStandardScraping(config);
+    // Phase 1: Standard scraping
+    console.log(`[Enhanced Scraper] Phase 1: Standard scraping`);
+    const standardResult = await performStandardScraping(config);
+    allReviews.push(...standardResult.reviews);
+    newReviewsCount += standardResult.newReviews;
+    sources.push('standard');
 
-    allReviews.push(...baseResult.reviews);
-    newReviewsCount += baseResult.newReviews;
-    duplicateCount += baseResult.duplicateReviews;
-    sources.push('standard_incremental');
+    console.log(`[Enhanced Scraper] Phase 1 result: ${standardResult.reviews.length} reviews, ${standardResult.newReviews} new`);
 
-    console.log(`[Enhanced Scraper] Phase 1: ${baseResult.newReviews} new, ${baseResult.duplicateReviews} duplicates`);
-
-    // Phase 2: 如果需要更多评论，启用增强策略
-    if (newReviewsCount < config.minNewReviews) {
-      const remainingNeeded = config.minNewReviews - newReviewsCount;
-      console.log(`[Enhanced Scraper] Need ${remainingNeeded} more reviews, enabling enhanced strategies`);
-
-      // Phase 2a: 多地区抓取（如果启用）
-      if (config.regions?.enabled && remainingNeeded > 0) {
-        console.log(`[Enhanced Scraper] Phase 2a: Multi-region collection`);
-        const regionResult = await performMultiRegionScrape(config, remainingNeeded);
-
-        if (regionResult.reviews.length > 0) {
-          allReviews.push(...regionResult.reviews);
-          newReviewsCount += regionResult.newReviews;
-          sources.push('multi_region');
-          console.log(`[Enhanced Scraper] Multi-region added ${regionResult.newReviews} reviews from ${regionResult.regions.length} regions`);
-        }
-      }
-
-      // Phase 2b: 时间范围扩展抓取（如果启用且需要更多）
-      if (config.timeRange?.enabled && newReviewsCount < config.minNewReviews) {
-        console.log(`[Enhanced Scraper] Phase 2b: Time-range expansion`);
-        const timeNeeded = config.minNewReviews - newReviewsCount;
-        const timeResult = await performTimeRangeScrape(config, timeNeeded);
-
-        if (timeResult.reviews.length > 0) {
-          allReviews.push(...timeResult.reviews);
-          newReviewsCount += timeResult.newReviews;
-          sources.push('time_range_expansion');
-          console.log(`[Enhanced Scraper] Time-range added ${timeResult.newReviews} reviews`);
-        }
-      }
-
-      // Phase 2c: 竞品评论补充（最后手段）
-      if (config.competitors?.enabled && newReviewsCount < config.competitors.threshold) {
-        console.log(`[Enhanced Scraper] Phase 2c: Competitor supplementation`);
-        const competitorResult = await performCompetitorSupplementation(config, allReviews);
-
-        const competitorReviews = competitorResult.reviews.filter(r => r.isCompetitorReview);
-        competitorReviewsCount = competitorReviews.length;
-
-        allReviews = competitorResult.allReviews;
-        sources.push(...competitorResult.sources);
-        console.log(`[Enhanced Scraper] Competitor data added ${competitorReviewsCount} reviews`);
-      }
-    }
-
-    // Phase 3: 应用增强去重算法（如果启用）
-    let finalReviews = allReviews;
-    if (config.deduplication?.enabled) {
-      console.log(`[Enhanced Scraper] Phase 3: Enhanced deduplication`);
-      const dedupResult = await performEnhancedDeduplication(
-        allReviews,
-        config.platform,
-        config.deduplication
+    // Phase 2: Multi-region scraping (if enabled and still need more reviews)
+    if (config.regions && config.regions.enabled && allReviews.length < config.targetReviews) {
+      console.log(`[Enhanced Scraper] Phase 2: Multi-region scraping`);
+      const regionTarget = Math.min(
+        config.targetReviews - allReviews.length,
+        Math.ceil(config.targetReviews * 0.3)
       );
 
-      finalReviews = dedupResult.uniqueReviews;
-      duplicateCount = dedupResult.duplicateCount;
-      sources.push('enhanced_deduplication');
-      console.log(`[Enhanced Scraper] Deduplication: ${dedupResult.uniqueReviews.length} unique, ${dedupResult.duplicateCount} duplicates`);
+      const regionResult = await performMultiRegionScrape(config, regionTarget);
+      allReviews.push(...regionResult.reviews);
+      newReviewsCount += regionResult.newReviews;
+      sources.push(...regionResult.regions.map(r => `region_${r}`));
+
+      console.log(`[Enhanced Scraper] Phase 2 result: ${regionResult.reviews.length} reviews from ${regionResult.regions.length} regions`);
     }
 
-    // Phase 4: 质量排序和最终选择
-    console.log(`[Enhanced Scraper] Phase 4: Quality sorting and final selection`);
-    const qualitySortedReviews = finalReviews
-      .sort((a, b) => calculateQualityScore(b, config) - calculateQualityScore(a, config))
-      .slice(0, config.targetReviews);
+    // Phase 3: Time-range expansion (if enabled and still need more reviews)
+    if (config.timeRange && config.timeRange.enabled && allReviews.length < config.targetReviews) {
+      console.log(`[Enhanced Scraper] Phase 3: Time-range expansion`);
+      const timeTarget = Math.min(
+        config.targetReviews - allReviews.length,
+        Math.ceil(config.targetReviews * 0.2)
+      );
 
-    const finalResult = {
+      const timeResult = await performTimeRangeScrape(config, timeTarget);
+      allReviews.push(...timeResult.reviews);
+      newReviewsCount += timeResult.newReviews;
+      sources.push('time_range');
+
+      console.log(`[Enhanced Scraper] Phase 3 result: ${timeResult.reviews.length} reviews from time expansion`);
+    }
+
+    // Phase 4: Competitor supplementation (if enabled and still need more reviews)
+    if (config.competitors && config.competitors.enabled && allReviews.length < config.competitors.threshold) {
+      console.log(`[Enhanced Scraper] Phase 4: Competitor supplementation`);
+      const competitorTarget = Math.min(
+        config.competitors.threshold - allReviews.length,
+        Math.ceil(config.targetReviews * 0.15)
+      );
+
+      const competitorResult = await performCompetitorSupplementation(config, allReviews, competitorTarget);
+      if (competitorResult.reviews.length > 0) {
+        allReviews.push(...competitorResult.reviews);
+        competitorReviewsCount = competitorResult.reviews.length;
+        sources.push('competitors');
+
+        console.log(`[Enhanced Scraper] Phase 4 result: ${competitorResult.reviews.length} competitor reviews`);
+      }
+    }
+
+    // Phase 5: Enhanced deduplication (if enabled)
+    if (config.deduplication && config.deduplication.enabled) {
+      console.log(`[Enhanced Scraper] Phase 5: Enhanced deduplication`);
+      const { finalReviews, duplicatesRemoved } = await performEnhancedDeduplication(
+        allReviews,
+        config.deduplication.similarityThreshold,
+        (config.deduplication.timeWindowDays || 7)
+      );
+
+      duplicateCount = duplicatesRemoved;
+      allReviews = finalReviews;
+
+      console.log(`[Enhanced Scraper] Phase 5 result: Removed ${duplicatesRemoved} duplicates, ${finalReviews.length} remaining`);
+    }
+
+    // Quality scoring and filtering
+    console.log(`[Enhanced Scraper] Phase 6: Quality scoring and filtering`);
+    const qualitySortedReviews = await performQualityScoring(allReviews, config.targetReviews);
+
+    const finalResult: EnhancedScrapeResult = {
       totalReviews: qualitySortedReviews.length,
       newReviews: newReviewsCount,
       duplicateReviews: duplicateCount,
       competitorReviews: competitorReviewsCount,
       scrapedReviews: qualitySortedReviews,
-      sources: [...new Set(sources)],
+      sources: sources,
       lastCrawledAt: new Date(),
       success: qualitySortedReviews.length >= config.minNewReviews
     };
@@ -253,21 +233,19 @@ export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): P
     return finalResult;
 
   } catch (error) {
-      console.error(`[Enhanced Scraper] Error during unified scrape:`, error);
+    console.error(`[Enhanced Scraper] Error during unified scrape:`, error);
 
-      // 返回部分结果
-      return {
-        totalReviews: allReviews.length,
-        newReviews: newReviewsCount,
-        duplicateReviews: duplicateCount,
-        competitorReviews: competitorReviewsCount,
-        scrapedReviews: allReviews,
-        sources: sources,
-        lastCrawledAt: new Date(),
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    return {
+      totalReviews: 0,
+      newReviews: 0,
+      duplicateReviews: 0,
+      competitorReviews: 0,
+      scrapedReviews: [],
+      sources: ['error'],
+      lastCrawledAt: new Date(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
@@ -277,19 +255,17 @@ async function performStandardScraping(config: EnhancedScrapeConfig): Promise<{
   duplicateReviews: number;
 }> {
   try {
-    // 调用现有的incrementalScrapeReviews逻辑
-    console.log(`[Standard Scraper] Would perform standard incremental scraping for ${config.appId}`);
+    console.log(`[Standard Scraper] Performing standard scraping for ${config.appId}`);
 
-    // 模拟结果 - 实际应该调用现有的incrementalScrapeReviews
+    // Get existing reviews from database
     const existingApp = await prisma.app.findFirst({
-      where: { appId: config.appId }
+      where: { appId: config.appId, platform: config.platform }
     });
 
     if (!existingApp) {
       return { reviews: [], newReviews: 0, duplicateReviews: 0 };
     }
 
-    // 获取现有评论
     const existingReviews = await prisma.review.findMany({
       where: { appId: existingApp.id },
       orderBy: { reviewDate: 'desc' },
@@ -300,7 +276,7 @@ async function performStandardScraping(config: EnhancedScrapeConfig): Promise<{
 
     return {
       reviews: existingReviews,
-      newReviews: Math.max(0, config.minNewReviews - existingReviews.length),
+      newReviews: 0,
       duplicateReviews: 0
     };
 
@@ -318,36 +294,149 @@ async function performMultiRegionScrape(
   newReviews: number;
   regions: string[];
 }> {
-  const regions: string[] = [];
+  const regions = (config.regions as any).prioritized.slice(0, (config.regions as any).maxRegions || 4);
   const allReviews: any[] = [];
+  let totalNew = 0;
 
-  for (const region of config.regions!.prioritized.slice(0, config.regions!.maxRegions || 6)) {
+  console.log(`[Multi-Region] Targeting ${targetCount} reviews from ${regions.length} regions`);
+
+  for (const region of regions) {
+    if (allReviews.length >= targetCount) break;
+
     try {
-      console.log(`[Multi-Region] Scraping region: ${region}`);
-
-      // 调用多地区抓取逻辑
       const regionReviews = await scrapeByRegion(config.appId, config.platform, region, Math.ceil(targetCount / regions.length));
+      allReviews.push(...regionReviews);
+      totalNew += regionReviews.length;
 
-      if (regionReviews.length > 0) {
-        allReviews.push(...regionReviews);
-        regions.push(region);
-      }
+      console.log(`[Multi-Region] ${region}: ${regionReviews.length} reviews`);
 
-      // 添加延迟避免被限制
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
+      // Delay between regions
+      await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (error) {
-      console.error(`[Multi-Region] Failed to scrape ${region}:`, error);
+      console.error(`[Multi-Region] Failed for region ${region}:`, error);
     }
   }
 
   return {
-    reviews: allReviews,
-    newReviews: allReviews.length,
-    regions
+    reviews: allReviews.slice(0, targetCount),
+    newReviews: totalNew,
+    regions: regions
   };
 }
 
+async function performTimeRangeScrape(
+  config: EnhancedScrapeConfig,
+  targetCount: number
+): Promise<{
+  reviews: any[];
+  newReviews: number;
+}> {
+  const timeRangeConfig = config.timeRange as any;
+const recentDays = timeRangeConfig?.recentDays || 7;
+const historicalDays = timeRangeConfig?.historicalDays || 30;
+  const allReviews: any[] = [];
+
+  console.log(`[Time-Range] Targeting ${targetCount} reviews from ${recentDays}-${historicalDays} days range`);
+
+  try {
+    // Get recent reviews
+    const recentReviews = await scrapeByTimeRange(config.appId, config.platform, recentDays, Math.ceil(targetCount * 0.6));
+    allReviews.push(...recentReviews);
+
+    // Get historical reviews if needed
+    if (allReviews.length < targetCount) {
+      const historicalReviews = await scrapeByTimeRange(config.appId, config.platform, historicalDays, targetCount - allReviews.length);
+      allReviews.push(...historicalReviews);
+    }
+
+    console.log(`[Time-Range] Collected ${allReviews.length} reviews from time expansion`);
+
+    return {
+      reviews: allReviews.slice(0, targetCount),
+      newReviews: allReviews.length
+    };
+  } catch (error) {
+    console.error('Time range scraping failed:', error);
+    return { reviews: [], newReviews: 0 };
+  }
+}
+
+async function performCompetitorSupplementation(
+  config: EnhancedScrapeConfig,
+  existingReviews: any[],
+  targetCount: number
+): Promise<{
+  reviews: any[];
+}> {
+  console.log(`[Competitor] Supplementing with ${targetCount} competitor reviews`);
+
+  // This is a placeholder for competitor data logic
+  // In a real implementation, you would:
+  // 1. Identify competitor apps in the same category
+  // 2. Fetch their reviews
+  // 3. Adapt/filter them to be relevant to the target app
+
+  return {
+    reviews: [] // Placeholder - no competitor reviews for now
+  };
+}
+
+async function performEnhancedDeduplication(
+  reviews: any[],
+  similarityThreshold: number,
+  timeWindowDays: number
+): Promise<{
+  finalReviews: any[];
+  duplicatesRemoved: number;
+}> {
+  console.log(`[Deduplication] Processing ${reviews.length} reviews with threshold ${similarityThreshold}`);
+
+  // Simple deduplication based on reviewId for now
+  const seenIds = new Set();
+  const uniqueReviews: any[] = [];
+
+  for (const review of reviews) {
+    const id = review.reviewId || review.id || `${review.author}_${review.date}_${review.rating}`;
+    if (!seenIds.has(id)) {
+      seenIds.add(id);
+      uniqueReviews.push(review);
+    }
+  }
+
+  const duplicatesRemoved = reviews.length - uniqueReviews.length;
+
+  console.log(`[Deduplication] Removed ${duplicatesRemoved} duplicates, ${uniqueReviews.length} remaining`);
+
+  return {
+    finalReviews: uniqueReviews,
+    duplicatesRemoved
+  };
+}
+
+async function performQualityScoring(reviews: any[], targetCount: number): Promise<any[]> {
+  console.log(`[Quality] Scoring and filtering ${reviews.length} reviews to ${targetCount}`);
+
+  // Simple quality scoring based on review length and rating
+  const scoredReviews = reviews.map(review => {
+    const contentLength = (review.content || '').length;
+    const rating = review.rating || 0;
+
+    // Higher score for longer content and extreme ratings (1 or 5)
+    let qualityScore = contentLength / 100; // Base score from content length
+    if (rating === 1 || rating === 5) {
+      qualityScore += 0.5; // Bonus for extreme ratings
+    }
+
+    return { ...review, qualityScore };
+  });
+
+  // Sort by quality score and take the best ones
+  scoredReviews.sort((a, b) => b.qualityScore - a.qualityScore);
+
+  return scoredReviews.slice(0, targetCount);
+}
+
+// Helper functions
 async function scrapeByRegion(
   appId: string,
   platform: 'ios' | 'android',
@@ -358,19 +447,16 @@ async function scrapeByRegion(
 
   try {
     if (platform === 'ios') {
-      // Use existing app store scraper with different regions
       const { fetchAppStoreReviews } = await import('./scrapers/app-store');
       const reviews = await fetchAppStoreReviews(appId, region, 'mostRecent', 1);
 
-      // Add region metadata
       reviews.forEach(review => {
-        review.region = region;
-        review.source = 'multi_region';
+        (review as any).region = region;
+        (review as any).source = 'multi_region';
       });
 
       return reviews.slice(0, targetCount);
     } else {
-      // For Android, region-specific scraping
       const { fetchGooglePlayReviews } = await import('./scrapers/google-play');
       const reviews = await fetchGooglePlayReviews(appId, {
         num: targetCount,
@@ -378,10 +464,9 @@ async function scrapeByRegion(
         country: region
       });
 
-      // Add region metadata
       reviews.forEach(review => {
-        review.region = region;
-        review.source = 'multi_region';
+        (review as any).region = region;
+        (review as any).source = 'multi_region';
       });
 
       return reviews;
@@ -390,48 +475,6 @@ async function scrapeByRegion(
     console.error(`[Region Scraper] Failed to scrape ${region}:`, error);
     return [];
   }
-}
-
-async function performTimeRangeScrape(
-  config: EnhancedScrapeConfig,
-  targetCount: number
-): Promise<{
-  reviews: any[];
-  newReviews: number;
-}> {
-  const timeRanges = [
-    { days: config.timeRange!.recentDays || 7, name: 'recent' },
-    { days: config.timeRange!.mediumDays || 30, name: 'medium' },
-    { days: config.timeRange!.historicalDays || 90, name: 'historical' }
-  ];
-
-  const allReviews: any[] = [];
-
-  for (const timeRange of timeRanges) {
-    try {
-      console.log(`[Time Range] Scraping ${timeRange.name} range (${timeRange.days} days)`);
-
-      // 实现时间范围抓取逻辑
-      const rangeReviews = await scrapeByTimeRange(config.appId, config.platform, timeRange.days, Math.ceil(targetCount / timeRanges.length));
-
-      if (rangeReviews.length > 0) {
-        rangeReviews.forEach(review => {
-          review.timeRange = timeRange.name;
-          review.timeRangeDays = timeRange.days;
-        });
-
-        allReviews.push(...rangeReviews);
-      }
-
-    } catch (error) {
-      console.error(`[Time Range] Failed to scrape ${timeRange.name} range:`, error);
-    }
-  }
-
-  return {
-    reviews: allReviews,
-    newReviews: allReviews.length
-  };
 }
 
 async function scrapeByTimeRange(
@@ -443,18 +486,15 @@ async function scrapeByTimeRange(
   console.log(`[Time Range Scraper] Scraping ${days} days range for ${targetCount} reviews`);
 
   try {
-    // For time range scraping, we get more pages/older reviews
     if (platform === 'ios') {
       const { fetchAppStoreReviews } = await import('./scrapers/app-store');
 
-      // Calculate how many pages we need to get enough reviews from this time range
       const pagesNeeded = Math.ceil(targetCount / 50);
       const allReviews: any[] = [];
 
       for (let page = 1; page <= pagesNeeded; page++) {
         const reviews = await fetchAppStoreReviews(appId, 'us', 'mostRecent', page);
 
-        // Filter by date range
         const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
         const filteredReviews = reviews.filter(review => {
           const reviewDate = new Date(review.date || review.createdAt);
@@ -467,31 +507,28 @@ async function scrapeByTimeRange(
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
-      // Add time range metadata
       allReviews.forEach(review => {
-        review.timeRange = `${days}days`;
-        review.source = 'time_range';
+        (review as any).timeRange = `${days}days`;
+        (review as any).source = 'time_range';
       });
 
       return allReviews.slice(0, targetCount);
     } else {
       const { fetchGooglePlayReviews } = await import('./scrapers/google-play');
       const reviews = await fetchGooglePlayReviews(appId, {
-        num: targetCount * 2, // Get more to filter by time
+        num: targetCount * 2,
         sort: 'NEWEST'
       });
 
-      // Filter by date range
       const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
       const filteredReviews = reviews.filter(review => {
         const reviewDate = new Date(review.date || review.createdAt);
         return reviewDate >= cutoffDate;
       });
 
-      // Add time range metadata
       filteredReviews.forEach(review => {
-        review.timeRange = `${days}days`;
-        review.source = 'time_range';
+        (review as any).timeRange = `${days}days`;
+        (review as any).source = 'time_range';
       });
 
       return filteredReviews.slice(0, targetCount);
@@ -502,165 +539,14 @@ async function scrapeByTimeRange(
   }
 }
 
-async function performCompetitorSupplementation(
-  config: EnhancedScrapeConfig,
-  existingReviews: any[]
-): Promise<{
-  allReviews: any[];
-  reviews: any[];
-  sources: string[];
-}> {
-  console.log(`[Competitor] Starting competitor supplementation (threshold: ${config.competitors!.threshold})`);
-
-  // 实现竞品评论补充逻辑
-  // 这里应该：
-  // 1. 查找相关竞品
-  // 2. 抓取竞品评论
-  // 3. 适配竞品评论
-  // 4. 与现有评论合并
-
-  return {
-    allReviews: existingReviews,
-    reviews: [],
-    sources: ['competitor_disabled']
-  };
-}
-
-async function performEnhancedDeduplication(
-  reviews: any[],
-  platform: 'ios' | 'android',
-  config: EnhancedScrapeConfig['deduplication']
-): Promise<{
-  uniqueReviews: any[];
-  duplicateCount: number;
-}> {
-  console.log(`[Deduplication] Starting enhanced deduplication (threshold: ${config.similarityThreshold})`);
-
-  // 实现增强的去重逻辑
-  const uniqueReviews: any[] = [];
-  const seenHashes = new Set<string>();
-
-  for (const review of reviews) {
-    const contentHash = generateContentHash(review.content);
-
-    // 检查相似度
-    const isDuplicate = Array.from(seenHashes).some(existingHash =>
-      calculateSimilarity(contentHash, existingHash) >= config.similarityThreshold
-    );
-
-    if (!isDuplicate) {
-      uniqueReviews.push(review);
-      seenHashes.add(contentHash);
-    }
-  }
-
-  return {
-    uniqueReviews,
-    duplicateCount: reviews.length - uniqueReviews.length
-  };
-}
-
-function calculateQualityScore(review: any, config: EnhancedScrapeConfig): number {
-  let score = 0;
-
-  // 基础评分
-  const contentLength = review.content?.length || 0;
-  if (contentLength > 50) score += 10;
-  if (contentLength > 100) score += 15;
-  if (contentLength > 200) score += 20;
-
-  // 有标题加分
-  if (review.title && review.title.trim()) score += 15;
-
-  // 评分分布
-  if (review.rating >= 2 && review.rating <= 4) score += 25;
-  else if (review.rating === 1 || review.rating === 5) score += 15;
-
-  // 数据源权重
-  if (review.isCompetitorReview) {
-    score = Math.floor(score * (review.competitorSimilarity || 0.5));
-    score -= 10; // 竞品评论稍微降低权重
-  } else {
-    score += 20; // 原生评论加分
-  }
-
-  // 地区多样性加分
-  if (review.region && review.region !== 'us') score += 10;
-
-  // 时间新鲜度
-  const reviewDate = new Date(review.date || review.createdAt || 0);
-  const daysOld = (Date.now() - reviewDate.getTime()) / (1000 * 60 * 60 * 24);
-  if (daysOld < 7) score += 20;
-  else if (daysOld < 30) score += 10;
-
-  // 技术术语
-  if (containsTechnicalTerms(review.content)) score += 15;
-
-  // 情感分析
-  const sentiment = analyzeSentiment(review.content);
-  if (sentiment !== 'neutral') score += 10;
-
-  return score;
-}
-
-function generateContentHash(content: string): string {
-  const normalized = content
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/[.,!?;:]/g, '')
-    .trim();
-
-  const preview = normalized.substring(0, 100);
-  return require('crypto')
-    .createHash('md5')
-    .update(preview)
-    .digest('hex');
-}
-
-function calculateSimilarity(hash1: string, hash2: string): number {
-  // 简单的哈希相似度计算
-  let common = 0;
-  const minLength = Math.min(hash1.length, hash2.length);
-
-  for (let i = 0; i < minLength; i++) {
-    if (hash1[i] === hash2[i]) common++;
-  }
-
-  return common / minLength;
-}
-
-function containsTechnicalTerms(content: string): boolean {
-  const technicalTerms = [
-    'crash', 'bug', 'performance', 'lag', 'freeze', 'memory',
-    'battery', 'update', 'feature', 'interface', 'ui', 'ux',
-    'server', 'connection', 'login', 'account', 'payment',
-    'ads', 'advertisement', 'monetization', 'subscription'
-  ];
-
-  const lowerContent = content.toLowerCase();
-  return technicalTerms.some(term => lowerContent.includes(term));
-}
-
-function analyzeSentiment(content: string): 'positive' | 'negative' | 'neutral' {
-  const positiveWords = ['good', 'great', 'love', 'amazing', 'excellent', 'perfect', 'awesome', 'fantastic'];
-  const negativeWords = ['bad', 'terrible', 'hate', 'worst', 'awful', 'horrible', 'disappointed', 'frustrated'];
-
-  const lowerContent = content.toLowerCase();
-
-  const positiveCount = positiveWords.filter(word => lowerContent.includes(word)).length;
-  const negativeCount = negativeWords.filter(word => lowerContent.includes(word)).length;
-
-  if (positiveCount > negativeCount) return 'positive';
-  if (negativeCount > positiveCount) return 'negative';
-  return 'neutral';
-}
-
-// 导出配置工具函数
-export function getRecommendedConfig(reviewCount: number, complexity: 'lightweight' | 'standard' | 'aggressive' = 'standard'): EnhancedScrapeConfig {
+// Configuration helpers
+export function getRecommendedConfig(
+  reviewCount: number,
+  complexity: 'lightweight' | 'standard' | 'aggressive' = 'standard'
+): Omit<EnhancedScrapeConfig, 'appId' | 'platform'> {
   const baseConfig = complexity === 'lightweight' ? LIGHTWEIGHT_CONFIG :
-                   complexity === 'aggressive' ? AGGRESSIVE_CONFIG : STANDARD_CONFIG;
+    complexity === 'aggressive' ? AGGRESSIVE_CONFIG : STANDARD_CONFIG;
 
-  // 根据实际评论数量调整配置
   const adjustedConfig = { ...baseConfig };
 
   if (reviewCount > 1000) {
@@ -671,10 +557,11 @@ export function getRecommendedConfig(reviewCount: number, complexity: 'lightweig
   return adjustedConfig;
 }
 
-// 便捷的预配置函数
 export const createConfig = (overrides: Partial<EnhancedScrapeConfig> = {}): EnhancedScrapeConfig => {
   return {
     ...STANDARD_CONFIG,
-    ...overrides
+    ...overrides,
+    appId: overrides.appId || '',
+    platform: overrides.platform || 'ios'
   };
 };

@@ -5,7 +5,7 @@
 import prisma from './prisma';
 import { fetchAppStoreReviews } from './scrapers/app-store';
 import { fetchGooglePlayReviews } from './scrapers/google-play';
-import { enhancedIncrementalScrape, getRecommendedConfig, LIGHTWEIGHT_CONFIG, STANDARD_CONFIG, AGGRESSIVE_CONFIG } from './enhanced-incremental-scraper';
+import { enhancedIncrementalScrape, getRecommendedConfig, LIGHTWEIGHT_CONFIG, STANDARD_CONFIG, AGGRESSIVE_CONFIG, type EnhancedScrapeConfig } from './enhanced-incremental-scraper';
 
 export interface IncrementalScrapeOptions {
   appId: string;
@@ -55,14 +55,17 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
     // Get recommended configuration based on complexity
     const enhancedConfig = getRecommendedConfig(targetCount, complexity);
 
-    // Override with specific options
-    enhancedConfig.appId = appId;
-    enhancedConfig.platform = platform;
-    enhancedConfig.targetReviews = targetCount;
-    enhancedConfig.minNewReviews = Math.min(maxNewReviews, targetCount * 0.3); // 30% of target
+    // Create final config with required fields
+    const finalConfig: EnhancedScrapeConfig = {
+      ...enhancedConfig,
+      appId,
+      platform,
+      targetReviews: targetCount,
+      minNewReviews: Math.min(maxNewReviews, targetCount * 0.3) // 30% of target
+    } as EnhancedScrapeConfig;
 
     try {
-      const enhancedResult = await enhancedIncrementalScrape(enhancedConfig);
+      const enhancedResult = await enhancedIncrementalScrape(finalConfig);
 
       console.log(`[Enhanced Scraper] Completed:`, {
         totalReviews: enhancedResult.totalReviews,
