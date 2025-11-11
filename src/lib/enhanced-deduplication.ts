@@ -52,10 +52,11 @@ export async function enhancedDeduplication(
     const contentHash = generateContentHash(review.content);
     existingContentHashes.set(contentHash, review);
 
-    if (!existingAuthorContents.has(review.author)) {
-      existingAuthorContents.set(review.author, new Set());
+    const author = review.author || 'Anonymous';
+    if (!existingAuthorContents.has(author)) {
+      existingAuthorContents.set(author, new Set());
     }
-    existingAuthorContents.get(review.author)!.add(review.content);
+    existingAuthorContents.get(author)!.add(review.content || '');
   }
 
   // 按重要性排序抓取的评论
@@ -171,7 +172,7 @@ function checkContentSimilarity(
   }
 
   // 检查相似度
-  for (const [hash, existingReview] of existingHashes.entries()) {
+  for (const [hash, existingReview] of Array.from(existingHashes.entries())) {
     const similarity = calculateContentSimilarity(content, existingReview.content);
     if (similarity >= threshold) {
       // 检查长度差异
@@ -190,8 +191,8 @@ function calculateContentSimilarity(content1: string, content2: string): number 
   const words1 = new Set(content1.toLowerCase().split(/\s+/));
   const words2 = new Set(content2.toLowerCase().split(/\s+/));
 
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
-  const union = new Set([...words1, ...words2]);
+  const intersection = new Set(Array.from(words1).filter(x => words2.has(x)));
+  const union = new Set(Array.from(words1).concat(Array.from(words2)));
 
   return intersection.size / union.size;
 }
