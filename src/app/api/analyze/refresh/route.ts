@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
                 title: r.title,
                 content: r.content,
                 date: r.reviewDate,
-                appVersion: r.version
+                appVersion: r.appVersion
               }))
             })
           }
