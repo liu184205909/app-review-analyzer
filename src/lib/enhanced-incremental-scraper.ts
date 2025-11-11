@@ -497,7 +497,7 @@ async function scrapeByTimeRange(
 
         const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
         const filteredReviews = reviews.filter(review => {
-          const reviewDate = new Date(review.date || review.createdAt);
+          const reviewDate = new Date(review.date);
           return reviewDate >= cutoffDate;
         });
 
@@ -522,7 +522,7 @@ async function scrapeByTimeRange(
 
       const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
       const filteredReviews = reviews.filter(review => {
-        const reviewDate = new Date(review.date || review.createdAt);
+        const reviewDate = new Date(review.date);
         return reviewDate >= cutoffDate;
       });
 
