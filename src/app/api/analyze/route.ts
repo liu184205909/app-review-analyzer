@@ -29,6 +29,7 @@ import { fetchQuickReviews, fetchIncrementalReviews } from '@/lib/scrapers/quick
 import { analyzeSingleApp, Review } from '@/lib/ai/openrouter';
 import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug';
 import { normalizeCategory } from '@/lib/category';
+import { incrementalScrapeReviews } from '@/lib/incremental-scraper';
 
 export async function POST(request: NextRequest) {
   try {
@@ -271,41 +272,34 @@ async function processAnalysis(
       data: { progress: 15 },
     });
 
-    // Fetch reviews with enhanced sampling and multi-country support
-    // 🚀 Enhanced: Always use deep analysis for better insights
-    // Base target: 1000-1200 reviews for comprehensive analysis
-    const reviewTarget = options?.multiCountry ? 1200 : 1000;
-    const useMultiCountry = options?.multiCountry || false;
+    // Enhanced Review Collection using unified multi-strategy approach
+    // 🚀 Enhanced: Use enhanced incremental scraping for comprehensive data collection
+    const reviewTarget = Math.max(1500, options?.reviewTarget || 1500); // Target 1500+ reviews for diverse issue analysis
+    const useEnhancedMode = true; // Always enable enhanced mode for better data collection
 
-    let reviews: any[] = [];
+    console.log(`[Enhanced Scraper] Starting enhanced collection: ${reviewTarget} target reviews`);
+    console.log(`[Enhanced Scraper] Platform: ${platform}, App ID: ${appId}`);
 
-    if (platform === 'ios') {
-      if (useMultiCountry) {
-        // Multi-country fetching for iOS (500-1000+ reviews)
-        const countries = options?.countries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'jp'];
-        console.log(`[iOS] Multi-country fetching: ${reviewTarget} target reviews from ${countries.length} countries`);
-        reviews = await fetchAppStoreReviewsMultiCountry(appId, reviewTarget, countries);
-      } else {
-        // Single country with more pages
-        const pages = 10; // Always use max pages for deep analysis
-        console.log(`[iOS] Single country fetching: ${pages} pages from US store`);
-        reviews = await fetchAppStoreReviewsMultiPage(appId, 'us', pages, reviewTarget);
-      }
-    } else {
-      // Android with enhanced options
-      if (useMultiCountry) {
-        // Multi-country fetching for Android (800-1000+ reviews)
-        const countries = options?.countries || ['us', 'gb', 'ca', 'au', 'de', 'fr', 'in', 'br'];
-        console.log(`[Android] Multi-country fetching: ${reviewTarget} target reviews from ${countries.length} countries`);
-        reviews = await fetchGooglePlayReviewsMultiCountry(appId, reviewTarget, countries);
-      } else {
-        // Single country with deep mode
-        reviews = await fetchGooglePlayReviewsMultiPage(appId, {
-          maxReviews: reviewTarget,
-          deepMode: true, // Always use deep mode
-        });
-      }
-    }
+    // Use enhanced incremental scraping with unified multi-strategy approach
+    const scrapeResult = await incrementalScrapeReviews({
+      appId,
+      platform,
+      targetCount: reviewTarget,
+      maxNewReviews: Math.ceil(reviewTarget * 0.4), // Target 40% new reviews
+      forceRefresh: options?.forceRefresh || false,
+      enhancedMode: useEnhancedMode,
+      complexity: options?.complexity || 'standard' // Use 'standard' complexity by default
+    });
+
+    const reviews = scrapeResult.scrapedReviews || [];
+
+    console.log(`[Enhanced Scraper] Collection complete:`, {
+      totalCollected: reviews.length,
+      newReviews: scrapeResult.newReviews,
+      duplicateReviews: scrapeResult.duplicateReviews,
+      isNewData: scrapeResult.isNewData,
+      lastCrawledAt: scrapeResult.lastCrawledAt
+    });
 
     // Update progress after review fetching
     await prisma.analysisTask.update({
@@ -313,37 +307,8 @@ async function processAnalysis(
       data: { progress: 45 },
     });
 
-    // ⚡ Batch save reviews to database (much faster)
-    // Skip duplicates by checking existing reviews first
-    const existingReviewIds = await prisma.review.findMany({
-      where: {
-        platform,
-        reviewId: { in: reviews.map(r => r.id) },
-      },
-      select: { reviewId: true },
-    });
-    
-    const existingIds = new Set(existingReviewIds.map(r => r.reviewId));
-    const newReviews = reviews.filter(r => !existingIds.has(r.id));
-    
-    // Batch insert new reviews only
-    if (newReviews.length > 0) {
-      await prisma.review.createMany({
-        data: newReviews.map(review => ({
-          appId: app.id,
-          platform,
-          reviewId: review.id,
-          author: review.author,
-          rating: review.rating,
-          title: review.title || null,
-          content: review.content,
-          reviewDate: review.date,
-          appVersion: review.appVersion,
-          helpfulCount: (review as any).thumbsUp || 0,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    // Reviews are already saved by enhanced incremental scraper
+    // No need to save again - skip database operations
 
     // Update progress after saving reviews
     await prisma.analysisTask.update({
@@ -351,27 +316,31 @@ async function processAnalysis(
       data: { progress: 60 },
     });
 
-    // Filter reviews for analysis (1-3 stars if option set)
+    // Enhanced Review Sampling for AI Analysis
+    // With enhanced data collection, we have more diverse reviews to work with
     let reviewsToAnalyze = reviews;
+
+    // Apply rating filter if specified (though with enhanced mode we usually want all ratings)
     if (options?.ratingFilter) {
       reviewsToAnalyze = reviews.filter(r =>
         options.ratingFilter.includes(r.rating)
       );
     }
 
-    // Enhanced sampling: Ensure comprehensive coverage for all issue types
-    // 🚀 Enhanced: Always use deep analysis with balanced review selection
-    const maxReviewsForAI = Math.min(300, reviewsToAnalyze.length); // Analyze up to 300 reviews for AI (optimized for prompt limits)
+    // Optimized sampling strategy for enhanced data collection
+    // Target 400 reviews for AI analysis to capture more diverse issues (increased from 300)
+    const maxReviewsForAI = Math.min(400, reviewsToAnalyze.length);
 
     if (reviewsToAnalyze.length > maxReviewsForAI) {
-      // Comprehensive sampling strategy for better issue coverage
-      // 50% negative (1-2 stars) for critical issues, 30% mixed (3 stars) for experience issues, 20% positive (4-5 stars) for feature requests
+      // Enhanced sampling for comprehensive issue coverage
+      // With multi-region and time-range data, we need balanced sampling across sources
       const criticalIssues = reviewsToAnalyze.filter(r => r.rating <= 2); // Critical issues (1-2 stars)
       const experienceIssues = reviewsToAnalyze.filter(r => r.rating === 3); // Experience issues (3 stars)
       const positiveReviews = reviewsToAnalyze.filter(r => r.rating >= 4); // Positive reviews (4-5 stars)
 
-      const criticalCount = Math.floor(maxReviewsForAI * 0.5); // 50% for critical issues
-      const experienceCount = Math.floor(maxReviewsForAI * 0.3); // 30% for experience issues
+      // Optimized distribution for better issue diversity
+      const criticalCount = Math.floor(maxReviewsForAI * 0.45); // 45% for critical issues
+      const experienceCount = Math.floor(maxReviewsForAI * 0.35); // 35% for experience issues
       const positiveCount = maxReviewsForAI - criticalCount - experienceCount; // 20% for positive
 
       reviewsToAnalyze = [
@@ -380,8 +349,11 @@ async function processAnalysis(
         ...positiveReviews.slice(0, positiveCount)
       ];
 
-      console.log(`[AI] Enhanced sampling: ${criticalCount} critical, ${experienceCount} experience, ${positiveCount} positive reviews`);
-      console.log(`[AI] Total available: ${criticalIssues.length} critical, ${experienceIssues.length} experience, ${positiveReviews.length} positive reviews`);
+      console.log(`[AI] Enhanced sampling for ${maxReviewsForAI} reviews:`);
+      console.log(`[AI] - ${criticalCount} critical issues (${criticalIssues.length} available)`);
+      console.log(`[AI] - ${experienceCount} experience issues (${experienceIssues.length} available)`);
+      console.log(`[AI] - ${positiveCount} positive reviews (${positiveReviews.length} available)`);
+      console.log(`[AI] Total collected: ${reviews.length} reviews from enhanced scraping`);
     }
 
     // Update progress before AI analysis

@@ -1,9 +1,11 @@
 // 增量评论采集优化器
 // 实现智能去重、时间戳比较和增量更新
+// Enhanced with unified multi-strategy approach
 
 import prisma from './prisma';
 import { fetchAppStoreReviews } from './scrapers/app-store';
 import { fetchGooglePlayReviews } from './scrapers/google-play';
+import { enhancedIncrementalScrape, getRecommendedConfig, LIGHTWEIGHT_CONFIG, STANDARD_CONFIG, AGGRESSIVE_CONFIG } from './enhanced-incremental-scraper';
 
 export interface IncrementalScrapeOptions {
   appId: string;
@@ -11,6 +13,8 @@ export interface IncrementalScrapeOptions {
   targetCount?: number; // 目标总评论数
   maxNewReviews?: number; // 本次最多抓取新评论数
   forceRefresh?: boolean; // 是否强制刷新（忽略缓存）
+  enhancedMode?: boolean; // 启用增强模式（多地区、时间范围、竞品补充）
+  complexity?: 'lightweight' | 'standard' | 'aggressive'; // 增强模式复杂度
 }
 
 export interface ScrapeResult {
@@ -29,10 +33,59 @@ export interface ScrapeResult {
  * 3. 自动去重和增量存储
  */
 export async function incrementalScrapeReviews(options: IncrementalScrapeOptions): Promise<ScrapeResult> {
-  const { appId, platform, targetCount = 5000, maxNewReviews = 1000, forceRefresh = false } = options;
+  const {
+    appId,
+    platform,
+    targetCount = 5000,
+    maxNewReviews = 1000,
+    forceRefresh = false,
+    enhancedMode = false,
+    complexity = 'standard'
+  } = options;
 
   console.log(`[Incremental Scraper] Starting for ${platform} app: ${appId}`);
   console.log(`[Incremental Scraper] Target: ${targetCount}, Max new: ${maxNewReviews}, Force refresh: ${forceRefresh}`);
+  console.log(`[Incremental Scraper] Enhanced Mode: ${enhancedMode}, Complexity: ${complexity}`);
+
+  // Enhanced Mode: Use unified multi-strategy approach
+  // Always use enhanced mode for better data collection
+  if (enhancedMode && targetCount >= 500) {
+    console.log(`[Incremental Scraper] Using enhanced multi-strategy scraping`);
+
+    // Get recommended configuration based on complexity
+    const enhancedConfig = getRecommendedConfig(targetCount, complexity);
+
+    // Override with specific options
+    enhancedConfig.appId = appId;
+    enhancedConfig.platform = platform;
+    enhancedConfig.targetReviews = targetCount;
+    enhancedConfig.minNewReviews = Math.min(maxNewReviews, targetCount * 0.3); // 30% of target
+
+    try {
+      const enhancedResult = await enhancedIncrementalScrape(enhancedConfig);
+
+      console.log(`[Enhanced Scraper] Completed:`, {
+        totalReviews: enhancedResult.totalReviews,
+        newReviews: enhancedResult.newReviews,
+        sources: enhancedResult.sources,
+        success: enhancedResult.success
+      });
+
+      // Convert to legacy format for compatibility
+      return {
+        totalReviews: enhancedResult.totalReviews,
+        newReviews: enhancedResult.newReviews,
+        duplicateReviews: enhancedResult.duplicateReviews,
+        scrapedReviews: enhancedResult.scrapedReviews,
+        lastCrawledAt: enhancedResult.lastCrawledAt,
+        isNewData: enhancedResult.newReviews > 0
+      };
+
+    } catch (error) {
+      console.error(`[Enhanced Scraper] Failed, falling back to standard mode:`, error);
+      // Fall back to standard mode if enhanced fails
+    }
+  }
 
   try {
     // 1. 查询现有应用和评论数据
