@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
           requiresUpgrade: true,
           currentTier: payload.subscriptionTier,
           remainingAnalyses: analysisCheck.remainingAnalyses,
-          nextResetDate: analysisCheck.nextResetDate
         },
         { status: 402 } // Payment Required
       );
