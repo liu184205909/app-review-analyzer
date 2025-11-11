@@ -103,19 +103,33 @@ async function processComparisonAnalysis(
         // Extract app ID
         const appId = extractAppId(appUrl, platform);
 
-        // Import analysis functions
-        const { extractAppInfo, crawlGooglePlayReviews, crawlAppStoreReviews, analyzeReviews } = await import('@/lib/scrapers');
+        // Import unified review scraper and analysis functions
+        const { unifiedReviewScraper } = await import('@/lib/scrapers/unified-reviews');
+        const { analyzeSingleApp } = await import('@/lib/ai/openrouter');
 
         // Extract app info
-        const appInfo = await extractAppInfo(appId, platform);
-
-        // Scrape reviews
-        let reviews = [];
-        if (platform === 'android') {
-          reviews = await crawlGooglePlayReviews(appId, options?.maxReviews || 500);
+        let appInfo;
+        if (platform === 'ios') {
+          const { fetchAppStoreApp } = await import('@/lib/scrapers/app-store');
+          appInfo = await fetchAppStoreApp(appId);
         } else {
-          reviews = await crawlAppStoreReviews(appId, options?.maxReviews || 500);
+          const { fetchGooglePlayApp } = await import('@/lib/scrapers/google-play');
+          appInfo = await fetchGooglePlayApp(appId);
         }
+
+        // Use unified review scraper with enhanced free data sources
+        const scraperResult = await unifiedReviewScraper.getReviews(
+          appId,
+          platform,
+          options?.maxReviews || 2000,
+          {
+            country: comparisonOptions?.country || 'us',
+            language: comparisonOptions?.language || 'en',
+            deepMode: comparisonOptions?.deepMode !== false,
+          }
+        );
+
+        let reviews = scraperResult.reviews;
 
         // Filter reviews by time range if specified
         if (comparisonOptions?.timeRange && comparisonOptions.timeRange !== 'all_time') {
@@ -141,7 +155,14 @@ async function processComparisonAnalysis(
         }
 
         // Analyze reviews with comparison focus
-        const analysisResult = await analyzeReviews(reviews, {
+        const analysisResult = await analyzeSingleApp(reviews.map(r => ({
+          rating: r.rating,
+          title: r.title,
+          content: r.content,
+          author: r.author,
+          date: r.date,
+          appVersion: r.appVersion,
+        })), {
           ...options,
           focusAreas: comparisonOptions?.focusAreas || ['sentiment', 'features'],
           isComparison: true,
