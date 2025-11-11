@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const analysisCheck = await canUserAnalyze(payload.userId);
 
     // 获取订阅限制信息
-    const subscriptionLimits = getSubscriptionLimits(userWithSubscription.subscriptionTier);
+    const subscriptionLimits = await getSubscriptionLimits(userWithSubscription.subscriptionTier);
 
     // 返回用户信息
     const userResponse = {
@@ -76,7 +76,7 @@ async function canUserAnalyze(userId: string) {
   return canUserAnalyze(userId);
 }
 
-function getSubscriptionLimits(tier: string) {
+async function getSubscriptionLimits(tier: string) {
   const { getSubscriptionLimits } = await import('@/lib/auth');
   return getSubscriptionLimits(tier);
 }
