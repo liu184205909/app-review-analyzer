@@ -159,7 +159,7 @@ export async function trueIncrementalScrape(config: IncrementalScrapeConfig): Pr
       duplicateReviews: finalReviews.duplicateReviews.length,
       competitorReviews: competitorReviewsCount,
       scrapedReviews: qualitySortedReviews,
-      sources: [...new Set(sources)], // 去重sources
+      sources: Array.from(new Set(sources)), // 去重sources
       lastCrawledAt: new Date()
     };
 
