@@ -146,7 +146,7 @@ async function performScraping(
       // iOS: 抓取多页评论
       const allReviews: any[] = [];
       const pagesNeeded = Math.ceil(maxCount / 50); // iOS每页约50条
-      const maxPages = Math.min(pagesNeeded, 20); // 最多抓20页，大幅增加采集量
+      const maxPages = Math.min(pagesNeeded, 100); // 最多抓100页，确保足够数据生成40-60个问题
 
       console.log(`[iOS Scraper] Fetching ${maxPages} pages for ${maxCount} reviews`);
 

@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare, RefreshCw } from 'lucide-react';
+import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import ExportDropdown from '@/components/ExportDropdown';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
@@ -65,7 +65,6 @@ export default function AnalysisResultPage() {
   
   const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
   const [expandedExperienceIssues, setExpandedExperienceIssues] = useState<Set<number>>(new Set());
   const [expandedFeatureRequests, setExpandedFeatureRequests] = useState<Set<number>>(new Set());
@@ -73,34 +72,7 @@ export default function AnalysisResultPage() {
   // Professional role state
   const [selectedRole, setSelectedRole] = useState<'product-manager' | 'developer' | 'ux-designer' | 'general'>('general');
 
-  // Force refresh analysis with updated configuration
-  const handleForceRefresh = async () => {
-    if (!data?.result?.app?.name) return;
-
-    setRefreshing(true);
-    try {
-      const response = await fetch('/api/analyze/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appName: data.result.app.name,
-          forceReanalysis: true
-        })
-      });
-
-      const result = await response.json();
-      if (result.taskId) {
-        // Redirect to new analysis
-        window.location.href = `/analysis/${result.taskId}`;
-      }
-    } catch (error) {
-      console.error('Failed to refresh analysis:', error);
-      alert('Failed to refresh analysis. Please try again.');
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -298,15 +270,6 @@ export default function AnalysisResultPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/" className="text-xl font-bold text-gray-900">ReviewInsight</a>
           <div className="flex gap-4">
-            <button
-              onClick={handleForceRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              title="Force refresh analysis with latest configuration (2000+ reviews, 40-60 issues per category)"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh Analysis'}
-            </button>
             <ExportDropdown analysisData={data} appName={app.name} />
           </div>
         </div>
