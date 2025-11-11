@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
           where: { id: taskId },
           data: {
             status: 'failed',
-            error: error instanceof Error ? error.message : 'Unknown error'
+            errorMsg: error instanceof Error ? error.message : 'Unknown error'
           }
         });
       }
