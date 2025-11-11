@@ -191,6 +191,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">ReviewInsight</h1>
           <nav className="flex gap-6 text-sm">
+            <a href="/compare" className="text-indigo-600 hover:text-indigo-700 font-medium">Compare Apps</a>
             <a href="/browse" className="text-gray-600 hover:text-gray-900 font-medium">Browse Apps</a>
             <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
             <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>

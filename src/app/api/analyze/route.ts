@@ -26,6 +26,7 @@ import {
   extractGooglePlayId
 } from '@/lib/scrapers/google-play';
 import { fetchQuickReviews, fetchIncrementalReviews } from '@/lib/scrapers/quick-fetch';
+import { unifiedReviewScraper } from '@/lib/scrapers/unified-reviews';
 import { analyzeSingleApp, Review } from '@/lib/ai/openrouter';
 import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug';
 import { normalizeCategory } from '@/lib/category';
@@ -35,6 +36,56 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { appUrl, platform, options } = body;
+
+    // 🔒 PAYWALL: Check authentication and subscription
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          message: 'Please sign in to analyze apps',
+          requiresLogin: true
+        },
+        { status: 401 }
+      );
+    }
+
+    // Verify token and get user info
+    const { verifyToken, canUserAnalyze } = await import('@/lib/auth');
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return NextResponse.json(
+        {
+          error: 'Invalid authentication',
+          code: 'INVALID_TOKEN',
+          message: 'Please log in again',
+          requiresLogin: true
+        },
+        { status: 401 }
+      );
+    }
+
+    // Check if user can perform analysis
+    const analysisCheck = await canUserAnalyze(payload.userId);
+
+    if (!analysisCheck.canAnalyze) {
+      return NextResponse.json(
+        {
+          error: 'Usage limit exceeded',
+          code: 'USAGE_LIMIT_EXCEEDED',
+          message: analysisCheck.reason || 'You have reached your analysis limit',
+          requiresUpgrade: true,
+          currentTier: payload.subscriptionTier,
+          remainingAnalyses: analysisCheck.remainingAnalyses,
+          nextResetDate: analysisCheck.nextResetDate
+        },
+        { status: 402 } // Payment Required
+      );
+    }
 
     // Enhanced validation
     if (!appUrl || !platform) {
@@ -184,9 +235,10 @@ export async function POST(request: NextRequest) {
       data: { isLatest: false },
     });
 
-    // Create new analysis task
+    // Create new analysis task with user ID
     const task = await prisma.analysisTask.create({
       data: {
+        userId: payload.userId, // Associate task with user
         taskType: 'single',
         status: 'processing',
         platform,
@@ -197,8 +249,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Start processing in background (in production, use a queue)
-    processAnalysis(task.id, platform, appId, appInfo, options).catch(console.error);
+    // Log analysis start
+    await prisma.usageLog.create({
+      data: {
+        userId: payload.userId,
+        actionType: 'analysis_started',
+        taskId: task.id,
+        metadata: {
+          platform,
+          appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'),
+          appSlug,
+        },
+      },
+    });
+
+    // Start processing in background with user ID (in production, use a queue)
+    processAnalysis(task.id, platform, appId, appInfo, options, payload.userId).catch(console.error);
 
     return NextResponse.json({
       taskId: task.id,
@@ -229,7 +295,8 @@ async function processAnalysis(
   platform: 'ios' | 'android',
   appId: string,
   appInfo: any,
-  options: any
+  options: any,
+  userId: string
 ) {
   try {
     // Update task status
@@ -272,33 +339,32 @@ async function processAnalysis(
       data: { progress: 15 },
     });
 
-    // Enhanced Review Collection using unified multi-strategy approach
-    // 🚀 Enhanced: Use enhanced incremental scraping for comprehensive data collection
-    const reviewTarget = Math.max(1500, options?.reviewTarget || 1500); // Target 1500+ reviews for diverse issue analysis
-    const useEnhancedMode = true; // Always enable enhanced mode for better data collection
+    // 🚀 Enhanced Review Collection using Unified Free Data Sources
+    const reviewTarget = Math.max(2000, options?.reviewTarget || 2000); // Target 2000+ reviews with unified sources
+    console.log(`[Unified Scraper] Starting unified collection: ${reviewTarget} target reviews`);
+    console.log(`[Unified Scraper] Platform: ${platform}, App ID: ${appId}`);
 
-    console.log(`[Enhanced Scraper] Starting enhanced collection: ${reviewTarget} target reviews`);
-    console.log(`[Enhanced Scraper] Platform: ${platform}, App ID: ${appId}`);
-
-    // Use enhanced incremental scraping with unified multi-strategy approach
-    const scrapeResult = await incrementalScrapeReviews({
+    // Use unified review scraper with free data sources
+    const unifiedResult = await unifiedReviewScraper.getReviews(
       appId,
       platform,
-      targetCount: reviewTarget,
-      maxNewReviews: Math.ceil(reviewTarget * 0.4), // Target 40% new reviews
-      forceRefresh: options?.forceRefresh || false,
-      enhancedMode: useEnhancedMode,
-      complexity: options?.complexity || 'standard' // Use 'standard' complexity by default
-    });
+      reviewTarget,
+      {
+        country: options?.country || 'us',
+        language: options?.language || 'en',
+        sortBy: options?.sortBy || 'recent',
+        deepMode: options?.deepMode !== false, // Default to true for better coverage
+      }
+    );
 
-    const reviews = scrapeResult.scrapedReviews || [];
+    const reviews = unifiedResult.reviews;
 
-    console.log(`[Enhanced Scraper] Collection complete:`, {
+    console.log(`[Unified Scraper] Collection complete:`, {
       totalCollected: reviews.length,
-      newReviews: scrapeResult.newReviews,
-      duplicateReviews: scrapeResult.duplicateReviews,
-      isNewData: scrapeResult.isNewData,
-      lastCrawledAt: scrapeResult.lastCrawledAt
+      dataSource: unifiedResult.source,
+      quality: unifiedResult.quality.toFixed(2),
+      targetReached: reviews.length >= reviewTarget,
+      qualityScore: unifiedResult.quality
     });
 
     // Update progress after review fetching
@@ -382,7 +448,7 @@ async function processAnalysis(
     // Get category from database (in case appInfo doesn't have it)
     const appCategory = app.category || normalizeCategory(appInfo.category) || null;
     
-    // Save result with reviews data
+    // Save result with enhanced data source information
     await prisma.analysisTask.update({
       where: { id: taskId },
       data: {
@@ -397,6 +463,14 @@ async function processAnalysis(
           reviewCount: reviews.length,
           analyzedCount: reviewsToAnalyze.length,
           analysis: analysisResult,
+          // Enhanced data source information
+          dataSource: {
+            primary: unifiedResult.source,
+            quality: unifiedResult.quality,
+            targetCount: reviewTarget,
+            achieved: reviews.length,
+            success: reviews.length >= reviewTarget,
+          },
           // Include review data for display
           reviews: reviews.map(r => ({
             id: r.id,
@@ -406,10 +480,49 @@ async function processAnalysis(
             content: r.content,
             date: r.date,
             appVersion: r.appVersion,
+            source: r.source, // Include data source for each review
+            helpfulVotes: r.helpfulVotes, // Include helpful votes if available
           })),
         } as any,
         completedAt: new Date(),
       },
+    });
+
+    // 📊 USAGE TRACKING: Log successful analysis and update user stats with enhanced data source info
+    await Promise.all([
+      // Log the usage with data source information
+      prisma.usageLog.create({
+        data: {
+          userId,
+          actionType: 'analysis_completed',
+          taskId,
+          metadata: {
+            platform,
+            appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'), // Partially hide for privacy
+            reviewCount: reviews.length,
+            targetCount: reviewTarget,
+            dataSource: unifiedResult.source,
+            dataQuality: unifiedResult.quality,
+            appSlug,
+          },
+        },
+      }),
+
+      // Increment user's monthly analysis count
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          monthlyAnalysisCount: {
+            increment: 1,
+          },
+        },
+      }),
+    ]);
+
+    // 📧 EMAIL NOTIFICATION: Send analysis completion notification (async, don't wait)
+    const { notifyAnalysisCompleted } = await import('@/lib/email');
+    notifyAnalysisCompleted(userId, appInfo.name, appSlug).catch(emailError => {
+      console.error('Failed to send analysis completion email:', emailError);
     });
 
   } catch (error: any) {
@@ -419,6 +532,14 @@ async function processAnalysis(
       appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'),
       phase: 'processing'
     });
+
+    // 📧 EMAIL NOTIFICATION: Send analysis failure notification (async, don't wait)
+    if (userId) {
+      const { notifyAnalysisFailed } = await import('@/lib/email');
+      notifyAnalysisFailed(userId, appInfo?.name || 'Unknown App', error.message).catch(emailError => {
+        console.error('Failed to send analysis failure email:', emailError);
+      });
+    }
 
     // Enhanced error handling for different failure scenarios
     let errorMessage = 'Analysis failed';

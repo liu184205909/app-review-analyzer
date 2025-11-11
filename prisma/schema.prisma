@@ -65,36 +65,166 @@ model Review {
   @@index([reviewDate])
 }
 
-// 分析任务表
+// 用户表
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  avatar        String?
+
+  // 认证相关
+  passwordHash  String?   // For email/password login
+  googleId      String?   // Google OAuth ID
+  appleId       String?   // Apple Sign In ID
+
+  // 订阅相关
+  subscriptionTier  SubscriptionTier @default(free)
+  subscriptionId     String?  // Stripe subscription ID
+  subscriptionEnds   DateTime? // Subscription end date
+
+  // 使用量限制
+  monthlyAnalysisCount Int @default(0)
+  lastResetDate       DateTime @default(now()) // Last time monthly count was reset
+
+  // 偏好设置
+  preferredLanguage String @default("en")
+  timezone         String?
+
+  // 邮件通知设置
+  emailNotifications Boolean @default(true)  // Overall email notifications toggle
+  analysisCompletedNotifications Boolean @default(true)  // Analysis completion notifications
+  marketingEmails Boolean @default(false)  // Marketing/promotional emails
+  securityNotifications Boolean @default(true)  // Security-related notifications
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  analysisTasks    AnalysisTask[]
+  usageLogs        UsageLog[]
+  subscriptions   Subscription[]
+}
+
+enum SubscriptionTier {
+  free        // 免费用户：3次分析/月
+  professional // 专业用户：$29/月，无限分析
+  team        // 团队用户：$99/月，多用户协作
+}
+
+// 订阅记录表
+model Subscription {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Stripe 相关
+  stripeCustomerId String?          // Stripe customer ID
+  stripeSubscriptionId String?       // Stripe subscription ID
+  stripePriceId     String?          // Stripe price ID
+
+  // 订阅信息
+  tier            SubscriptionTier
+  status          SubscriptionStatus @default(active)
+  price           Float             // 订阅价格
+  currency        String @default("usd")
+
+  // 周期信息
+  interval        SubscriptionInterval @default(month) // month | year
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+
+  // 取消信息
+  cancelAtPeriodEnd Boolean @default(false)
+  canceledAt       DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+}
+
+enum SubscriptionStatus {
+  active     // 活跃订阅
+  canceled   // 已取消（仍在使用期内）
+  past_due   // 逾期
+  incomplete // 未完成
+  trialing   // 试用中
+  unpaid     // 未支付
+}
+
+enum SubscriptionInterval {
+  month
+  year
+}
+
+// 使用记录表
+model UsageLog {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 使用类型
+  actionType    UsageAction
+
+  // 关联的分析任务（可选）
+  taskId        String?
+
+  // 元数据
+  metadata      Json?       // 额外的使用信息
+
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, actionType])
+  @@index([createdAt])
+  @@index([taskId])
+}
+
+enum UsageAction {
+  analysis_started    // 开始分析
+  analysis_completed  // 完成分析
+  analysis_failed     // 分析失败
+  login                // 用户登录
+  signup              // 用户注册
+  subscription_upgraded // 订阅升级
+  subscription_downgraded // 订阅降级
+}
+
+// 分析任务表（扩展原有模型）
 model AnalysisTask {
   id          String    @id @default(uuid())
-  userId      String?   // For future user system
+  userId      String?   // User ID (now required for tracking)
   taskType    TaskType  // 'single' | 'comparison'
   status      TaskStatus @default(pending)
   progress    Int       @default(0)
-  
+
   // App identification (for single app analysis)
   platform    Platform? // App platform
   appStoreId  String?   // App Store ID or Package Name
-  
+
   // SEO-friendly URL slug (e.g., "instagram-ios", "tiktok-android")
-  // Note: Slug can be duplicated (e.g., multiple analyses of same app)
-  // The latest analysis for each app is found by (platform, appStoreId, createdAt DESC)
   appSlug     String?
   isLatest    Boolean   @default(true) // Mark as latest analysis for this app
-  
+
   modelUsed   String?   // AI model identifier
   options     Json?     // Analysis options
   result      Json?     // Analysis result
   errorMsg    String?
-  
+
+  // 成本和使用量跟踪
+  reviewCount   Int?   // 处理的评论数量
+  tokensUsed    Int?   // 使用的AI tokens
+  cost          Float? // 分析成本
+
   createdAt   DateTime  @default(now())
   startedAt   DateTime?
   completedAt DateTime?
 
+  user        User?       @relation(fields: [userId], references: [id])
   taskApps    TaskApp[]
 
   @@index([userId, status])
+  @@index([userId, createdAt])
   @@index([createdAt])
   @@index([appSlug, isLatest])
   @@index([platform, appStoreId, createdAt])  // For finding latest analysis

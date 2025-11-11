@@ -3,13 +3,28 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cache, performanceMonitor, apiOptimization } from '@/lib/performance';
 
 export async function GET(request: NextRequest) {
+  const endTiming = performanceMonitor.startTiming('api_recent_analyses');
+
   try {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const sortBy = url.searchParams.get('sort') || 'recent'; // 'recent' | 'popular'
     const platform = url.searchParams.get('platform'); // 'ios' | 'android' | null
+
+    // Create cache key
+    const cacheKey = `recent_analyses:${limit}:${sortBy}:${platform || 'all'}`;
+
+    // Try cache first (cache for 2 minutes)
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      endTiming();
+      return NextResponse.json(cached, {
+        headers: apiOptimization.getCacheHeaders(120), // 2 minutes
+      });
+    }
 
     // Build where clause
     const where: any = {
@@ -72,9 +87,17 @@ export async function GET(request: NextRequest) {
       })
       .slice(0, limit); // Take only the requested number after deduplication
 
-    return NextResponse.json({
+    const responseData = {
       analyses: formatted,
       total: formatted.length,
+    };
+
+    // Cache the result for 2 minutes
+    cache.set(cacheKey, responseData, 2 * 60 * 1000);
+
+    endTiming();
+    return NextResponse.json(responseData, {
+      headers: apiOptimization.getCacheHeaders(120), // 2 minutes
     });
   } catch (error) {
     console.error('Recent analyses API error:', error);
