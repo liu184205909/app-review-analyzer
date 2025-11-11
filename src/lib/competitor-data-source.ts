@@ -142,7 +142,8 @@ async function scrapeCompetitorReviews(
     // 使用现有的iOS抓取逻辑
     for (let page = 1; page <= maxPages && reviews.length < targetCount; page++) {
       try {
-        const pageReviews = await fetchAppStoreReviewsByRegion(
+        const { fetchAppStoreReviews } = await import('./scrapers/app-store');
+        const pageReviews = await fetchAppStoreReviews(
           competitor.appId,
           'us',
           'mostRecent',
@@ -183,7 +184,7 @@ async function scrapeCompetitorReviews(
 function adaptCompetitorReviews(
   reviews: any[],
   competitor: CompetitorApp,
-  targetApp: CompetitorApp['targetApp']
+  targetApp: CompetitorAnalysisConfig['targetApp']
 ): any[] {
   return reviews.map(review => {
     const adapted = { ...review };
@@ -205,7 +206,7 @@ function adaptCompetitorReviews(
   });
 }
 
-function adaptReviewContent(content: string, competitor: CompetitorApp, targetApp: CompetitorApp['targetApp']): string {
+function adaptReviewContent(content: string, competitor: CompetitorApp, targetApp: CompetitorAnalysisConfig['targetApp']): string {
   // 将竞品名称替换为目标应用名称
   let adaptedContent = content
     .replace(new RegExp(competitor.name, 'gi'), targetApp.name)
@@ -217,7 +218,7 @@ function adaptReviewContent(content: string, competitor: CompetitorApp, targetAp
   return adaptedContent;
 }
 
-function adaptReviewTitle(title: string, competitor: CompetitorApp, targetApp: CompetitorApp['targetApp']): string {
+function adaptReviewTitle(title: string, competitor: CompetitorApp, targetApp: CompetitorAnalysisConfig['targetApp']): string {
   if (!title) return title;
 
   return title
@@ -253,7 +254,7 @@ export interface CompetitorInsights {
 }
 
 export async function analyzeCompetitors(
-  targetApp: CompetitorApp['targetApp'],
+  targetApp: CompetitorAnalysisConfig['targetApp'],
   competitorApps: CompetitorApp[]
 ): Promise<CompetitorInsights[]> {
   const insights: CompetitorInsights[] = [];
