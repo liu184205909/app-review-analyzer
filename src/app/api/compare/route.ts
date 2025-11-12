@@ -375,7 +375,7 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
   });
 
   rankingScores.sort((a, b) => b.overallScore - a.overallScore);
-  insights.ranking = rankingScores;
+  insights.ranking = rankingScores as any;
 
   // Generate recommendations
   insights.recommendations = [
