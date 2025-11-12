@@ -250,7 +250,7 @@ async function processComparisonAnalysis(
     // 📧 EMAIL NOTIFICATION: Send comparison completion notification (async, don't wait)
     const { notifyAnalysisCompleted } = await import('@/lib/email');
     const comparisonSlug = generateComparisonSlug(
-      appAnalyses.map(a => ({ name: a.appInfo.name, platform: a.platform }))
+      appAnalyses.map(a => ({ name: a.appInfo?.name || 'Unknown App', platform: a.platform }))
     );
     notifyAnalysisCompleted(userId, `App Comparison (${totalApps} apps)`, comparisonSlug).catch(emailError => {
       console.error('Failed to send comparison completion email:', emailError);
