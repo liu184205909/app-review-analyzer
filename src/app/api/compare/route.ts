@@ -446,8 +446,7 @@ export async function POST(request: NextRequest) {
           message: analysisCheck.reason || 'You have reached your analysis limit',
           requiresUpgrade: true,
           currentTier: payload.subscriptionTier,
-          remainingAnalyses: analysisCheck.remainingAnalyses,
-          nextResetDate: analysisCheck.nextResetDate
+          remainingAnalyses: analysisCheck.remainingAnalyses
         },
         { status: 402 } // Payment Required
       );
