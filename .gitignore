@@ -46,3 +46,27 @@ prisma/*.db-journal
 *.swp
 *.swo
 *~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Bundle analysis
+bundle-analysis/
+
+# Test files
+test-enhanced-analysis.js
+
+# Environment files
+check-data.sql
