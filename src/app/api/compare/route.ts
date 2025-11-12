@@ -315,17 +315,17 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
 
   // Compare issues and features
   const allIssues = appAnalyses.flatMap(app =>
-    (app.analysis.criticalIssues || []).map(issue => ({
+    (app.analysis.criticalIssues || []).map((issue: any) => ({
       ...issue,
-      appName: app.appInfo.name,
+      appName: app.appInfo?.name || 'Unknown App',
       platform: app.platform,
     }))
   );
 
   const allFeatures = appAnalyses.flatMap(app =>
-    (app.analysis.featureRequests || []).map(feature => ({
+    (app.analysis.featureRequests || []).map((feature: any) => ({
       ...feature,
-      appName: app.appInfo.name,
+      appName: app.appInfo?.name || 'Unknown App',
       platform: app.platform,
     }))
   );
