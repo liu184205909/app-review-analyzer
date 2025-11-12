@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     // 从请求头中提取token
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
