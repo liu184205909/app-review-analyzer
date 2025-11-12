@@ -229,7 +229,7 @@ async function processComparisonAnalysis(
           metadata: {
             type: 'comparison',
             totalApps,
-            appNames: appAnalyses.map(a => a.appInfo.name),
+            appNames: appAnalyses.map(a => a.appInfo?.name || 'Unknown App'),
             focusAreas: comparisonOptions?.focusAreas,
             timeRange: comparisonOptions?.timeRange,
           },
