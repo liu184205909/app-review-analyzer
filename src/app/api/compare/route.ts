@@ -479,12 +479,31 @@ export async function POST(request: NextRequest) {
     // Create TaskApp entries for each app
     for (let i = 0; i < appInfos.length; i++) {
       const appInfo = appInfos[i];
+
+      // Find or create App record
+      let app = await prisma.app.findUnique({
+        where: {
+          platform_appId: {
+            platform: appInfo.platform,
+            appId: appInfo.appId
+          }
+        }
+      });
+
+      if (!app) {
+        app = await prisma.app.create({
+          data: {
+            platform: appInfo.platform,
+            appId: appInfo.appId,
+          }
+        });
+      }
+
       await prisma.taskApp.create({
         data: {
           taskId: task.id,
-          platform: appInfo.platform,
-          appStoreId: appInfo.appId,
-          sortOrder: i,
+          appId: app.id,
+          role: i === 0 ? 'target' : 'competitor',
         },
       });
     }
@@ -505,9 +524,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Start processing in background
+    const appsWithOptions = validatedData.apps.map(app => ({
+      ...app,
+      options: app.options || {}
+    }));
+
     processComparisonAnalysis(
       task.id,
-      validatedData.apps,
+      appsWithOptions,
       validatedData.comparisonOptions,
       payload.userId
     ).catch(console.error);

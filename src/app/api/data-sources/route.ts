@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const platform = url.searchParams.get('platform') as 'ios' | 'android' | undefined;
 
     // Get data sources information
-    const dataSourcesInfo = await unifiedReviewScraper.getDataSourcesInfo(appId, platform);
+    const dataSourcesInfo = await unifiedReviewScraper.getDataSourcesInfo(appId || undefined, platform);
 
     // Get statistics
     const statistics = unifiedReviewScraper.getSourcesStatistics();
