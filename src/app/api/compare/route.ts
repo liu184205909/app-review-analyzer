@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { verifyToken, extractTokenFromHeader, canUserAnalyze } from '@/lib/auth';
 import { generateAppSlug } from '@/lib/slug';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // Validation schema
 const comparisonRequestSchema = z.object({
@@ -212,7 +213,7 @@ async function processComparisonAnalysis(
           })),
           comparison: comparisonInsights,
           generatedAt: new Date().toISOString(),
-        },
+        } as Prisma.InputJsonValue,
         reviewCount: appAnalyses.reduce((total, app) => total + app.reviews.length, 0),
       },
     });
