@@ -341,11 +341,11 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
   }, {});
 
   insights.strengthsComparison = Object.entries(issuesByTitle)
-    .filter(([_, issues]) => issues.length === 1) // Issues that only affect one app = potential strength for others
+    .filter(([_, issues]) => (issues as any[]).length === 1) // Issues that only affect one app = potential strength for others
     .map(([title, issues]) => ({
       issue: title,
-      affectedApps: issues.map(i => i.appName),
-      unaffectedApps: appAnalyses.map(a => a.appInfo.name).filter(name => !issues.some(i => i.appName === name)),
+      affectedApps: (issues as any[]).map((i: any) => i.appName),
+      unaffectedApps: appAnalyses.map(a => a.appInfo?.name || 'Unknown App').filter(name => !(issues as any[]).some((i: any) => i.appName === name)),
     }));
 
   // Generate overall ranking
