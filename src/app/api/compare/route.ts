@@ -203,7 +203,7 @@ async function processComparisonAnalysis(
             platform: analysis.platform,
             app: analysis.appInfo,
             reviewCount: analysis.reviews.length,
-            analyzedCount: analysis.analysis.analyzedCount || analysis.reviews.length,
+            analyzedCount: analysis.reviews.length,
             sentiment: analysis.analysis.sentiment,
             criticalIssues: analysis.analysis.criticalIssues || [],
             experienceIssues: analysis.analysis.experienceIssues || [],
