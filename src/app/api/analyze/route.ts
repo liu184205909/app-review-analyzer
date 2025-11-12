@@ -298,6 +298,9 @@ async function processAnalysis(
   userId: string
 ) {
   try {
+    // Generate appSlug for this analysis
+    const appSlug = generateAppSlug(appInfo.name, platform);
+
     // Update task status
     await prisma.analysisTask.update({
       where: { id: taskId },
