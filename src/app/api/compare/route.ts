@@ -394,7 +394,7 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
       target: 'All apps',
       recommendation: 'Consider implementing the most requested features across all analyzed apps',
     },
-  ];
+  ] as any;
 
   return insights;
 }
