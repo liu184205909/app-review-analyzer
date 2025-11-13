@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Star, Zap, Users, Crown, TrendingUp, BarChart3 } from 'lucide-react';
+import { Check, Star, Zap, Users, Crown, TrendingUp, BarChart3, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { FEATURES } from '@/lib/features';
 
 // Force dynamic rendering - do not prerender at build time
 export const dynamic = 'force-dynamic';
@@ -100,6 +101,12 @@ export default function PricingPage() {
         return;
       }
 
+      // Check if subscriptions are enabled
+      if (!FEATURES.SUBSCRIPTIONS_ENABLED) {
+        alert('订阅功能暂未启用。付费订阅功能目前未配置，您可以注册免费账户使用基础功能。');
+        return;
+      }
+
       // Get token from localStorage
       const token = localStorage.getItem('token');
 
@@ -182,6 +189,23 @@ export default function PricingPage() {
         <p className="text-xl text-gray-600 mb-8">
           Choose the perfect plan for your app analysis needs. No hidden fees, cancel anytime.
         </p>
+
+        {/* Subscription Feature Warning */}
+        {!FEATURES.SUBSCRIPTIONS_ENABLED && (
+          <div className="max-w-3xl mx-auto mb-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div className="text-left">
+                <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                  订阅功能暂未启用
+                </h3>
+                <p className="text-sm text-yellow-700">
+                  付费订阅功能目前未配置。您仍然可以注册免费账户使用基础功能。如需启用付费订阅，请联系管理员配置 Stripe 支付系统。
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center mb-12">

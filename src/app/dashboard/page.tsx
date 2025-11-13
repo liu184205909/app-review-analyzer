@@ -13,6 +13,7 @@ import {
   Users,
   Zap
 } from 'lucide-react';
+import { FEATURES } from '@/lib/features';
 
 // Force dynamic rendering - do not prerender at build time
 export const dynamic = 'force-dynamic';
@@ -461,7 +462,7 @@ export default function DashboardPage() {
                   </div>
                 </button>
 
-                {user.subscriptionTier === 'free' && (
+                {user.subscriptionTier === 'free' && FEATURES.SUBSCRIPTIONS_ENABLED && (
                   <button
                     onClick={() => router.push('/pricing')}
                     className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"

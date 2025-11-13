@@ -6,8 +6,18 @@ import prisma from '@/lib/prisma';
 // Prevent Next.js from trying to collect page data
 export const dynamic = 'force-dynamic';
 
+// Check if subscriptions are enabled
+const SUBSCRIPTIONS_ENABLED = process.env.ENABLE_SUBSCRIPTIONS === 'true';
+
 export async function POST(request: NextRequest) {
   try {
+    // Check if subscription feature is enabled
+    if (!SUBSCRIPTIONS_ENABLED) {
+      return NextResponse.json(
+        { error: 'Subscription feature is currently disabled' },
+        { status: 503 }
+      );
+    }
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
     const token = extractTokenFromHeader(authHeader);
