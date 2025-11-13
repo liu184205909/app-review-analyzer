@@ -6,6 +6,9 @@ const nextConfig = {
   swcMinify: true,
   compress: true,
 
+  // Fix for server-side global references
+  output: 'standalone',
+
   // Enhanced image optimization
   images: {
     domains: [
@@ -46,12 +49,17 @@ const nextConfig = {
 
   // Bundle optimization and fix for 'self is not defined' error
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Fix 'self is not defined' error
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'self': isServer ? 'this' : 'self',
-      })
-    );
+    // Fix 'self is not defined' error for server-side
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'self': 'this',
+          'window': 'undefined',
+          'document': 'undefined',
+          'navigator': 'undefined',
+        })
+      );
+    }
     // Optimize bundle size
     if (config.optimization) {
       config.optimization.splitChunks = {

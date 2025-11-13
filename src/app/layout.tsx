@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "@/polyfills"; // Import server-side polyfills
 import PerformanceMonitor from "@/components/optimizations/PerformanceMonitor";
 
 const inter = Inter({ subsets: ["latin"] });
