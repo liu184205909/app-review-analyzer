@@ -9,6 +9,20 @@ const nextConfig = {
   // Fix for server-side global references
   output: 'standalone',
 
+  // Define global variables at build time
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Define self for server-side environment
+      config.plugins.push(
+        new (require('webpack')).DefinePlugin({
+          'typeof self': '"object"',
+          'self': '({})',
+        })
+      );
+    }
+    return config;
+  },
+
   // Enhanced image optimization
   images: {
     domains: [
