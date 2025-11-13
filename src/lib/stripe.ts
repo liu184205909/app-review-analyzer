@@ -1,8 +1,19 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover',
-});
+// Lazy initialization of Stripe to avoid build-time errors
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-10-29.clover',
+    });
+  }
+  return stripeInstance;
+}
 
 // Stripe price IDs for different plans and billing cycles
 export const STRIPE_PRICES = {
@@ -45,6 +56,7 @@ export async function createStripeCheckoutSession(
   tier: 'professional' | 'team',
   billingCycle: 'monthly' | 'yearly'
 ) {
+  const stripe = getStripe();
   const priceConfig = getStripePrice(tier, billingCycle);
 
   const session = await stripe.checkout.sessions.create({
@@ -74,6 +86,7 @@ export async function createStripeCheckoutSession(
 }
 
 export async function createStripeCustomer(userEmail: string, userName?: string) {
+  const stripe = getStripe();
   return await stripe.customers.create({
     email: userEmail,
     name: userName || undefined,
@@ -84,10 +97,12 @@ export async function createStripeCustomer(userEmail: string, userName?: string)
 }
 
 export async function retrieveStripeSubscription(subscriptionId: string) {
+  const stripe = getStripe();
   return await stripe.subscriptions.retrieve(subscriptionId);
 }
 
 export async function cancelStripeSubscription(subscriptionId: string, immediate = false) {
+  const stripe = getStripe();
   if (immediate) {
     return await stripe.subscriptions.cancel(subscriptionId);
   } else {
@@ -98,10 +113,11 @@ export async function cancelStripeSubscription(subscriptionId: string, immediate
 }
 
 export async function createCustomerPortalSession(customerId: string) {
+  const stripe = getStripe();
   return await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: `${process.env.NEXTAUTH_URL}/dashboard`,
   });
 }
 
-export default stripe;
+export default getStripe;

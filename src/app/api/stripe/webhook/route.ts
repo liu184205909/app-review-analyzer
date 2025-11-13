@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import stripe, { STRIPE_PRICES } from '@/lib/stripe';
+import getStripe, { STRIPE_PRICES } from '@/lib/stripe';
 import prisma from '@/lib/prisma';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     let event: any;
 
     try {
+      const stripe = getStripe();
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err: any) {
       console.error('Webhook signature verification failed:', err.message);
@@ -153,6 +154,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
   }
 
   // Update subscription period
+  const stripe = getStripe();
   const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
 
   await prisma.subscription.update({
