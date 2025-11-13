@@ -5,6 +5,9 @@ import prisma from '@/lib/prisma';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+// Prevent Next.js from trying to collect page data
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
