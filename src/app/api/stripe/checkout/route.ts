@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
-import { createStripeCheckoutSession } from '@/lib/stripe';
-import prisma from '@/lib/prisma';
 
 // Prevent Next.js from trying to collect page data
 export const dynamic = 'force-dynamic';
@@ -19,6 +16,12 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
+
+    // Lazy load dependencies to avoid build-time errors
+    const { verifyToken, extractTokenFromHeader } = await import('@/lib/auth');
+    const { createStripeCheckoutSession } = await import('@/lib/stripe');
+    const prisma = (await import('@/lib/prisma')).default;
+
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
     const token = extractTokenFromHeader(authHeader);
