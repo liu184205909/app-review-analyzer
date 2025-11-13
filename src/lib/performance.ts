@@ -1,4 +1,5 @@
 // Performance optimization utilities
+import React from 'react';
 
 // Memory cache with TTL
 interface CacheEntry<T> {

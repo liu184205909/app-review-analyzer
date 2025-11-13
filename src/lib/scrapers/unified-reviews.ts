@@ -3,11 +3,12 @@
 
 import {
   fetchAppStoreReviews,
-  fetchGooglePlayReviews,
   AppStoreReview,
-  GooglePlayReview,
 } from './app-store';
-import { fetchGooglePlayReviews as fetchGPReviews } from './google-play';
+import {
+  fetchGooglePlayReviews,
+  GooglePlayReview,
+} from './google-play';
 
 export interface Review {
   id: string;
