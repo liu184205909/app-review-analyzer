@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth-core';
 
 // 定义不需要认证的路径
 const publicPaths = [
