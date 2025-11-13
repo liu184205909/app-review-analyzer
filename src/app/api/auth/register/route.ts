@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
 import { hashPassword, generateToken } from '@/lib/auth';
+
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // 验证schema
 const registerSchema = z.object({
@@ -11,6 +14,9 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const prisma = (await import('@/lib/prisma')).default;
+  
   try {
     const body = await request.json();
     const validatedData = registerSchema.parse(body);

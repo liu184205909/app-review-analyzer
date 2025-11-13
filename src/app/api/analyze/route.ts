@@ -2,7 +2,6 @@
 // Single app analysis with enhanced error handling
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import {
   AppAnalysisError,
   createError,
@@ -32,7 +31,14 @@ import { generateAppSlug, isAnalysisRecent, getCacheDuration } from '@/lib/slug'
 import { normalizeCategory } from '@/lib/category';
 import { incrementalScrapeReviews } from '@/lib/incremental-scraper';
 
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const prisma = (await import('@/lib/prisma')).default;
+  
   try {
     const body = await request.json();
     const { appUrl, platform, options } = body;
