@@ -28,9 +28,9 @@ try {
     });
 
     // Define other browser globals as undefined for server-side
-    global.window = undefined;
-    global.document = undefined;
-    global.navigator = undefined;
+    (global as any).window = undefined;
+    (global as any).document = undefined;
+    (global as any).navigator = undefined;
   }
 } catch (e) {
   // Fallback if defineProperty fails
