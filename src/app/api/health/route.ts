@@ -1,9 +1,15 @@
 // Health Check API
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
+    // Lazy load Prisma to avoid build-time issues
+    const prisma = (await import('@/lib/prisma')).default;
+    
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
     

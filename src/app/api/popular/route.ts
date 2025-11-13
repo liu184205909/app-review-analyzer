@@ -2,10 +2,16 @@
 // Get popular analyses (well-known apps with high review counts)
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const prisma = (await import('@/lib/prisma')).default;
+  
   try {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '12');
