@@ -193,8 +193,9 @@ export default function HistoryPage() {
     const { positive, negative, neutral } = sentiment;
     const total = positive + negative + neutral;
     if (total === 0) return '0%';
-    const score = ((positive - negative) / total * 100).toFixed(1);
-    return `${score > 0 ? '+' : ''}${score}%`;
+    const scoreNum = (positive - negative) / total * 100;
+    const score = scoreNum.toFixed(1);
+    return `${scoreNum > 0 ? '+' : ''}${score}%`;
   };
 
   if (loading && analyses.length === 0) {
