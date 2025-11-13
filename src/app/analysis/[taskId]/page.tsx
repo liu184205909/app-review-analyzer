@@ -1,6 +1,10 @@
 // Analysis Result Page
 'use client';
 
+// Prevent Next.js from trying to collect page data
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
