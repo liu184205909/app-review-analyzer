@@ -297,19 +297,19 @@ export default function ComparisonResultsPage() {
             {result.comparison.ranking.map((app, index) => {
               const badge = getRankBadge(index + 1);
               return (
-                <div key={`${app.app.name}-${app.platform}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={`${app.name}-${app.platform}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${badge.color} font-bold`}>
                       {badge.icon}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{app.app.name}</div>
+                      <div className="font-medium text-gray-900">{app.name}</div>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>{app.platform === 'ios' ? 'iOS' : 'Android'}</span>
                         <span>•</span>
-                        <span>{app.app.rating?.toFixed(1) || 'N/A'} ⭐</span>
+                        <span>{app.details?.rating?.toFixed(1) || 'N/A'} ⭐</span>
                         <span>•</span>
-                        <span>{app.app.reviewCount?.toLocaleString() || 0} reviews</span>
+                        <span>{app.details?.reviewCount?.toLocaleString() || 0} reviews</span>
                       </div>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ export default function ComparisonResultsPage() {
         {/* Apps Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {result.apps.map((app, index) => {
-            const rank = result.comparison.ranking.findIndex(r => r.app.name === app.app.name) + 1;
+            const rank = result.comparison.ranking.findIndex(r => r.name === app.app.name) + 1;
             const badge = getRankBadge(rank);
 
             return (
