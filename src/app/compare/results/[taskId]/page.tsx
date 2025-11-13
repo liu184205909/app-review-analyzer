@@ -328,7 +328,7 @@ export default function ComparisonResultsPage() {
         {/* Apps Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {result.apps.map((app, index) => {
-            const rank = result.comparison.ranking.findIndex(r => r.name === app.name) + 1;
+            const rank = result.comparison.ranking.findIndex(r => r.name === app.app.name) + 1;
             const badge = getRankBadge(rank);
 
             return (
@@ -446,7 +446,7 @@ export default function ComparisonResultsPage() {
 
                 {/* View Details */}
                 <Link
-                  href={`/app/${app.app.platform}-${app.appId}`}
+                  href={`/analysis/${app.app.name.toLowerCase().replace(/\s+/g, '-')}-${app.platform}`}
                   className="block w-full text-center bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
                 >
                   View Full Analysis
