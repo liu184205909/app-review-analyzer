@@ -1,5 +1,7 @@
+const withSelfFix = require('./next-self-plugin');
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig = withSelfFix({
   reactStrictMode: true,
 
   // Performance optimizations
@@ -10,13 +12,34 @@ const nextConfig = {
   output: 'standalone',
 
   // Define global variables at build time
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // Define self for server-side environment
+      // Define self for server-side environment using the most aggressive approach
+      config.plugins.unshift(
+        new webpack.BannerPlugin({
+          banner: `
+            // Define self immediately for all modules
+            if (typeof global !== 'undefined') {
+              global.self = global;
+              global.window = undefined;
+              global.document = undefined;
+              global.navigator = undefined;
+            }
+            if (typeof globalThis !== 'undefined') {
+              globalThis.self = globalThis;
+            }
+          `,
+          raw: true,
+          entryOnly: false,
+          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
+        })
+      );
+
+      // Additional DefinePlugin for build-time replacement
       config.plugins.push(
-        new (require('webpack')).DefinePlugin({
+        new webpack.DefinePlugin({
           'typeof self': '"object"',
-          'self': '({})',
+          'self': 'globalThis',
         })
       );
     }
