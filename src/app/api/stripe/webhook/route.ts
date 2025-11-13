@@ -7,8 +7,9 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Prevent Next.js from trying to collect page data
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-// Check if subscriptions are enabled
+// Check if subscriptions are enabled (safe access with default)
 const SUBSCRIPTIONS_ENABLED = process.env.ENABLE_SUBSCRIPTIONS === 'true';
 
 export async function POST(request: NextRequest) {
