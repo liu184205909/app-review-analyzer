@@ -9,6 +9,11 @@ const nextConfig = {
   // Fix for server-side global references
   output: 'standalone',
 
+  // Environment variables
+  env: {
+    CUSTOM_SELF: 'global',
+  },
+
   // Enhanced image optimization
   images: {
     domains: [
@@ -53,13 +58,23 @@ const nextConfig = {
     if (isServer) {
       config.plugins.push(
         new webpack.DefinePlugin({
-          'self': 'this',
+          'self': '({})',
           'window': 'undefined',
           'document': 'undefined',
           'navigator': 'undefined',
         })
       );
     }
+
+    // Additional plugin to inject self into global scope
+    config.plugins.push(
+      new webpack.BannerPlugin({
+        banner: 'if (typeof global !== "undefined") { global.self = global; } else if (typeof window !== "undefined") { global.self = window; }',
+        raw: true,
+        entryOnly: true,
+        include: /\.js$/,
+      })
+    );
     // Optimize bundle size
     if (config.optimization) {
       config.optimization.splitChunks = {
