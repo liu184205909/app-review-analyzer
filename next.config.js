@@ -49,14 +49,23 @@ const nextConfig = {
 
   // Bundle optimization and fix for 'self is not defined' error
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Simple fix for 'self is not defined' error for server-side
+    // Fix for 'self is not defined' error for server-side
     if (isServer) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'self': 'globalThis',
-          'window': 'undefined',
-          'document': 'undefined',
-          'navigator': 'undefined',
+      // Add a plugin that injects self definition before any module loads
+      config.plugins.unshift(
+        new webpack.BannerPlugin({
+          banner: `
+            // Define self for Node.js server environment
+            if (typeof globalThis !== 'undefined') {
+              globalThis.self = globalThis;
+            }
+            if (typeof global !== 'undefined') {
+              global.self = global;
+            }
+          `,
+          raw: true,
+          entryOnly: false,
+          include: /\.js$/,
         })
       );
     }
