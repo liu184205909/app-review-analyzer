@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 
+// Force dynamic rendering - do not prerender at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({

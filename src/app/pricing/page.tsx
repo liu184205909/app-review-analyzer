@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Check, Star, Zap, Users, Crown, TrendingUp, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
+// Force dynamic rendering - do not prerender at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PricingPlan {
   id: string;
   name: string;
