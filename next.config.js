@@ -1,7 +1,5 @@
-const withSelfFix = require('./next-self-plugin');
-
 /** @type {import('next').NextConfig} */
-const nextConfig = withSelfFix({
+const nextConfig = {
   reactStrictMode: true,
 
   // Performance optimizations
@@ -10,41 +8,6 @@ const nextConfig = withSelfFix({
 
   // Fix for server-side global references
   output: 'standalone',
-
-  // Define global variables at build time
-  webpack: (config, { isServer, webpack }) => {
-    if (isServer) {
-      // Define self for server-side environment using the most aggressive approach
-      config.plugins.unshift(
-        new webpack.BannerPlugin({
-          banner: `
-            // Define self immediately for all modules
-            if (typeof global !== 'undefined') {
-              global.self = global;
-              global.window = undefined;
-              global.document = undefined;
-              global.navigator = undefined;
-            }
-            if (typeof globalThis !== 'undefined') {
-              globalThis.self = globalThis;
-            }
-          `,
-          raw: true,
-          entryOnly: false,
-          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-        })
-      );
-
-      // Additional DefinePlugin for build-time replacement
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'typeof self': '"object"',
-          'self': 'globalThis',
-        })
-      );
-    }
-    return config;
-  },
 
   // Enhanced image optimization
   images: {
@@ -84,10 +47,17 @@ const nextConfig = withSelfFix({
     },
   },
 
-  // Bundle optimization (cleaned up - no webpack plugins for self fix)
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Keep only essential optimization configurations
-    // The 'self is not defined' error is handled by node-shims.ts and polyfills.ts
+  // Bundle optimization with simple self fix
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Simple and direct fix for self reference
+      config.plugins.push(
+        new (require('webpack')).DefinePlugin({
+          'self': 'globalThis',
+        })
+      );
+    }
+
     // Optimize bundle size
     if (config.optimization) {
       config.optimization.splitChunks = {
@@ -122,7 +92,7 @@ const nextConfig = withSelfFix({
     };
 
     // Optimize for production
-    if (!dev && !isServer && config.optimization) {
+    if (config.optimization && !process.env.NODE_ENV?.includes('dev') && !isServer) {
       config.optimization.minimize = true;
     }
 
@@ -201,4 +171,3 @@ const nextConfig = withSelfFix({
 };
 
 module.exports = nextConfig;
-
