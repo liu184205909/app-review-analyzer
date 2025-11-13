@@ -47,58 +47,7 @@ const nextConfig = {
     },
   },
 
-  // Bundle optimization with simple self fix
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Simple and direct fix for self reference
-      config.plugins.push(
-        new (require('webpack')).DefinePlugin({
-          'self': 'globalThis',
-        })
-      );
-    }
-
-    // Optimize bundle size
-    if (config.optimization) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: -10,
-            enforce: true,
-          },
-        },
-      };
-    }
-
-    // Reduce bundle size
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, 'src'),
-    };
-
-    // Optimize for production
-    if (config.optimization && !process.env.NODE_ENV?.includes('dev') && !isServer) {
-      config.optimization.minimize = true;
-    }
-
-    return config;
-  },
-
+  
   // Headers for caching and security
   async headers() {
     return [

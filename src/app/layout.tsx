@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "@/global-self-fix"; // Import global self fix
 import "@/polyfills"; // Import server-side polyfills
 import "@/lib/node-shims"; // Import Node.js shims for browser globals
 import PerformanceMonitor from "@/components/optimizations/PerformanceMonitor";
