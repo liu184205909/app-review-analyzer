@@ -308,8 +308,8 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
   });
 
   insights.sentimentComparison = {
-    bestSentiment: sentimentScores[0],
-    worstSentiment: sentimentScores[sentimentScores.length - 1],
+    bestSentiment: sentimentScores.length > 0 ? sentimentScores[0] : null,
+    worstSentiment: sentimentScores.length > 0 ? sentimentScores[sentimentScores.length - 1] : null,
     ranking: sentimentScores,
   };
 

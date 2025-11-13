@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
       lastResetDate: userWithSubscription.lastResetDate,
       activeSubscription: userWithSubscription.activeSubscription,
       createdAt: userWithSubscription.createdAt,
-      updatedAt: userWithSubscription.updatedAt,
     };
 
     return NextResponse.json({
