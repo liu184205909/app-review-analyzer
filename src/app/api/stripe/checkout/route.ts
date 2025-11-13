@@ -3,6 +3,9 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { createStripeCheckoutSession } from '@/lib/stripe';
 import prisma from '@/lib/prisma';
 
+// Prevent Next.js from trying to collect page data
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Extract and verify token
