@@ -1,11 +1,11 @@
 // Browse Apps Page - Category and Region Filters
 'use client';
 
-// Prevent Next.js from trying to collect page data
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 import { useState, useEffect } from 'react';
+
+// Force dynamic rendering - do not prerender at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { Search, Filter, Globe, Grid, List } from 'lucide-react';
 import { POPULAR_CATEGORIES, normalizeCategory } from '@/lib/category';
 

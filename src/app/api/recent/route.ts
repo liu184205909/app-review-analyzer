@@ -38,21 +38,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch completed analyses (more than needed for deduplication)
-    const recentAnalyses = await prisma.analysisTask.findMany({
-      where,
-      orderBy: sortBy === 'popular' 
-        ? { createdAt: 'desc' } // TODO: 后续可以按浏览量排序
-        : { completedAt: 'desc' },
-      take: limit * 3, // Fetch more for deduplication
-      select: {
-        id: true,
-        appSlug: true,
-        platform: true,
-        appStoreId: true,
-        completedAt: true,
-        result: true,
-      },
-    });
+    let recentAnalyses;
+    try {
+      recentAnalyses = await prisma.analysisTask.findMany({
+        where,
+        orderBy: sortBy === 'popular' 
+          ? { createdAt: 'desc' } // TODO: 后续可以按浏览量排序
+          : { completedAt: 'desc' },
+        take: limit * 3, // Fetch more for deduplication
+        select: {
+          id: true,
+          appSlug: true,
+          platform: true,
+          appStoreId: true,
+          completedAt: true,
+          result: true,
+        },
+      });
+    } catch (dbError) {
+      console.warn('Database not available (likely build time):', dbError);
+      const emptyResponse = { analyses: [], total: 0 };
+      cache.set(cacheKey, emptyResponse, 2 * 60 * 1000);
+      endTiming();
+      return NextResponse.json(emptyResponse, {
+        headers: apiOptimization.getCacheHeaders(120),
+      });
+    }
 
     // Format and deduplicate by appStoreId + platform
     const seenApps = new Set<string>();

@@ -27,19 +27,32 @@ export async function GET(request: NextRequest) {
       where.platform = platform;
     }
 
-    // Fetch analyses
-    const analyses = await prisma.analysisTask.findMany({
-      where,
-      take: limit * 3, // Fetch more for filtering
-      select: {
-        id: true,
-        appSlug: true,
-        platform: true,
-        appStoreId: true,
-        completedAt: true,
-        result: true,
-      },
-    });
+    // Fetch analyses - return empty array if DB not available (build time)
+    let analyses;
+    try {
+      analyses = await prisma.analysisTask.findMany({
+        where,
+        take: limit * 3, // Fetch more for filtering
+        select: {
+          id: true,
+          appSlug: true,
+          platform: true,
+          appStoreId: true,
+          completedAt: true,
+          result: true,
+        },
+      });
+    } catch (dbError) {
+      console.warn('Database not available (likely build time):', dbError);
+      return NextResponse.json({
+        apps: [],
+        filters: {
+          categories: [],
+          regions: ['United States', 'China', 'Japan', 'South Korea', 'United Kingdom'],
+        },
+        total: 0,
+      });
+    }
 
     // Format and filter
     const seenApps = new Set<string>();

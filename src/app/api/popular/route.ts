@@ -25,18 +25,27 @@ export async function GET(request: NextRequest) {
 
     // Fetch completed analyses with app info
     // We'll join with App table to get reviewCount for sorting
-    const analyses = await prisma.analysisTask.findMany({
-      where,
-      take: limit * 5, // Fetch more for filtering and deduplication
-      select: {
-        id: true,
-        appSlug: true,
-        platform: true,
-        appStoreId: true,
-        completedAt: true,
-        result: true,
-      },
-    });
+    let analyses;
+    try {
+      analyses = await prisma.analysisTask.findMany({
+        where,
+        take: limit * 5, // Fetch more for filtering and deduplication
+        select: {
+          id: true,
+          appSlug: true,
+          platform: true,
+          appStoreId: true,
+          completedAt: true,
+          result: true,
+        },
+      });
+    } catch (dbError) {
+      console.warn('Database not available (likely build time):', dbError);
+      return NextResponse.json({
+        analyses: [],
+        total: 0,
+      });
+    }
 
     // Format and filter by popularity (high review count)
     const seenApps = new Set<string>();

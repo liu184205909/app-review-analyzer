@@ -5,6 +5,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowRight, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
+// Force dynamic rendering - do not prerender at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function SubscriptionSuccess() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);

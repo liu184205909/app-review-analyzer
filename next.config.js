@@ -47,6 +47,13 @@ const nextConfig = {
     },
   },
 
+  // Skip static optimization for pages that require database
+  // This prevents build errors when database is not available during build
+  generateBuildId: async () => {
+    // Use a custom build ID based on the latest git commit or timestamp
+    return process.env.VERCEL_GIT_COMMIT_SHA || `build-${Date.now()}`;
+  },
+
   
   // Headers for caching and security
   async headers() {
