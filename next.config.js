@@ -44,8 +44,14 @@ const nextConfig = {
     },
   },
 
-  // Bundle optimization
+  // Bundle optimization and fix for 'self is not defined' error
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Fix 'self is not defined' error
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'self': isServer ? 'this' : 'self',
+      })
+    );
     // Optimize bundle size
     if (config.optimization) {
       config.optimization.splitChunks = {
