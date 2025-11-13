@@ -381,12 +381,12 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
   insights.recommendations = [
     {
       type: 'improvement',
-      target: rankingScores[rankingScores.length - 1]?.name,
+      target: rankingScores.length > 0 ? rankingScores[rankingScores.length - 1]?.name : null,
       recommendation: 'Focus on addressing critical issues mentioned in reviews to improve user satisfaction',
     },
     {
       type: 'strength',
-      target: rankingScores[0]?.name,
+      target: rankingScores.length > 0 ? rankingScores[0]?.name : null,
       recommendation: 'Leverage your high user satisfaction in marketing materials',
     },
     {
