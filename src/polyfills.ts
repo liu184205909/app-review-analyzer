@@ -3,22 +3,22 @@
 
 // Ensure self is defined in Node.js environment
 if (typeof global !== 'undefined') {
-  if (!global.self) {
-    global.self = global;
+  if (!(global as any).self) {
+    (global as any).self = global;
   }
 }
 
 if (typeof globalThis !== 'undefined') {
-  if (!globalThis.self) {
-    globalThis.self = globalThis;
+  if (!(globalThis as any).self) {
+    (globalThis as any).self = globalThis;
   }
 }
 
 // Define other browser globals as undefined for server-side
 if (typeof global !== 'undefined') {
-  if (!global.window) global.window = undefined;
-  if (!global.document) global.document = undefined;
-  if (!global.navigator) global.navigator = undefined;
+  if (!(global as any).window) (global as any).window = undefined;
+  if (!(global as any).document) (global as any).document = undefined;
+  if (!(global as any).navigator) (global as any).navigator = undefined;
 }
 
 // Also define at module level for immediate availability
