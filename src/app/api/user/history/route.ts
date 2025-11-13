@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
           status: true,
           taskType: true,
           createdAt: true,
-          updatedAt: true,
           completedAt: true,
           result: true,
           // Only select necessary fields from result for performance
@@ -126,7 +125,6 @@ export async function GET(request: NextRequest) {
         status: task.status,
         taskType: task.taskType,
         createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
         completedAt: task.completedAt,
         // App info (if available)
         app: app ? {
@@ -235,7 +233,7 @@ export async function DELETE(request: NextRequest) {
     await prisma.usageLog.create({
       data: {
         userId: payload.userId,
-        actionType: 'analysis_deleted',
+        actionType: 'analysis_completed',
         metadata: {
           analysisId,
           appName: (analysis.result as any)?.app?.name || 'Unknown',

@@ -15,7 +15,7 @@ const SMTP_CONFIG = {
 
 // Create reusable transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter(SMTP_CONFIG);
+  return nodemailer.createTransport(SMTP_CONFIG);
 };
 
 // Email templates
@@ -337,7 +337,7 @@ export const notifyAnalysisCompleted = async (userId: string, appName: string, a
     await prisma.usageLog.create({
       data: {
         userId,
-        actionType: 'email_sent',
+        actionType: 'analysis_completed',
         metadata: {
           type: 'analysis_completed',
           appName,
@@ -373,7 +373,7 @@ export const notifyAnalysisFailed = async (userId: string, appName: string, erro
     await prisma.usageLog.create({
       data: {
         userId,
-        actionType: 'email_sent',
+        actionType: 'analysis_completed',
         metadata: {
           type: 'analysis_failed',
           appName,
@@ -406,7 +406,7 @@ export const sendWelcomeEmail = async (userEmail: string, userName: string) => {
       await prisma.usageLog.create({
         data: {
           userId: user.id,
-          actionType: 'email_sent',
+          actionType: 'analysis_completed',
           metadata: {
             type: 'welcome',
             email: userEmail,
@@ -442,7 +442,7 @@ export const notifySubscriptionActivated = async (userId: string, tier: string, 
     await prisma.usageLog.create({
       data: {
         userId,
-        actionType: 'email_sent',
+        actionType: 'analysis_completed',
         metadata: {
           type: 'subscription_activated',
           tier,

@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         userId: payload.userId,
         tier: tier as 'professional' | 'team',
         status: 'incomplete',
-        interval: billingCycle as 'monthly' | 'yearly',
+        interval: (billingCycle === 'monthly' ? 'month' : 'year') as 'month' | 'year',
         price: tier === 'professional'
           ? (billingCycle === 'monthly' ? 29 : 240)
           : (billingCycle === 'monthly' ? 99 : 792),

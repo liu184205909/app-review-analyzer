@@ -156,9 +156,9 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     where: { id: subscription.id },
     data: {
       status: 'active',
-      currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-      cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+      currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
+      currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
+      cancelAtPeriodEnd: (stripeSubscription as any).cancel_at_period_end,
     },
   });
 

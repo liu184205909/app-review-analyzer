@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     await prisma.usageLog.create({
       data: {
         userId: payload.userId,
-        actionType: 'email_sent',
+        actionType: 'analysis_completed',
         metadata: {
           type: 'test_email',
           email: user.email,

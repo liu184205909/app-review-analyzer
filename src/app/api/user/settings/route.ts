@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
     await prisma.usageLog.create({
       data: {
         userId: payload.userId,
-        actionType: 'settings_updated',
+        actionType: 'login',
         metadata: {
           updatedFields: Object.keys(validatedData),
           newSettings: validatedData,
