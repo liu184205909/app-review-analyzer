@@ -328,7 +328,7 @@ export default function ComparisonResultsPage() {
         {/* Apps Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {result.apps.map((app, index) => {
-            const rank = result.comparison.ranking.findIndex(r => r.name === app.app.name) + 1;
+            const rank = result.comparison.ranking.findIndex(r => r.app.name === app.app.name) + 1;
             const badge = getRankBadge(rank);
 
             return (
