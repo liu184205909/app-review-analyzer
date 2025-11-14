@@ -4,6 +4,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { triggerHotAppsUpdate } from '@/lib/scrapers/quick-fetch';
 
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // 简单的密钥验证（生产环境应使用更安全的方式）
 const SCHEDULE_SECRET = process.env.SCHEDULE_SECRET || 'schedule-secret-key-2024';
 
@@ -86,7 +90,8 @@ export async function POST(request: NextRequest) {
  */
 async function checkAllAppsStorageStatus(): Promise<any> {
   const { checkReviewStorageStatus } = await import('@/lib/incremental-scraper');
-  const prisma = await import('@/lib/prisma').then(m => m.default);
+  const getPrisma = await import('@/lib/prisma').then(m => m.default);
+  const prisma = getPrisma();
 
   // 获取所有有评论的应用
   const appsWithReviews = await prisma.app.findMany({
