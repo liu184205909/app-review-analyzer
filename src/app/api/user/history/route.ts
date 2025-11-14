@@ -187,6 +187,10 @@ export async function GET(request: NextRequest) {
 
 // DELETE /api/user/history - Delete specific analysis
 export async function DELETE(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
