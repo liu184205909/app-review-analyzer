@@ -156,7 +156,7 @@ export async function incrementalScrapeReviews(options: IncrementalScrapeOptions
 
     // 5. 保存新评论到数据库
     if (newReviews.length > 0 && existingApp) {
-      await saveNewReviews(newReviews, existingApp.id, platform);
+      await saveNewReviews(prisma, newReviews, existingApp.id, platform);
 
       // 更新应用的最后抓取时间
       await prisma.app.update({
@@ -261,6 +261,9 @@ async function deduplicateReviews(
   const duplicateReviews: any[] = [];
 
   // 获取现有评论的reviewId集合用于快速查找
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   const existingReviewIds = new Set(
     (await prisma.review.findMany({
       where: { appId: existingAppId },
@@ -306,7 +309,7 @@ function generateReviewId(review: any, platform: 'ios' | 'android'): string {
 /**
  * 保存新评论到数据库
  */
-async function saveNewReviews(newReviews: any[], appId: number, platform: 'ios' | 'android'): Promise<void> {
+async function saveNewReviews(prisma: any, newReviews: any[], appId: number, platform: 'ios' | 'android'): Promise<void> {
   if (newReviews.length === 0) return;
 
   console.log(`[Database] Saving ${newReviews.length} new reviews`);
