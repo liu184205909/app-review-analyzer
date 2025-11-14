@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { createCustomerPortalSession } from '@/lib/stripe';
-import prisma from '@/lib/prisma';
 
 // Prevent Next.js from trying to collect page data
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     // Extract and verify token
     const authHeader = request.headers.get('authorization');

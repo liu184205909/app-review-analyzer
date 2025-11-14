@@ -5,8 +5,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyToken, extractTokenFromHeader, canUserAnalyze } from '@/lib/auth';
 import { generateAppSlug } from '@/lib/slug';
-import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Validation schema
 const comparisonRequestSchema = z.object({
@@ -63,6 +66,7 @@ function generateComparisonSlug(apps: Array<{ name: string; platform: string }>)
 
 // Process comparison analysis
 async function processComparisonAnalysis(
+  prisma: any,
   taskId: string,
   apps: Array<{ appUrl: string; platform: 'ios' | 'android'; options: any }>,
   comparisonOptions: any,
@@ -400,6 +404,10 @@ function generateComparisonInsights(appAnalyses: any[], comparisonOptions: any) 
 }
 
 export async function POST(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     const body = await request.json();
     const validatedData = comparisonRequestSchema.parse(body);
@@ -530,6 +538,7 @@ export async function POST(request: NextRequest) {
     }));
 
     processComparisonAnalysis(
+      prisma,
       task.id,
       appsWithOptions,
       validatedData.comparisonOptions,

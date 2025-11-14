@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { sendEmail, emailTemplates } from '@/lib/email';
-import prisma from '@/lib/prisma';
+
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // POST /api/user/test-email - Send test email
 export async function POST(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     // Extract and verify token
     const authHeader = request.headers.get('authorization');

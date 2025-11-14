@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+
+// Force dynamic to prevent build-time evaluation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Settings validation schema
 const settingsSchema = z.object({
@@ -13,7 +16,11 @@ const settingsSchema = z.object({
 
 // GET /api/user/settings - Get user settings
 export async function GET(request: NextRequest) {
-  try {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
+  try{
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
     const token = extractTokenFromHeader(authHeader);
@@ -77,6 +84,10 @@ export async function GET(request: NextRequest) {
 
 // PUT /api/user/settings - Update user settings
 export async function PUT(request: NextRequest) {
+  // Lazy load Prisma to avoid build-time issues
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
