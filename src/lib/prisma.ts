@@ -25,22 +25,29 @@ function getPrismaClient(): PrismaClient {
     return prismaInstance;
   }
 
-  // Detect build-time environment
+  // Detect build-time environment more reliably
   const isBuildTime = 
     process.env.NEXT_PHASE === 'phase-production-build' ||
-    (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL);
+    process.env.npm_lifecycle_event === 'build' ||
+    (typeof process.env.VERCEL !== 'undefined' && !process.env.DATABASE_URL);
 
   if (isBuildTime) {
-    // Create a mock client for build time
-    console.log('[Prisma] Build time detected - creating placeholder client');
-    prismaInstance = new PrismaClient({
-      datasources: {
-        db: {
-          url: 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
-        },
-      },
-    });
-  } else {
+    // During build, return a mock/placeholder client
+    // This prevents build errors while allowing the code to compile
+    console.warn('[Prisma] WARNING: Build-time detected, returning placeholder client');
+    console.warn('[Prisma] Database operations will not be available during build');
+    
+    // Create a minimal mock instance
+    prismaInstance = {
+      $connect: async () => {},
+      $disconnect: async () => {},
+    } as any as PrismaClient;
+    
+    return prismaInstance;
+  }
+
+  // Only create real client at runtime
+  {
     // Create real client for runtime
     try {
       const databaseUrl = process.env.DATABASE_URL;
