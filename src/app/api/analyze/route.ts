@@ -344,7 +344,7 @@ async function processAnalysis(
   appId: string,
   appInfo: any,
   options: any,
-  userId: string
+  userId: string | null
 ) {
   try {
     // Generate appSlug for this analysis
@@ -539,42 +539,44 @@ async function processAnalysis(
       },
     });
 
-    // 📊 USAGE TRACKING: Log successful analysis and update user stats with enhanced data source info
-    await Promise.all([
-      // Log the usage with data source information
-      prisma.usageLog.create({
-        data: {
-          userId,
-          actionType: 'analysis_completed',
-          taskId,
-          metadata: {
-            platform,
-            appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'), // Partially hide for privacy
-            reviewCount: reviews.length,
-            targetCount: reviewTarget,
-            dataSource: unifiedResult.source,
-            dataQuality: unifiedResult.quality,
-            appSlug,
+    // 📊 USAGE TRACKING: Log successful analysis and update user stats (only for registered users)
+    if (userId) {
+      await Promise.all([
+        // Log the usage with data source information
+        prisma.usageLog.create({
+          data: {
+            userId,
+            actionType: 'analysis_completed',
+            taskId,
+            metadata: {
+              platform,
+              appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'), // Partially hide for privacy
+              reviewCount: reviews.length,
+              targetCount: reviewTarget,
+              dataSource: unifiedResult.source,
+              dataQuality: unifiedResult.quality,
+              appSlug,
+            },
           },
-        },
-      }),
+        }),
 
-      // Increment user's monthly analysis count
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          monthlyAnalysisCount: {
-            increment: 1,
+        // Increment user's monthly analysis count
+        prisma.user.update({
+          where: { id: userId },
+          data: {
+            monthlyAnalysisCount: {
+              increment: 1,
+            },
           },
-        },
-      }),
-    ]);
+        }),
+      ]);
 
-    // 📧 EMAIL NOTIFICATION: Send analysis completion notification (async, don't wait)
-    const { notifyAnalysisCompleted } = await import('@/lib/email');
-    notifyAnalysisCompleted(userId, appInfo.name, appSlug).catch(emailError => {
-      console.error('Failed to send analysis completion email:', emailError);
-    });
+      // 📧 EMAIL NOTIFICATION: Send analysis completion notification (async, don't wait)
+      const { notifyAnalysisCompleted } = await import('@/lib/email');
+      notifyAnalysisCompleted(userId, appInfo.name, appSlug).catch(emailError => {
+        console.error('Failed to send analysis completion email:', emailError);
+      });
+    }
 
   } catch (error: any) {
     logError(error, {
