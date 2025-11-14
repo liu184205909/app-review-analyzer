@@ -19,7 +19,8 @@ export {
  * Uses lazy import of Prisma to avoid build-time issues
  */
 export async function getUserWithSubscription(userId: string) {
-  const prisma = (await import('./prisma')).default;
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
   
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -111,7 +112,8 @@ export async function canUserAnalyze(userId: string): Promise<{
  * 记录分析使用
  */
 export async function recordAnalysisUsage(userId: string, taskId: string) {
-  const prisma = (await import('./prisma')).default;
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
   
   // 增加月度分析计数
   await prisma.user.update({
