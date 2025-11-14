@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Start processing in background with user ID (in production, use a queue)
-    processAnalysis(task.id, platform, appId, appInfo, options, payload.userId).catch(console.error);
+    processAnalysis(prisma, task.id, platform, appId, appInfo, options, payload.userId).catch(console.error);
 
     return NextResponse.json({
       taskId: task.id,
@@ -298,6 +298,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function processAnalysis(
+  prisma: any,
   taskId: string,
   platform: 'ios' | 'android',
   appId: string,
