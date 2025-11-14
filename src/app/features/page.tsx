@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import AuthModal from '@/components/AuthModal';
 import {
   BarChart3,
   Zap,
@@ -22,6 +24,8 @@ import {
 } from 'lucide-react';
 
 export default function FeaturesPage() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
   const mainFeatures = [
     {
       icon: <BarChart3 className="w-12 h-12 text-blue-600" />,
@@ -118,12 +122,12 @@ export default function FeaturesPage() {
           Transform user reviews into actionable insights with our comprehensive suite of AI-powered analysis tools
         </p>
         <div className="flex gap-4 justify-center">
-          <Link
-            href="/register"
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
             className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Get Started Free
-          </Link>
+          </button>
           <Link
             href="/pricing"
             className="bg-gray-100 text-gray-900 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
@@ -242,14 +246,21 @@ export default function FeaturesPage() {
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Join hundreds of product teams using ReviewInsight to build better products
           </p>
-          <Link
-            href="/register"
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
             className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors font-medium text-lg"
           >
             Start Free Trial
-          </Link>
+          </button>
         </div>
       </section>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultTab="register"
+      />
     </div>
   );
 }
