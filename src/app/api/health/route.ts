@@ -8,7 +8,8 @@ export const runtime = 'nodejs';
 export async function GET() {
   try {
     // Lazy load Prisma to avoid build-time issues
-    const prisma = (await import('@/lib/prisma')).default;
+    const getPrisma = (await import('@/lib/prisma')).default;
+    const prisma = getPrisma();
     
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;

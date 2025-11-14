@@ -10,7 +10,8 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   // Lazy load Prisma to avoid build-time issues
-  const prisma = (await import('@/lib/prisma')).default;
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
   
   const endTiming = performanceMonitor.startTiming('api_recent_analyses');
 

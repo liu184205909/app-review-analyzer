@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
     // Lazy load dependencies to avoid build-time errors
     const getStripe = (await import('@/lib/stripe')).default;
     const { STRIPE_PRICES } = await import('@/lib/stripe');
-    const prisma = (await import('@/lib/prisma')).default;
+    const getPrisma = (await import('@/lib/prisma')).default;
+    const prisma = getPrisma();
 
     const body = await request.text();
     const signature = headers().get('stripe-signature');

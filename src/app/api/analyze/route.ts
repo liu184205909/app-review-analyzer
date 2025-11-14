@@ -37,7 +37,8 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   // Lazy load Prisma to avoid build-time issues
-  const prisma = (await import('@/lib/prisma')).default;
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
   
   let taskId: string | null = null;
   
@@ -580,7 +581,8 @@ async function processAnalysis(
 // GET /api/analyze?taskId=xxx or ?slug=xxx - Get analysis status/result
 export async function GET(request: NextRequest) {
   // Lazy load Prisma to avoid build-time issues
-  const prisma = (await import('@/lib/prisma')).default;
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
   
   const url = new URL(request.url);
   const taskId = url.searchParams.get('taskId');

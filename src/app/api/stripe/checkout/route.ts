@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     // Lazy load dependencies to avoid build-time errors
     const { verifyToken, extractTokenFromHeader } = await import('@/lib/auth');
     const { createStripeCheckoutSession } = await import('@/lib/stripe');
-    const prisma = (await import('@/lib/prisma')).default;
+    const getPrisma = (await import('@/lib/prisma')).default;
+    const prisma = getPrisma();
 
     // Extract and verify token
     const authHeader = request.headers.get('authorization');
