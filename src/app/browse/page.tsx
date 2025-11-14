@@ -2,10 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-// Force dynamic rendering - do not prerender at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 import { Search, Filter, Globe, Grid, List } from 'lucide-react';
 import { POPULAR_CATEGORIES, normalizeCategory } from '@/lib/category';
 

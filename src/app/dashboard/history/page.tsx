@@ -23,10 +23,6 @@ import {
   BarChart3
 } from 'lucide-react';
 
-// Force dynamic rendering - do not prerender at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface AnalysisHistory {
   id: string;
   slug: string;

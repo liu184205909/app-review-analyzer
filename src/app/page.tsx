@@ -4,10 +4,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Clock, TrendingUp, Flame } from 'lucide-react';
 
-// Force dynamic rendering - do not prerender at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export default function HomePage() {
   const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
   const [mode, setMode] = useState<'single' | 'comparison'>('single');

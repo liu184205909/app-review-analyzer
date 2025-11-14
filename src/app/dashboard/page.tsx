@@ -15,10 +15,6 @@ import {
 } from 'lucide-react';
 import { FEATURES } from '@/lib/features';
 
-// Force dynamic rendering - do not prerender at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface UserData {
   id: string;
   email: string;

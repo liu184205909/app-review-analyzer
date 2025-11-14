@@ -6,10 +6,6 @@ import { Check, Star, Zap, Users, Crown, TrendingUp, BarChart3, AlertCircle } fr
 import Link from 'next/link';
 import { FEATURES } from '@/lib/features';
 
-// Force dynamic rendering - do not prerender at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface PricingPlan {
   id: string;
   name: string;
