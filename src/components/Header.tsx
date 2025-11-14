@@ -117,20 +117,12 @@ export default function Header() {
                 </div>
               </>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Get Started
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className="text-sm bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Sign In
+              </Link>
             )}
           </div>
 
@@ -208,22 +200,13 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="block py-2 text-gray-600"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="block py-2 bg-blue-600 text-white text-center rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
-                </>
+                <Link
+                  href="/login"
+                  className="block py-3 bg-blue-600 text-white text-center rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
               )}
             </div>
           </nav>
