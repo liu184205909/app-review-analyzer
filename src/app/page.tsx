@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Clock, TrendingUp, Flame } from 'lucide-react';
 import Header from '@/components/Header';
+import AuthModal from '@/components/AuthModal';
 
 export default function HomePage() {
   const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
@@ -18,6 +19,7 @@ export default function HomePage() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStatus, setAnalysisStatus] = useState('');
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [platformFilter, setPlatformFilter] = useState<'all' | 'ios' | 'android'>('all');
@@ -92,9 +94,16 @@ export default function HomePage() {
             },
           };
 
+      // Get token from localStorage if available
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       });
 
@@ -104,6 +113,11 @@ export default function HomePage() {
         setTaskId(data.taskId);
         // Start real-time progress tracking
         trackProgress(data.taskId);
+      } else if (response.status === 401 || data.requiresLogin) {
+        // Authentication required - show login modal
+        setShowProgressModal(false);
+        setAnalyzing(false);
+        setShowAuthModal(true);
       } else {
         // Enhanced error handling with suggestions
         const errorMessage = data.error || 'Unknown error occurred';
@@ -954,6 +968,13 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultTab="login"
+      />
     </div>
   );
 }
