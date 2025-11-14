@@ -20,25 +20,50 @@ try {
 
 try {
   if (typeof global !== 'undefined') {
-    Object.defineProperty(global, 'self', {
-      value: global,
-      writable: true,
-      configurable: true,
-      enumerable: true
-    });
+    // Define self property
+    if (!(global as any).self) {
+      Object.defineProperty(global, 'self', {
+        value: global,
+        writable: true,
+        configurable: true,
+        enumerable: true
+      });
+    }
 
     // Define other browser globals as undefined for server-side
-    (global as any).window = undefined;
-    (global as any).document = undefined;
-    (global as any).navigator = undefined;
+    // Use try-catch for each property as some may be read-only
+    try {
+      if (typeof (global as any).window === 'undefined') {
+        (global as any).window = undefined;
+      }
+    } catch (e) {
+      // Property is read-only, skip
+    }
+    
+    try {
+      if (typeof (global as any).document === 'undefined') {
+        (global as any).document = undefined;
+      }
+    } catch (e) {
+      // Property is read-only, skip
+    }
+    
+    try {
+      if (typeof (global as any).navigator === 'undefined') {
+        (global as any).navigator = undefined;
+      }
+    } catch (e) {
+      // Property is read-only, skip
+    }
   }
 } catch (e) {
   // Fallback if defineProperty fails
   if (typeof global !== 'undefined') {
-    (global as any).self = global;
-    (global as any).window = undefined;
-    (global as any).document = undefined;
-    (global as any).navigator = undefined;
+    try {
+      (global as any).self = global;
+    } catch (e) {
+      // Skip if can't set
+    }
   }
 }
 

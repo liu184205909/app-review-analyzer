@@ -15,10 +15,23 @@ if (typeof globalThis !== 'undefined') {
 }
 
 // Define other browser globals as undefined for server-side
+// Wrap in try-catch as some properties may be read-only
 if (typeof global !== 'undefined') {
-  if (!(global as any).window) (global as any).window = undefined;
-  if (!(global as any).document) (global as any).document = undefined;
-  if (!(global as any).navigator) (global as any).navigator = undefined;
+  try {
+    if (!(global as any).window) (global as any).window = undefined;
+  } catch (e) {
+    // Property is read-only, skip
+  }
+  try {
+    if (!(global as any).document) (global as any).document = undefined;
+  } catch (e) {
+    // Property is read-only, skip
+  }
+  try {
+    if (!(global as any).navigator) (global as any).navigator = undefined;
+  } catch (e) {
+    // Property is read-only, skip
+  }
 }
 
 // Also define at module level for immediate availability
