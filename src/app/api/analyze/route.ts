@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
   // Lazy load Prisma to avoid build-time issues
   const prisma = (await import('@/lib/prisma')).default;
   
+  let taskId: string | null = null;
+  
   try {
     const body = await request.json();
     const { appUrl, platform, options } = body;
