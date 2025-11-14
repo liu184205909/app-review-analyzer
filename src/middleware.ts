@@ -4,79 +4,87 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth-core';
 // 定义不需要认证的路径
 const publicPaths = [
   '/',
+  '/features',
+  '/browse',
+  '/login',
+  '/register',
+  '/pricing',
+  '/subscription/success',
   '/api/auth/register',
   '/api/auth/login',
+  '/api/auth/google',
+  '/api/auth/google/callback',
   '/api/health',
   '/api/recent',
   '/api/popular',
   '/api/browse',
-  '/api/analyze', // 允许匿名用户查看分析结果，但在创建时需要认证
+  '/api/analyze',
   '/api/schedule-update',
-  '/api/stripe/webhook', // Stripe webhook endpoint
-  '/login',
-  '/register',
-  '/pricing',
-  '/subscription/success', // Payment success page
-  // Note: /dashboard/*, /compare/*, and /api/user/* require authentication and are handled by middleware
+  '/api/stripe/webhook',
+  '/api/data-sources',
+  // Static assets
+  '/_next',
+  '/favicon.ico',
 ];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 检查是否是公共路径
-  const isPublicPath = publicPaths.some(path => {
-    if (path === pathname) return true;
-    if (path.endsWith('/') && pathname.startsWith(path.slice(0, -1))) return true;
-    if (path.includes(':') && pathname.startsWith(path.split(':')[0])) return true;
-    return false;
-  });
-
-  // 静态资源文件和API健康检查不需要认证
-  const isStaticResource = /\.(png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/i.test(pathname);
-  const isHealthCheck = pathname === '/api/health';
-
-  if (isPublicPath || isStaticResource || isHealthCheck) {
+  // 静态资源和 Next.js 内部路径不需要认证
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname === '/favicon.ico' ||
+    /\.(png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|eot|webp)$/i.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
-  // 对于需要认证的路径，验证token
-  const authHeader = request.headers.get('authorization');
-  const token = extractTokenFromHeader(authHeader);
+  // 检查是否是公共路径
+  const isPublicPath = publicPaths.some(path => {
+    // 精确匹配
+    if (path === pathname) return true;
+    // 前缀匹配（用于 /_next 等）
+    if (pathname.startsWith(path + '/')) return true;
+    return false;
+  });
 
-  if (!token) {
-    // 如果是API路由，返回401
-    if (pathname.startsWith('/api/')) {
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+  // 只对 API 路由进行认证检查（页面路由在客户端检查）
+  if (pathname.startsWith('/api/')) {
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader);
+
+    if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // 如果是页面路由，重定向到登录页面
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // 验证token
-  const payload = verifyToken(token);
-  if (!payload) {
-    // token无效
-    if (pathname.startsWith('/api/')) {
+    // 验证token
+    const payload = verifyToken(token);
+    if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
         { status: 401 }
       );
     }
 
-    return NextResponse.redirect(new URL('/login', request.url));
+    // 将用户信息添加到请求头中，供后续API使用
+    const response = NextResponse.next();
+    response.headers.set('x-user-id', payload.userId);
+    response.headers.set('x-user-email', payload.email);
+    response.headers.set('x-user-tier', payload.subscriptionTier);
+
+    return response;
   }
 
-  // 将用户信息添加到请求头中，供后续API使用
-  const response = NextResponse.next();
-  response.headers.set('x-user-id', payload.userId);
-  response.headers.set('x-user-email', payload.email);
-  response.headers.set('x-user-tier', payload.subscriptionTier);
-
-  return response;
+  // 所有非 API 的页面路由都允许访问（在客户端进行认证检查）
+  return NextResponse.next();
 }
 
 export const config = {
