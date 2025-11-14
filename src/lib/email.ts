@@ -402,6 +402,9 @@ export const sendWelcomeEmail = async (userEmail: string, userName: string) => {
     await sendEmail(userEmail, template);
 
     // Find user and log the notification
+    const getPrisma = (await import('./prisma')).default;
+    const prisma = getPrisma();
+    
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
       select: { id: true },
