@@ -8,6 +8,9 @@ import PerformanceMonitor from "@/components/optimizations/PerformanceMonitor";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Force dynamic rendering for all pages
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "ReviewInsight - AI-Powered App Review Analysis",
   description: "Analyze app reviews from iOS and Android to uncover user needs and discover opportunities from competitor feedback",

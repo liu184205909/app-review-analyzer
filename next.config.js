@@ -6,7 +6,9 @@ const nextConfig = {
   swcMinify: true,
   compress: true,
 
-  // Fix for server-side global references
+  // Use standalone output for Vercel deployment
+  // Note: This will still try to generate static pages at build time
+  // We prevent this by setting dynamic = 'force-dynamic' in layout.tsx
   output: 'standalone',
 
   // Enhanced image optimization
