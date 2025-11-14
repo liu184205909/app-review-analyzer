@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Star, Zap, Users, Crown, TrendingUp, BarChart3, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { FEATURES } from '@/lib/features';
+import Header from '@/components/Header';
 
 interface PricingPlan {
   id: string;
@@ -147,35 +148,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <Link href="/" className="text-xl font-semibold text-gray-900 hover:text-gray-700">
-                App Review Analyzer
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Get Started Free
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Clock, TrendingUp, Flame } from 'lucide-react';
+import Header from '@/components/Header';
 
 export default function HomePage() {
   const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
@@ -186,19 +187,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">ReviewInsight</h1>
-          <nav className="flex gap-6 text-sm">
-            <a href="/compare" className="text-indigo-600 hover:text-indigo-700 font-medium">Compare Apps</a>
-            <a href="/browse" className="text-gray-600 hover:text-gray-900 font-medium">Browse Apps</a>
-            <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
-            <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
-            <button className="text-gray-600 hover:text-gray-900">Sign In</button>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <main className="max-w-4xl mx-auto px-4 py-16">
