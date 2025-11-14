@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken, getUserWithSubscription } from '@/lib/auth';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     // 从请求头中提取token

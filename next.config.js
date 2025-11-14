@@ -38,8 +38,6 @@ const nextConfig = {
     },
     // Enable React Server Components
     serverComponentsExternalPackages: ['@prisma/client'],
-    // Disable ISR memory cache to prevent build-time page generation
-    isrMemoryCacheSize: 0,
     // Enable Turbopack (faster builds)
     turbo: {
       rules: {
