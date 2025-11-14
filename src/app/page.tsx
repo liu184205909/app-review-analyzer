@@ -118,6 +118,15 @@ export default function HomePage() {
         setShowProgressModal(false);
         setAnalyzing(false);
         setShowAuthModal(true);
+      } else if (response.status === 429 || data.requiresSignup) {
+        // Guest trial used - show signup prompt
+        setShowProgressModal(false);
+        setAnalyzing(false);
+        
+        const message = data.details || data.message || 'You\'ve used your free trial. Sign up to get 3 analyses per month!';
+        if (confirm(`🎉 ${message}\n\nClick OK to create a free account.`)) {
+          setShowAuthModal(true);
+        }
       } else {
         // Enhanced error handling with suggestions
         const errorMessage = data.error || 'Unknown error occurred';

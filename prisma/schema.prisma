@@ -106,9 +106,9 @@ model User {
 }
 
 enum SubscriptionTier {
-  free        // 免费用户：3次分析/月
+  free        // 免费用户：每月 3 次分析
   professional // 专业用户：$29/月，无限分析
-  team        // 团队用户：$99/月，多用户协作
+  team        // 团队用户：$99/月，多用户协作 + 高级功能
 }
 
 // 订阅记录表
@@ -284,5 +284,29 @@ model AIModel {
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// 访客分析记录表（追踪未登录用户的使用）
+model GuestAnalysis {
+  id            String    @id @default(uuid())
+  
+  // 访客标识（IP地址 + User-Agent fingerprint）
+  ipAddress     String
+  fingerprint   String?   // Browser fingerprint for additional tracking
+  
+  // 分析任务引用
+  taskId        String?   // Reference to AnalysisTask if created
+  
+  // 元数据
+  platform      Platform?
+  appUrl        String?
+  userAgent     String?
+  
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime  // 24小时后过期，允许重新分析
+  
+  @@index([ipAddress, createdAt])
+  @@index([fingerprint, createdAt])
+  @@index([expiresAt])
 }
 

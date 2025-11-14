@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
   const prisma = getPrisma();
   
   let taskId: string | null = null;
+  let userId: string | null = null;
+  let isGuest = false;
   
   try {
     const body = await request.json();
@@ -51,48 +53,69 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.replace('Bearer ', '');
 
     if (!token) {
-      return NextResponse.json(
-        {
-          error: 'Authentication required',
-          code: 'AUTH_REQUIRED',
-          message: 'Please sign in to analyze apps',
-          requiresLogin: true
-        },
-        { status: 401 }
-      );
-    }
+      // Guest mode: Allow analysis with IP-based rate limiting
+      const { getClientIp, getBrowserFingerprint, canGuestAnalyze } = await import('@/lib/guest');
+      const ipAddress = getClientIp(request);
+      const fingerprint = getBrowserFingerprint(request);
+      
+      const guestCheck = await canGuestAnalyze(ipAddress, fingerprint);
+      
+      if (!guestCheck.canAnalyze) {
+        const { formatRemainingTime } = await import('@/lib/guest');
+        const timeRemaining = guestCheck.remainingTime 
+          ? formatRemainingTime(guestCheck.remainingTime)
+          : '24 hours';
+        
+        return NextResponse.json(
+          {
+            error: 'Free trial used',
+            code: 'GUEST_LIMIT_EXCEEDED',
+            message: `You've used your free trial. Sign up to get 3 analyses per month!`,
+            details: `Try again in ${timeRemaining} or create a free account now.`,
+            requiresSignup: true,
+            timeRemaining: guestCheck.remainingTime,
+          },
+          { status: 429 } // Too Many Requests
+        );
+      }
+      
+      isGuest = true;
+      userId = null; // Guest users don't have a userId
+    } else {
+      // Registered user: Verify token and check limits
+      const { verifyToken, canUserAnalyze } = await import('@/lib/auth');
+      const payload = verifyToken(token);
 
-    // Verify token and get user info
-    const { verifyToken, canUserAnalyze } = await import('@/lib/auth');
-    const payload = verifyToken(token);
+      if (!payload) {
+        return NextResponse.json(
+          {
+            error: 'Invalid authentication',
+            code: 'INVALID_TOKEN',
+            message: 'Please log in again',
+            requiresLogin: true
+          },
+          { status: 401 }
+        );
+      }
 
-    if (!payload) {
-      return NextResponse.json(
-        {
-          error: 'Invalid authentication',
-          code: 'INVALID_TOKEN',
-          message: 'Please log in again',
-          requiresLogin: true
-        },
-        { status: 401 }
-      );
-    }
+      userId = payload.userId;
 
-    // Check if user can perform analysis
-    const analysisCheck = await canUserAnalyze(payload.userId);
+      // Check if user can perform analysis
+      const analysisCheck = await canUserAnalyze(userId);
 
-    if (!analysisCheck.canAnalyze) {
-      return NextResponse.json(
-        {
-          error: 'Usage limit exceeded',
-          code: 'USAGE_LIMIT_EXCEEDED',
-          message: analysisCheck.reason || 'You have reached your analysis limit',
-          requiresUpgrade: true,
-          currentTier: payload.subscriptionTier,
-          remainingAnalyses: analysisCheck.remainingAnalyses,
-        },
-        { status: 402 } // Payment Required
-      );
+      if (!analysisCheck.canAnalyze) {
+        return NextResponse.json(
+          {
+            error: 'Usage limit exceeded',
+            code: 'USAGE_LIMIT_EXCEEDED',
+            message: analysisCheck.reason || 'You have reached your analysis limit',
+            requiresUpgrade: true,
+            currentTier: payload.subscriptionTier,
+            remainingAnalyses: analysisCheck.remainingAnalyses,
+          },
+          { status: 402 } // Payment Required
+        );
+      }
     }
 
     // Enhanced validation
@@ -243,10 +266,10 @@ export async function POST(request: NextRequest) {
       data: { isLatest: false },
     });
 
-    // Create new analysis task with user ID
+    // Create new analysis task (with or without user ID)
     const task = await prisma.analysisTask.create({
       data: {
-        userId: payload.userId, // Associate task with user
+        userId: userId, // Associate task with user (null for guests)
         taskType: 'single',
         status: 'processing',
         platform,
@@ -257,22 +280,38 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Log analysis start
-    await prisma.usageLog.create({
-      data: {
-        userId: payload.userId,
-        actionType: 'analysis_started',
-        taskId: task.id,
-        metadata: {
-          platform,
-          appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'),
-          appSlug,
+    // Log analysis start (only for registered users)
+    if (userId) {
+      await prisma.usageLog.create({
+        data: {
+          userId: userId,
+          actionType: 'analysis_started',
+          taskId: task.id,
+          metadata: {
+            platform,
+            appId: appId.replace(/(\d{3}).*(\d{3})/, '$1***$2'),
+            appSlug,
+          },
         },
-      },
-    });
+      });
+    }
+
+    // Record guest analysis
+    if (isGuest) {
+      const { getClientIp, getBrowserFingerprint, recordGuestAnalysis } = await import('@/lib/guest');
+      const ipAddress = getClientIp(request);
+      const fingerprint = getBrowserFingerprint(request);
+      const userAgent = request.headers.get('user-agent') || undefined;
+      
+      await recordGuestAnalysis(ipAddress, fingerprint, task.id, {
+        platform,
+        appUrl,
+        userAgent,
+      });
+    }
 
     // Start processing in background with user ID (in production, use a queue)
-    processAnalysis(prisma, task.id, platform, appId, appInfo, options, payload.userId).catch(console.error);
+    processAnalysis(prisma, task.id, platform, appId, appInfo, options, userId).catch(console.error);
 
     return NextResponse.json({
       taskId: task.id,

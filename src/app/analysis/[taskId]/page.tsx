@@ -6,6 +6,8 @@ import { useParams } from 'next/navigation';
 import { AlertCircle, TrendingDown, Lightbulb, Target, Download, ChevronDown, ChevronUp, ExternalLink, MessageSquare } from 'lucide-react';
 import ReviewList from '@/components/ReviewList';
 import ExportDropdown from '@/components/ExportDropdown';
+import SignupPromoModal from '@/components/SignupPromoModal';
+import AuthModal from '@/components/AuthModal';
 import { getCategoryDisplay, normalizeCategory } from '@/lib/category';
 
 interface AnalysisData {
@@ -72,6 +74,10 @@ export default function AnalysisResultPage() {
   // Professional role state
   const [selectedRole, setSelectedRole] = useState<'product-manager' | 'developer' | 'ux-designer' | 'general'>('general');
 
+  // Guest signup prompts
+  const [showSignupPromo, setShowSignupPromo] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +94,20 @@ export default function AnalysisResultPage() {
           setTimeout(fetchData, 1500); // Reduced from 3000ms for faster updates
         } else {
           setLoading(false);
+          
+          // Check if guest user completed analysis - show signup promo
+          if (result.status === 'completed') {
+            const hasToken = localStorage.getItem('token');
+            const hasSeenPromo = sessionStorage.getItem(`signup-promo-${taskId}`);
+            
+            if (!hasToken && !hasSeenPromo) {
+              // Delay to let user see the results first
+              setTimeout(() => {
+                setShowSignupPromo(true);
+                sessionStorage.setItem(`signup-promo-${taskId}`, 'true');
+              }, 3000); // Show promo after 3 seconds
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch analysis:', error);
@@ -1035,6 +1055,23 @@ export default function AnalysisResultPage() {
           <ReviewList reviews={data.result.reviews} appName={app.name} />
         )}
       </main>
+
+      {/* Signup Promo Modal for Guests */}
+      <SignupPromoModal
+        isOpen={showSignupPromo}
+        onClose={() => setShowSignupPromo(false)}
+        onSignup={() => {
+          setShowSignupPromo(false);
+          setShowAuthModal(true);
+        }}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultTab="register"
+      />
     </div>
   );
 }
