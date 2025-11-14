@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
   
   const [loginData, setLoginData] = useState({
     email: '',
@@ -27,6 +29,11 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     email: '',
     password: '',
   });
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -44,7 +51,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google';
@@ -110,8 +117,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -336,5 +343,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
