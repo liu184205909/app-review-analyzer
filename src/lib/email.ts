@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import prisma from './prisma';
 
 // Email configuration
 const SMTP_CONFIG = {
@@ -318,6 +317,9 @@ export const sendEmail = async (
 
 // Specific notification functions
 export const notifyAnalysisCompleted = async (userId: string, appName: string, appSlug: string) => {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -355,6 +357,9 @@ export const notifyAnalysisCompleted = async (userId: string, appName: string, a
 };
 
 export const notifyAnalysisFailed = async (userId: string, appName: string, error?: string) => {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -424,6 +429,9 @@ export const sendWelcomeEmail = async (userEmail: string, userName: string) => {
 };
 
 export const notifySubscriptionActivated = async (userId: string, tier: string, nextBillingDate?: string) => {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },

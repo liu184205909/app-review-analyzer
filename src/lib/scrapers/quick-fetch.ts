@@ -4,7 +4,6 @@
 import { fetchAppStoreReviews } from './app-store';
 import { fetchGooglePlayReviews } from './google-play';
 import { incrementalScrapeReviews, getScrapeStats } from '../incremental-scraper';
-import prisma from '../prisma';
 
 /**
  * 智能快速抓取评论（优化版本）
@@ -150,6 +149,9 @@ export async function checkAppNeedsUpdate(appId: string, platform: 'ios' | 'andr
  * @param limit 更新的应用数量限制
  */
 export async function triggerHotAppsUpdate(limit: number = 10) {
+  const getPrisma = (await import('../prisma')).default;
+  const prisma = getPrisma();
+  
   console.log(`[Hot Apps Update] Starting update for top ${limit} apps`);
 
   try {

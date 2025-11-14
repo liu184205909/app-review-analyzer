@@ -3,8 +3,6 @@
  * 解决过度去重问题，允许更多样性评论进入系统
  */
 
-import prisma from '@/lib/prisma';
-
 interface EnhancedDeduplicationOptions {
   // 时间窗口内的相似评论可以共存
   timeWindowHours?: number;
@@ -22,6 +20,8 @@ export async function enhancedDeduplication(
   platform: 'ios' | 'android',
   options: EnhancedDeduplicationOptions = {}
 ): Promise<{ newReviews: any[], duplicateReviews: any[] }> {
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
 
   const {
     timeWindowHours = 24, // 24小时内的相似评论可以共存

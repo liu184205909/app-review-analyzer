@@ -2,7 +2,6 @@
 // 实现智能去重、时间戳比较和增量更新
 // Enhanced with unified multi-strategy approach
 
-import prisma from './prisma';
 import { fetchAppStoreReviews } from './scrapers/app-store';
 import { fetchGooglePlayReviews } from './scrapers/google-play';
 import { enhancedIncrementalScrape, getRecommendedConfig, LIGHTWEIGHT_CONFIG, STANDARD_CONFIG, AGGRESSIVE_CONFIG, type EnhancedScrapeConfig } from './enhanced-incremental-scraper';
@@ -33,6 +32,9 @@ export interface ScrapeResult {
  * 3. 自动去重和增量存储
  */
 export async function incrementalScrapeReviews(options: IncrementalScrapeOptions): Promise<ScrapeResult> {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   const {
     appId,
     platform,
@@ -340,6 +342,9 @@ async function saveNewReviews(newReviews: any[], appId: number, platform: 'ios' 
  * 获取应用的抓取统计信息
  */
 export async function getScrapeStats(appId: string, platform: 'ios' | 'android') {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   const app = await prisma.app.findFirst({
     where: { platform, appId },
     include: {
@@ -373,6 +378,9 @@ export async function getScrapeStats(appId: string, platform: 'ios' | 'android')
  * 检查评论数据的存储状态（确保数据完整性）
  */
 export async function checkReviewStorageStatus(appId: string, platform: 'ios' | 'android') {
+  const getPrisma = (await import('./prisma')).default;
+  const prisma = getPrisma();
+  
   const app = await prisma.app.findFirst({
     where: { platform, appId }
   });

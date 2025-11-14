@@ -3,8 +3,6 @@
  * 整合去重算法、多地区抓取、时间范围扩展、竞品补充于一体
  */
 
-import prisma from '@/lib/prisma';
-
 export interface EnhancedScrapeConfig {
   // 基础配置
   appId: string;
@@ -121,6 +119,9 @@ export const AGGRESSIVE_CONFIG: Omit<EnhancedScrapeConfig, 'appId' | 'platform'>
  * 增强增量抓取 - 统一的多策略数据收集
  */
 export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): Promise<EnhancedScrapeResult> {
+  const getPrisma = (await import('@/lib/prisma')).default;
+  const prisma = getPrisma();
+  
   console.log(`[Enhanced Scraper] Starting unified scrape for ${config.platform} app: ${config.appId}`);
   console.log(`[Enhanced Scraper] Target: ${config.targetReviews}, Min new: ${config.minNewReviews}`);
 
@@ -134,7 +135,7 @@ export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): P
   try {
     // Phase 1: Standard scraping
     console.log(`[Enhanced Scraper] Phase 1: Standard scraping`);
-    const standardResult = await performStandardScraping(config);
+    const standardResult = await performStandardScraping(config, prisma);
     allReviews.push(...standardResult.reviews);
     newReviewsCount += standardResult.newReviews;
     sources.push('standard');
@@ -249,7 +250,7 @@ export async function enhancedIncrementalScrape(config: EnhancedScrapeConfig): P
   }
 }
 
-async function performStandardScraping(config: EnhancedScrapeConfig): Promise<{
+async function performStandardScraping(config: EnhancedScrapeConfig, prisma: any): Promise<{
   reviews: any[];
   newReviews: number;
   duplicateReviews: number;
