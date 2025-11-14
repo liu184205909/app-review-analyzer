@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     // Generate JWT token
     const token = generateToken({
-      userId: user.id,
+      id: user.id,
       email: user.email,
       subscriptionTier: user.subscriptionTier,
     });
