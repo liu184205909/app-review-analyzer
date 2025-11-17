@@ -70,7 +70,7 @@ export async function analyzeSingleApp(
       messages: [
         {
           role: 'system',
-          content: 'You are a professional product analyst and UX expert specializing in app review analysis.'
+          content: 'You are a professional product analyst and UX expert specializing in app review analysis. IMPORTANT: Always respond in English only, regardless of the language of the input reviews. All analysis, categories, and outputs must be in English.'
         },
         {
           role: 'user',
@@ -104,7 +104,7 @@ export async function compareApps(
       messages: [
         {
           role: 'system',
-          content: 'You are a competitive analysis expert who helps product teams understand their position in the market by analyzing user feedback.'
+          content: 'You are a competitive analysis expert who helps product teams understand their position in the market by analyzing user feedback. IMPORTANT: Always respond in English only, regardless of the language of the input reviews. All analysis, categories, and outputs must be in English.'
         },
         {
           role: 'user',
